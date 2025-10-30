@@ -1,0 +1,26 @@
+
+
+<!-- README.md is generated from README.Rmd. Please edit that file -->
+
+# osrm.backend
+
+<!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+[![CRAN
+status](https://www.r-pkg.org/badges/version/osrm.backend)](https://CRAN.R-project.org/package=osrm.backend)
+[![R-CMD-check](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml)
+[![Codecov test
+coverage](https://codecov.io/gh/e-kotov/osrm.backend/graph/badge.svg)](https://app.codecov.io/gh/e-kotov/osrm.backend)
+<!-- badges: end -->
+
+The goal of `osrm.backend` is to be a companion to `{osrm}` R package
+<https://github.com/riatelab/osrm>:
+
+- easily install `osrm.backend` on major operating systems (Linux,
+  Windows, MacOS);
+
+- provide wrapper functions to prepare data for `osrm` routing;
+
+- provide wrapper to start/stop local OSRM backend server.
