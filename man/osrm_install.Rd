@@ -15,7 +15,9 @@ osrm_install(
 \arguments{
 \item{version}{A string specifying the OSRM version tag to install.
 Defaults to \code{"v5.27.1"}. Use \code{"latest"} to automatically find the most
-recent stable version by calling \code{osrm_check_latest_version()}.}
+recent stable version by calling \code{osrm_check_latest_version()}. Versions
+other than \code{v5.27.1} and \code{v6.0.0} will trigger a warning but are still
+attempted if binaries are available.}
 
 \item{dest_dir}{A string specifying the directory where OSRM binaries should be installed.
 If \code{NULL} (the default), a user-friendly, persistent location is chosen via
@@ -38,9 +40,7 @@ Defaults to \code{FALSE}.}
 The path to the installation directory, invisibly.
 }
 \description{
-Downloads and installs pre-compiled binaries for the OSRM backend from the
-official GitHub releases. The function automatically detects the user's
-operating system and architecture to download the appropriate files.
+Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.
 }
 \details{
 The function performs the following steps:
@@ -53,6 +53,13 @@ The function performs the following steps:
 \item Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 \item Optionally modifies the \code{PATH} environment variable for the current session or project.
 }
+
+Power users (including package authors running cross-platform tests) can
+override the auto-detected platform by setting the R options
+\code{osrm.backend.override_os} and \code{osrm.backend.override_arch} (e.g.,
+\code{options(osrm.backend.override_os = "linux", osrm.backend.override_arch = "arm64")})
+before calling \code{osrm_install()}. Overrides allow requesting binaries for any
+OS and CPU combination that exists on the GitHub releases.
 }
 \examples{
 \dontrun{

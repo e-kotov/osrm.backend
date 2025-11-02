@@ -1,8 +1,6 @@
 #' Install OSRM Backend Binaries
 #'
-#' Downloads and installs pre-compiled binaries for the OSRM backend from the
-#' official GitHub releases. The function automatically detects the user's
-#' operating system and architecture to download the appropriate files.
+#' Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (`v5.27.1`) and `v6.0.0` were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.
 #'
 #' @details
 #' The function performs the following steps:
@@ -14,9 +12,18 @@
 #' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 #' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
+#' Power users (including package authors running cross-platform tests) can
+#' override the auto-detected platform by setting the R options
+#' `osrm.backend.override_os` and `osrm.backend.override_arch` (e.g.,
+#' `options(osrm.backend.override_os = "linux", osrm.backend.override_arch = "arm64")`)
+#' before calling `osrm_install()`. Overrides allow requesting binaries for any
+#' OS and CPU combination that exists on the GitHub releases.
+#'
 #' @param version A string specifying the OSRM version tag to install.
 #'   Defaults to `"v5.27.1"`. Use `"latest"` to automatically find the most
-#'   recent stable version by calling `osrm_check_latest_version()`.
+#'   recent stable version by calling `osrm_check_latest_version()`. Versions
+#'   other than `v5.27.1` and `v6.0.0` will trigger a warning but are still
+#'   attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be installed.
 #'   If `NULL` (the default), a user-friendly, persistent location is chosen via
 #'   `tools::R_user_dir("osrm.backend", which = "cache")`.
@@ -80,7 +87,8 @@ osrm_install <- function(
 
     if (profiles_missing) {
       message(
-        "Existing OSRM installation in ", dest_dir,
+        "Existing OSRM installation in ",
+        dest_dir,
         " is missing Lua profiles. Reinstalling to restore them."
       )
     } else if (force) {
@@ -89,10 +97,25 @@ osrm_install <- function(
   }
 
   # --- 3. Determine version and get release info ---
+  tested_versions <- c("v5.27.1", "v6.0.0")
+  requested_version <- version
   if (version == "latest") {
     message("Finding latest stable version with available binaries...")
     version <- osrm_check_latest_version()
     message("Latest stable version is '", version, "'")
+  }
+  if (!version %in% tested_versions) {
+    warning_message <- sprintf(
+      "Version '%s' has not been validated by osrm.backend; only v5.27.1 and v6.0.0 are tested.",
+      version
+    )
+    if (identical(requested_version, "latest")) {
+      warning_message <- sprintf(
+        "Latest available release '%s' has not been validated by osrm.backend; only v5.27.1 and v6.0.0 are tested.",
+        version
+      )
+    }
+    warning(warning_message, call. = FALSE)
   }
   release_info <- get_release_by_tag(version)
 
@@ -136,20 +159,23 @@ osrm_install <- function(
   )
 
   # --- 7. Locate and install binaries ---
-  bin_names <- c(
-    "osrm-routed",
-    "osrm-extract",
-    "osrm-contract",
-    "osrm-partition",
-    "osrm-customize",
-    "osrm-datastore"
-  )
-  if (.Platform$OS.type == "windows") {
-    bin_names <- paste0(bin_names, ".exe")
-  }
+  bin_regex <- "osrm-(routed|extract|contract|partition|customize|datastore)"
 
   all_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
-  found_bins <- all_files[basename(all_files) %in% bin_names]
+  found_bins <- all_files[
+    grepl(paste0("^", bin_regex, "(\\.exe)?$"), basename(all_files), ignore.case = TRUE)
+  ]
+
+  # Fallback for archives that place binaries alongside additional artefacts (e.g. node bindings)
+  if (length(found_bins) == 0) {
+    found_bins <- all_files[
+      grepl(
+        paste0(bin_regex, "(\\.exe)?$"),
+        basename(all_files),
+        ignore.case = TRUE
+      )
+    ]
+  }
 
   if (length(found_bins) == 0) {
     stop(
@@ -164,6 +190,12 @@ osrm_install <- function(
   message("Installing binaries to ", dest_dir)
   file.copy(from = files_to_copy, to = dest_dir, overwrite = TRUE)
 
+  runtime_version <- release_info$tag_name
+  if (is.null(runtime_version) || !nzchar(runtime_version)) {
+    runtime_version <- version
+  }
+  maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir)
+
   # --- 8. Download and install Lua profiles ---
   install_profiles_for_release(release_info, dest_dir)
 
@@ -172,7 +204,9 @@ osrm_install <- function(
   if (.Platform$OS.type != "windows") {
     message("Setting executable permissions...")
     Sys.chmod(
-      installed_bins[grepl(paste(bin_names, collapse = "|"), installed_bins)],
+      installed_bins[
+        grepl(paste0("^", bin_regex, "$"), basename(installed_bins), ignore.case = TRUE)
+      ],
       mode = "0755"
     )
   }
@@ -320,28 +354,62 @@ osrm_clear_path <- function(quiet = FALSE) {
 
 #' @noRd
 get_platform_info <- function() {
+  sys_info <- Sys.info()
   os <- switch(
-    Sys.info()[["sysname"]],
+    sys_info[["sysname"]],
     Linux = "linux",
     Darwin = "darwin",
     Windows = "win32"
   )
   arch <- switch(
-    Sys.info()[["machine"]],
+    sys_info[["machine"]],
     x86_64 = "x64",
     amd64 = "x64",
     aarch64 = "arm64",
     arm64 = "arm64"
   )
-  if (is.null(os) || is.null(arch)) {
+
+  override_os <- getOption("osrm.backend.override_os")
+  if (!is.null(override_os)) {
+    if (length(override_os) != 1 || !is.character(override_os)) {
+      override_os <- as.character(override_os)[1]
+    }
+    override_os <- trimws(override_os)
+    if (!nzchar(override_os)) {
+      stop(
+        "Option 'osrm.backend.override_os' must be a non-empty string when set.",
+        call. = FALSE
+      )
+    }
+    os <- override_os
+  }
+
+  override_arch <- getOption("osrm.backend.override_arch")
+  if (!is.null(override_arch)) {
+    if (length(override_arch) != 1 || !is.character(override_arch)) {
+      override_arch <- as.character(override_arch)[1]
+    }
+    override_arch <- trimws(override_arch)
+    if (!nzchar(override_arch)) {
+      stop(
+        "Option 'osrm.backend.override_arch' must be a non-empty string when set.",
+        call. = FALSE
+      )
+    }
+    arch <- override_arch
+  }
+
+  if (is.null(os) || is.null(arch) || !nzchar(os) || !nzchar(arch)) {
     stop(
       "Your platform is not supported by pre-compiled OSRM binaries. OS: ",
-      Sys.info()[["sysname"]],
+      if (!is.null(override_os)) override_os else sys_info[["sysname"]],
       ", Arch: ",
-      Sys.info()[["machine"]],
+      if (!is.null(override_arch)) override_arch else sys_info[["machine"]],
+      ".",
       call. = FALSE
     )
   }
+
   list(os = os, arch = arch)
 }
 
@@ -463,7 +531,11 @@ install_profiles_for_release <- function(release_info, dest_dir) {
     }
   )
 
-  top_level_dirs <- list.dirs(tmp_profiles_extract, recursive = FALSE, full.names = TRUE)
+  top_level_dirs <- list.dirs(
+    tmp_profiles_extract,
+    recursive = FALSE,
+    full.names = TRUE
+  )
   profile_source <- NULL
   for (root in top_level_dirs) {
     candidate <- file.path(root, "profiles")
@@ -486,15 +558,160 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   }
   dir.create(dest_profiles_dir, recursive = TRUE, showWarnings = FALSE)
 
-  files_to_copy <- list.files(profile_source, full.names = TRUE, all.files = TRUE, no.. = TRUE)
-  copied <- file.copy(from = files_to_copy, to = dest_profiles_dir, recursive = TRUE, overwrite = TRUE)
+  files_to_copy <- list.files(
+    profile_source,
+    full.names = TRUE,
+    all.files = TRUE,
+    no.. = TRUE
+  )
+  copied <- file.copy(
+    from = files_to_copy,
+    to = dest_profiles_dir,
+    recursive = TRUE,
+    overwrite = TRUE
+  )
 
   if (!all(copied)) {
-    stop("Failed to copy one or more profile files to the destination directory.", call. = FALSE)
+    stop(
+      "Failed to copy one or more profile files to the destination directory.",
+      call. = FALSE
+    )
   }
 
   message("Installed profiles to ", dest_profiles_dir)
   invisible(dest_profiles_dir)
+}
+
+#' @noRd
+maybe_install_windows_v6_runtime <- function(version, platform, dest_dir) {
+  if (!identical(platform$os, "win32")) {
+    return(invisible(NULL))
+  }
+
+  if (is.null(version) || !nzchar(version)) {
+    return(invisible(NULL))
+  }
+
+  version_tag <- tolower(as.character(version)[1])
+  if (is.na(version_tag) || !startsWith(version_tag, "v6")) {
+    return(invisible(NULL))
+  }
+
+  install_windows_v6_runtime(dest_dir)
+}
+
+#' @noRd
+install_windows_v6_runtime <- function(dest_dir) {
+  message("Fetching additional Windows runtime dependencies (TBB, BZip2)...")
+
+  tbb_url <- paste0(
+    "https://github.com/uxlfoundation/oneTBB/releases/download/v2022.3.0/",
+    "oneapi-tbb-2022.3.0-win.zip"
+  )
+  download_zip_member(
+    url = tbb_url,
+    member_path = "oneapi-tbb-2022.3.0/redist/intel64/vc14/tbb12.dll",
+    dest_path = file.path(dest_dir, "tbb12.dll")
+  )
+  message("  - Installed tbb12.dll")
+
+  bzip_url <- paste0(
+    "https://github.com/philr/bzip2-windows/releases/download/v1.0.8.0/",
+    "bzip2-dll-1.0.8.0-win-x64.zip"
+  )
+  download_zip_member(
+    url = bzip_url,
+    member_path = "libbz2.dll",
+    dest_path = file.path(dest_dir, "bz2.dll")
+  )
+  message("  - Installed bz2.dll")
+
+  invisible(dest_dir)
+}
+
+#' @noRd
+download_zip_member <- function(url, member_path, dest_path) {
+  member_path <- gsub("^/+", "", member_path)
+  normalized_member <- gsub("\\\\", "/", member_path)
+
+  tmp_zip <- tempfile(fileext = ".zip")
+  on.exit(unlink(tmp_zip), add = TRUE)
+
+  req <- httr2::request(url)
+  tryCatch(
+    httr2::req_perform(req, path = tmp_zip),
+    error = function(e) {
+      stop(
+        sprintf("Failed to download '%s': %s", url, e$message),
+        call. = FALSE
+      )
+    }
+  )
+
+  contents <- utils::unzip(tmp_zip, list = TRUE)
+  if (is.null(contents) || nrow(contents) == 0) {
+    stop(
+      sprintf("Archive '%s' did not contain any files.", basename(url)),
+      call. = FALSE
+    )
+  }
+
+  matches <- contents$Name[tolower(contents$Name) == tolower(normalized_member)]
+  if (length(matches) == 0) {
+    stop(
+      sprintf(
+        "Archive '%s' did not contain expected file '%s'.",
+        basename(url),
+        member_path
+      ),
+      call. = FALSE
+    )
+  }
+
+  selected_member <- matches[[1]]
+
+  tmp_extract <- tempfile()
+  dir.create(tmp_extract)
+  on.exit(unlink(tmp_extract, recursive = TRUE), add = TRUE)
+
+  tryCatch(
+    utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract),
+    error = function(e) {
+      stop(
+        sprintf(
+          "Failed to extract '%s' from archive '%s': %s",
+          selected_member,
+          basename(url),
+          e$message
+        ),
+        call. = FALSE
+      )
+    }
+  )
+
+  parts <- strsplit(selected_member, "/", fixed = TRUE)[[1]]
+  src_path <- do.call(file.path, c(list(tmp_extract), parts))
+
+  if (!file.exists(src_path)) {
+    stop(
+      sprintf("Extraction did not produce expected file '%s'.", src_path),
+      call. = FALSE
+    )
+  }
+
+  dest_parent <- dirname(dest_path)
+  if (!dir.exists(dest_parent)) {
+    dir.create(dest_parent, recursive = TRUE, showWarnings = FALSE)
+  }
+
+  if (!file.copy(src_path, dest_path, overwrite = TRUE)) {
+    stop(
+      sprintf("Failed to copy '%s' to '%s'.", src_path, dest_path),
+      call. = FALSE
+    )
+  }
+
+  invisible(dest_path)
 }
 
 #' @noRd
