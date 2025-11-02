@@ -49,13 +49,6 @@ osrm_install <- function(
   path_action = c("session", "project", "none"),
   quiet = FALSE
 ) {
-  # Check for dependencies
-  if (!requireNamespace("httr2", quietly = TRUE)) {
-    stop(
-      "'httr2' package is required. Please install it with install.packages('httr2').",
-      call. = FALSE
-    )
-  }
   path_action <- match.arg(path_action)
 
   # --- 1. Determine destination directory ---
