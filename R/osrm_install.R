@@ -353,21 +353,48 @@ osrm_clear_path <- function(quiet = FALSE) {
 # --- Helper functions (not exported) ---
 
 #' @noRd
-get_platform_info <- function() {
-  sys_info <- Sys.info()
+get_platform_info <- function(sys_info = Sys.info()) {
+  if (is.null(sys_info)) {
+    sys_info <- list()
+  }
+
+  sys_info <- as.list(sys_info)
+  sysname <- sys_info[["sysname"]]
+  if (!is.null(sysname)) {
+    sysname <- as.character(sysname)[1]
+  }
+
+  machine <- sys_info[["machine"]]
+  if (!is.null(machine)) {
+    machine <- as.character(machine)[1]
+  }
+
+  sysname_key <- tolower(sysname)
   os <- switch(
-    sys_info[["sysname"]],
-    Linux = "linux",
-    Darwin = "darwin",
-    Windows = "win32"
+    sysname_key,
+    linux = "linux",
+    darwin = "darwin",
+    windows = "win32"
   )
-  arch <- switch(
-    sys_info[["machine"]],
+
+  normalized_machine <- NULL
+  if (!is.null(machine) && isTRUE(nzchar(machine))) {
+    normalized_machine <- tolower(machine)
+    normalized_machine <- gsub("[^a-z0-9]+", "_", normalized_machine)
+    normalized_machine <- gsub("^_+|_+$", "", normalized_machine)
+  }
+
+  arch_map <- c(
     x86_64 = "x64",
     amd64 = "x64",
+    x64 = "x64",
+    x86 = "x86",
+    i386 = "x86",
+    i686 = "x86",
     aarch64 = "arm64",
     arm64 = "arm64"
   )
+  arch <- arch_map[[normalized_machine]]
 
   override_os <- getOption("osrm.backend.override_os")
   if (!is.null(override_os)) {
@@ -402,9 +429,9 @@ get_platform_info <- function() {
   if (is.null(os) || is.null(arch) || !nzchar(os) || !nzchar(arch)) {
     stop(
       "Your platform is not supported by pre-compiled OSRM binaries. OS: ",
-      if (!is.null(override_os)) override_os else sys_info[["sysname"]],
+      if (!is.null(override_os)) override_os else sysname,
       ", Arch: ",
-      if (!is.null(override_arch)) override_arch else sys_info[["machine"]],
+      if (!is.null(override_arch)) override_arch else machine,
       ".",
       call. = FALSE
     )
