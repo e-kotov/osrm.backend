@@ -11,7 +11,8 @@
 #' 3.  Downloads the archive to a temporary location.
 #' 4.  Extracts the archive and locates the OSRM executables (e.g., `osrm-routed`, `osrm-extract`).
 #' 5.  Copies these executables to a local directory (defaults to `tools::R_user_dir("osrm.backend", which = "cache")`).
-#' 6.  Optionally modifies the `PATH` environment variable for the current session or project.
+#' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
+#' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
 #' @param version A string specifying the OSRM version tag to install.
 #'   Defaults to `"v5.27.1"`. Use `"latest"` to automatically find the most
@@ -65,12 +66,26 @@ osrm_install <- function(
   if (.Platform$OS.type == "windows") {
     existing_bin <- paste0(existing_bin, ".exe")
   }
-  if (file.exists(existing_bin) && !force) {
-    message("OSRM backend already found in: ", dest_dir)
-    message("Use force = TRUE to reinstall.")
-    # Handle path and return
-    handle_path_setting(path_action, dest_dir, quiet)
-    return(invisible(dest_dir))
+  profiles_dir <- file.path(dest_dir, "profiles")
+  profiles_missing <- !dir.exists(profiles_dir)
+
+  if (file.exists(existing_bin)) {
+    if (!force && !profiles_missing) {
+      message("OSRM backend already found in: ", dest_dir)
+      message("Use force = TRUE to reinstall.")
+      # Handle path and return
+      handle_path_setting(path_action, dest_dir, quiet)
+      return(invisible(dest_dir))
+    }
+
+    if (profiles_missing) {
+      message(
+        "Existing OSRM installation in ", dest_dir,
+        " is missing Lua profiles. Reinstalling to restore them."
+      )
+    } else if (force) {
+      message("force = TRUE; reinstalling OSRM backend in ", dest_dir)
+    }
   }
 
   # --- 3. Determine version and get release info ---
@@ -149,7 +164,10 @@ osrm_install <- function(
   message("Installing binaries to ", dest_dir)
   file.copy(from = files_to_copy, to = dest_dir, overwrite = TRUE)
 
-  # --- 8. Set permissions and update PATH ---
+  # --- 8. Download and install Lua profiles ---
+  install_profiles_for_release(release_info, dest_dir)
+
+  # --- 9. Set permissions and update PATH ---
   installed_bins <- file.path(dest_dir, basename(files_to_copy))
   if (.Platform$OS.type != "windows") {
     message("Setting executable permissions...")
@@ -161,7 +179,7 @@ osrm_install <- function(
 
   handle_path_setting(path_action, dest_dir, quiet)
 
-  # --- 9. Final verification and user message ---
+  # --- 10. Final verification and user message ---
   osrm_path_check <- Sys.which("osrm-routed")
   if (path_action != "none" && !nzchar(osrm_path_check)) {
     warning(
@@ -401,6 +419,82 @@ find_asset_url <- function(release_info, platform) {
     )
   }
   return(asset_url)
+}
+
+#' @noRd
+install_profiles_for_release <- function(release_info, dest_dir) {
+  tarball_url <- release_info$tarball_url
+
+  if (is.null(tarball_url) || !nzchar(tarball_url)) {
+    warning(
+      "Release metadata did not include a tarball URL. Skipping installation of profiles.",
+      call. = FALSE
+    )
+    return(invisible(NULL))
+  }
+
+  message("Downloading profiles from release tarball...")
+  tmp_tarball <- tempfile(fileext = ".tar.gz")
+  on.exit(unlink(tmp_tarball), add = TRUE)
+
+  tryCatch(
+    {
+      req <- httr2::request(tarball_url)
+      httr2::req_perform(req, path = tmp_tarball)
+    },
+    error = function(e) {
+      stop(
+        "Failed to download source tarball for profiles: ",
+        e$message,
+        call. = FALSE
+      )
+    }
+  )
+
+  tmp_profiles_extract <- tempfile()
+  dir.create(tmp_profiles_extract)
+  on.exit(unlink(tmp_profiles_extract, recursive = TRUE), add = TRUE)
+
+  message("Extracting profiles...")
+  tryCatch(
+    utils::untar(tmp_tarball, exdir = tmp_profiles_extract),
+    error = function(e) {
+      stop("Failed to extract profiles archive: ", e$message, call. = FALSE)
+    }
+  )
+
+  top_level_dirs <- list.dirs(tmp_profiles_extract, recursive = FALSE, full.names = TRUE)
+  profile_source <- NULL
+  for (root in top_level_dirs) {
+    candidate <- file.path(root, "profiles")
+    if (dir.exists(candidate)) {
+      profile_source <- candidate
+      break
+    }
+  }
+
+  if (is.null(profile_source)) {
+    stop(
+      "The release tarball did not contain a 'profiles' directory.",
+      call. = FALSE
+    )
+  }
+
+  dest_profiles_dir <- file.path(dest_dir, "profiles")
+  if (dir.exists(dest_profiles_dir)) {
+    unlink(dest_profiles_dir, recursive = TRUE)
+  }
+  dir.create(dest_profiles_dir, recursive = TRUE, showWarnings = FALSE)
+
+  files_to_copy <- list.files(profile_source, full.names = TRUE, all.files = TRUE, no.. = TRUE)
+  copied <- file.copy(from = files_to_copy, to = dest_profiles_dir, recursive = TRUE, overwrite = TRUE)
+
+  if (!all(copied)) {
+    stop("Failed to copy one or more profile files to the destination directory.", call. = FALSE)
+  }
+
+  message("Installed profiles to ", dest_profiles_dir)
+  invisible(dest_profiles_dir)
 }
 
 #' @noRd
