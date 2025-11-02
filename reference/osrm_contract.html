@@ -54,7 +54,6 @@ After running, a companion <code>&lt;base&gt;.osrm.hsgr</code> file must exist t
 <span>  <span class="va">input_osrm</span>,</span>
 <span>  threads <span class="op">=</span> <span class="fl">8L</span>,</span>
 <span>  verbosity <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"INFO"</span>, <span class="st">"NONE"</span>, <span class="st">"ERROR"</span>, <span class="st">"WARNING"</span>, <span class="st">"DEBUG"</span><span class="op">)</span>,</span>
-<span>  core <span class="op">=</span> <span class="fl">1</span>,</span>
 <span>  segment_speed_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  turn_penalty_file <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  edge_weight_updates_over_factor <span class="op">=</span> <span class="fl">0</span>,</span>
@@ -81,10 +80,6 @@ After running, a companion <code>&lt;base&gt;.osrm.hsgr</code> file must exist t
 <dt id="arg-verbosity">verbosity<a class="anchor" aria-label="anchor" href="#arg-verbosity"></a></dt>
 <dd><p>A string. Log verbosity level passed to <code>-l/--verbosity</code>
 (one of <code>"NONE","ERROR","WARNING","INFO","DEBUG"</code>); default <code>"INFO"</code>.</p></dd>
-
-
-<dt id="arg-core">core<a class="anchor" aria-label="anchor" href="#arg-core"></a></dt>
-<dd><p>A numeric. Percentage of the graph to contract 0..1; default <code>1.0</code>.</p></dd>
 
 
 <dt id="arg-segment-speed-file">segment_speed_file<a class="anchor" aria-label="anchor" href="#arg-segment-speed-file"></a></dt>
