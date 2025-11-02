@@ -1,3 +1,7 @@
+# Allow tar-related warnings during tests so we can detect regressions when
+# Windows-specific extraction issues resurface.
+Sys.setenv(OSRM_BACKEND_ALLOW_TAR_WARNINGS = "true")
+
 # Ensure OSRM backend binaries and profiles are available before tests run.
 # We'll attempt to install them once if they are missing. If installation fails,
 # we mark tests to be skipped via an option so individual tests can opt out.

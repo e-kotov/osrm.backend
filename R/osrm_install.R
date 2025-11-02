@@ -117,6 +117,34 @@ osrm_install <- function(
     }
     warning(warning_message, call. = FALSE)
   }
+
+  # Validate requested tag exists for this platform before hitting the API.
+  if (!identical(requested_version, "latest")) {
+    available_versions <- tryCatch(
+      osrm_check_available_versions(prereleases = TRUE),
+      error = identity
+    )
+
+    if (inherits(available_versions, "error")) {
+      warning(
+        sprintf(
+          "Unable to verify requested version '%s' against available releases: %s",
+          version,
+          available_versions$message
+        ),
+        call. = FALSE
+      )
+    } else if (!version %in% available_versions) {
+      stop(
+        sprintf(
+          "Version '%s' is not available for this platform. Run osrm_check_available_versions(prereleases = TRUE) to list supported tags.",
+          version
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
   release_info <- get_release_by_tag(version)
 
   # --- 4. Detect platform ---
@@ -550,6 +578,19 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   dir.create(tmp_profiles_extract)
   on.exit(unlink(tmp_profiles_extract, recursive = TRUE), add = TRUE)
 
+  allow_tar_warnings_env <- tolower(Sys.getenv(
+    "OSRM_BACKEND_ALLOW_TAR_WARNINGS",
+    unset = ""
+  ))
+  suppress_tar_warnings <- !allow_tar_warnings_env %in% c("1", "true", "yes")
+  run_untar <- function(arg_list) {
+    if (suppress_tar_warnings) {
+      suppressWarnings(do.call(utils::untar, arg_list))
+    } else {
+      do.call(utils::untar, arg_list)
+    }
+  }
+
   list_args <- list(tarfile = tmp_tarball, list = TRUE)
   list_attempts <- list(list_args)
   if (.Platform$OS.type == "windows") {
@@ -561,7 +602,7 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   last_list_error <- NULL
   for (args in list_attempts) {
     tar_members <- tryCatch(
-      do.call(utils::untar, args),
+      run_untar(args),
       error = function(e) {
         last_list_error <<- e
         NULL
@@ -615,7 +656,7 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   for (args in untar_attempts) {
     tryCatch(
       {
-        do.call(utils::untar, args)
+        run_untar(args)
         extracted <- TRUE
       },
       error = function(e) {
