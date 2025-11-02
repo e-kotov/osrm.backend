@@ -12,6 +12,15 @@
 #' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 #' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
+#' When installing OSRM v6.x for Windows, the upstream release omits the Intel
+#' Threading Building Blocks (TBB) runtime and a compatible `bz2` DLL. To keep
+#' the executables runnable out of the box, `osrm_install()` fetches TBB from
+#' \href{https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0}{oneTBB
+#' v2022.3.0} and the BZip2 runtime from
+#' \href{https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0}{bzip2-windows
+#' v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
+#' extra libraries, the OSRM v6 binaries shipped for Windows cannot start.
+#'
 #' Power users (including package authors running cross-platform tests) can
 #' override the auto-detected platform by setting the R options
 #' `osrm.backend.override_os` and `osrm.backend.override_arch` (e.g.,
@@ -748,10 +757,11 @@ install_windows_v6_runtime <- function(dest_dir) {
     "https://github.com/uxlfoundation/oneTBB/releases/download/v2022.3.0/",
     "oneapi-tbb-2022.3.0-win.zip"
   )
-  download_zip_member(
+  download_zip_asset(
     url = tbb_url,
     member_path = "oneapi-tbb-2022.3.0/redist/intel64/vc14/tbb12.dll",
-    dest_path = file.path(dest_dir, "tbb12.dll")
+    dest_path = file.path(dest_dir, "tbb12.dll"),
+    sha256 = "e1b2373f25558bf47d16b4c89cf0a31e6689aaf7221400d209e8527afc7c9eee"
   )
   message("  - Installed tbb12.dll")
 
@@ -759,10 +769,11 @@ install_windows_v6_runtime <- function(dest_dir) {
     "https://github.com/philr/bzip2-windows/releases/download/v1.0.8.0/",
     "bzip2-dll-1.0.8.0-win-x64.zip"
   )
-  download_zip_member(
+  download_zip_asset(
     url = bzip_url,
     member_path = "libbz2.dll",
-    dest_path = file.path(dest_dir, "bz2.dll")
+    dest_path = file.path(dest_dir, "bz2.dll"),
+    sha256 = "50340fece047960f49cf869034c778ff9f6af27dde2f1ea9773cd89ddb326254"
   )
   message("  - Installed bz2.dll")
 
@@ -770,7 +781,8 @@ install_windows_v6_runtime <- function(dest_dir) {
 }
 
 #' @noRd
-download_zip_member <- function(url, member_path, dest_path) {
+# Download a zip archive, verify its checksum, and extract a single file.
+download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   member_path <- gsub("^/+", "", member_path)
   normalized_member <- gsub("\\\\", "/", member_path)
 
@@ -787,6 +799,28 @@ download_zip_member <- function(url, member_path, dest_path) {
       )
     }
   )
+
+  if (!is.null(sha256) && nzchar(sha256)) {
+    if (!requireNamespace("digest", quietly = TRUE)) {
+      stop(
+        "Package 'digest' is required to verify download checksums.",
+        call. = FALSE
+      )
+    }
+    expected <- tolower(gsub("[^0-9a-f]", "", sha256))
+    actual <- digest::digest(file = tmp_zip, algo = "sha256", serialize = FALSE)
+    if (!identical(actual, expected)) {
+      stop(
+        sprintf(
+          "SHA-256 checksum mismatch for '%s'. Expected %s but got %s.",
+          basename(url),
+          expected,
+          actual
+        ),
+        call. = FALSE
+      )
+    }
+  }
 
   contents <- utils::unzip(tmp_zip, list = TRUE)
   if (is.null(contents) || nrow(contents) == 0) {

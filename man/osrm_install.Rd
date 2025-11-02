@@ -54,6 +54,15 @@ The function performs the following steps:
 \item Optionally modifies the \code{PATH} environment variable for the current session or project.
 }
 
+When installing OSRM v6.x for Windows, the upstream release omits the Intel
+Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL. To keep
+the executables runnable out of the box, \code{osrm_install()} fetches TBB from
+\href{https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0}{oneTBB
+v2022.3.0} and the BZip2 runtime from
+\href{https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0}{bzip2-windows
+v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
+extra libraries, the OSRM v6 binaries shipped for Windows cannot start.
+
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options
 \code{osrm.backend.override_os} and \code{osrm.backend.override_arch} (e.g.,
