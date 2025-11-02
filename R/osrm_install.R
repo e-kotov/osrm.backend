@@ -21,6 +21,11 @@
 #' v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
 #' extra libraries, the OSRM v6 binaries shipped for Windows cannot start.
 #'
+#' On macOS, OSRM v6.x binaries also miss the bundled TBB runtime. The installer
+#' reuses the libraries from release `v5.27.1` to keep the binaries functional
+#' and patches their `libbz2` linkage using `install_name_tool` so that they load
+#' the system-provided BZip2 runtime.
+#'
 #' Power users (including package authors running cross-platform tests) can
 #' override the auto-detected platform by setting the R options
 #' `osrm.backend.override_os` and `osrm.backend.override_arch` (e.g.,
@@ -232,6 +237,7 @@ osrm_install <- function(
     runtime_version <- version
   }
   maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir)
+  maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir)
 
   # --- 8. Download and install Lua profiles ---
   install_profiles_for_release(release_info, dest_dir)
@@ -797,6 +803,226 @@ install_windows_v6_runtime <- function(dest_dir) {
   message("  - Installed bz2.dll")
 
   invisible(dest_dir)
+}
+
+#' @noRd
+maybe_install_macos_v6_runtime <- function(version, platform, dest_dir) {
+  if (!identical(platform$os, "darwin")) {
+    return(invisible(NULL))
+  }
+
+  if (!version_at_least(version, "v6.0.0")) {
+    return(invisible(NULL))
+  }
+
+  ensure_macos_tbb_runtime(dest_dir, platform)
+  patch_macos_bzip2_rpath(dest_dir)
+}
+
+#' @noRd
+ensure_macos_tbb_runtime <- function(dest_dir, platform, reference_version = "v5.27.1") {
+  required_libs <- c(
+    "libtbbmalloc.dylib",
+    "libtbbmalloc.2.3.dylib",
+    "libtbbmalloc_proxy.2.3.dylib",
+    "libtbb.dylib",
+    "libtbb.12.3.dylib",
+    "libtbbmalloc.2.dylib",
+    "libtbbmalloc_proxy.dylib",
+    "libtbbmalloc_proxy.2.dylib",
+    "libtbb.12.dylib"
+  )
+
+  missing_libs <- required_libs[!file.exists(file.path(dest_dir, required_libs))]
+  if (length(missing_libs)) {
+    message(
+      "Fetching macOS TBB runtime components from OSRM release ",
+      reference_version,
+      "..."
+    )
+  } else {
+    message(
+      "Refreshing macOS TBB runtime components from OSRM release ",
+      reference_version,
+      "..."
+    )
+  }
+
+  release_info <- get_release_by_tag(reference_version)
+  asset_url <- find_asset_url(release_info, platform)
+
+  tmp_tar <- tempfile(fileext = ".tar.gz")
+  on.exit(unlink(tmp_tar), add = TRUE)
+
+  tryCatch(
+    {
+      req <- httr2::request(asset_url)
+      httr2::req_perform(req, path = tmp_tar)
+    },
+    error = function(e) {
+      stop(
+        "Failed to download macOS TBB runtime from OSRM release ",
+        reference_version,
+        ": ",
+        e$message,
+        call. = FALSE
+      )
+    }
+  )
+
+  tmp_extract_dir <- tempfile()
+  dir.create(tmp_extract_dir)
+  on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
+
+  tryCatch(
+    utils::untar(tmp_tar, exdir = tmp_extract_dir),
+    error = function(e) {
+      stop(
+        "Failed to extract OSRM release ",
+        reference_version,
+        " while retrieving macOS TBB runtime: ",
+        e$message,
+        call. = FALSE
+      )
+    }
+  )
+
+  extracted_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
+
+  locate_lib <- function(lib) {
+    matches <- extracted_files[tolower(basename(extracted_files)) == tolower(lib)]
+    if (!length(matches)) {
+      return(NA_character_)
+    }
+    matches[[1]]
+  }
+
+  lib_sources <- vapply(required_libs, locate_lib, FUN.VALUE = character(1))
+
+  if (anyNA(lib_sources)) {
+    missing <- required_libs[is.na(lib_sources)]
+    stop(
+      "Could not locate required TBB libraries in OSRM release ",
+      reference_version,
+      ": ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  dest_paths <- file.path(dest_dir, required_libs)
+  copied <- mapply(
+    function(src, dest) {
+      if (is.na(src)) {
+        return(TRUE)
+      }
+      file.copy(src, dest, overwrite = TRUE)
+    },
+    lib_sources,
+    dest_paths,
+    USE.NAMES = FALSE
+  )
+
+  if (!all(copied)) {
+    stop(
+      "Failed to copy one or more macOS TBB runtime libraries into ",
+      dest_dir,
+      call. = FALSE
+    )
+  }
+
+  message("Installed macOS TBB runtime libraries.")
+  invisible(dest_dir)
+}
+
+#' @noRd
+patch_macos_bzip2_rpath <- function(dest_dir) {
+  tool_path <- Sys.which("install_name_tool")
+  if (!nzchar(tool_path)) {
+    stop(
+      "Required tool 'install_name_tool' not found in PATH; cannot rewrite macOS BZip2 linkage.",
+      call. = FALSE
+    )
+  }
+
+  binaries <- file.path(
+    dest_dir,
+    c(
+      "osrm-routed",
+      "osrm-partition",
+      "osrm-extract",
+      "osrm-datastore",
+      "osrm-customize",
+      "osrm-contract",
+      "osrm-components"
+    )
+  )
+  binaries <- binaries[file.exists(binaries)]
+
+  if (!length(binaries)) {
+    warning(
+      "No OSRM executables found to patch in ",
+      dest_dir,
+      call. = FALSE
+    )
+    return(invisible(dest_dir))
+  }
+
+  message("Updating macOS BZip2 linkage...")
+  for (bin in binaries) {
+    status <- system2(
+      tool_path,
+      args = c(
+        "-change",
+        "@rpath/libbz2.1.dylib",
+        "/usr/lib/libbz2.1.0.dylib",
+        bin
+      )
+    )
+
+    if (!identical(status, 0L)) {
+      stop(
+        sprintf(
+          "install_name_tool failed for '%s' with exit status %s.",
+          basename(bin),
+          status
+        ),
+        call. = FALSE
+      )
+    }
+  }
+
+  invisible(dest_dir)
+}
+
+#' @noRd
+version_at_least <- function(version, minimum) {
+  normalize_version <- function(x) {
+    if (is.null(x) || !length(x)) {
+      return(NA_character_)
+    }
+    x <- as.character(x)[1]
+    x <- trimws(x)
+    if (!nzchar(x)) {
+      return(NA_character_)
+    }
+    x <- tolower(x)
+    sub("^v", "", x)
+  }
+
+  v_norm <- normalize_version(version)
+  min_norm <- normalize_version(minimum)
+
+  if (anyNA(c(v_norm, min_norm))) {
+    return(FALSE)
+  }
+
+  cmp <- suppressWarnings(utils::compareVersion(v_norm, min_norm))
+  if (is.na(cmp)) {
+    return(FALSE)
+  }
+
+  cmp >= 0
 }
 
 #' @noRd
