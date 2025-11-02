@@ -169,9 +169,9 @@ osrm_install <- function(
       call. = FALSE
     )
   } else if (path_action != "none") {
-    message("\n✅ Installation successful!")
+    message("Installation successful!")
   } else {
-    message("\n✅ Installation successful! Binaries are in ", dest_dir)
+    message("Installation successful! Binaries are in ", dest_dir)
   }
 
   return(invisible(dest_dir))

@@ -59,7 +59,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
     tryCatch(
       {
         unlink(dest_dir, recursive = TRUE, force = TRUE)
-        message("✅ Successfully uninstalled OSRM backend binaries.")
+        message("Successfully uninstalled OSRM backend binaries.")
         uninstalled_ok <- TRUE
       },
       error = function(e) {
