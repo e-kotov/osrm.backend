@@ -119,7 +119,6 @@ osrm_prepare_graph <- function(
       input_osrm = base,
       threads = threads,
       verbosity = verbosity,
-      core = 1.0,
       segment_speed_file = NULL,
       turn_penalty_file = NULL,
       edge_weight_updates_over_factor = 0,

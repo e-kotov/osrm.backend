@@ -7,7 +7,6 @@
 #' @param threads An integer. Number of threads to use; default `8`.
 #' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
 #'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
-#' @param core A numeric. Percentage of the graph to contract [0..1]; default `1.0`.
 #' @param segment_speed_file A string or `NULL`. Path to nodeA,nodeB,speed CSV; default `NULL`.
 #' @param turn_penalty_file A string or `NULL`. Path to from_,to_,via_nodes,penalties CSV; default `NULL`.
 #' @param edge_weight_updates_over_factor A numeric. Threshold for logging large weight updates; default `0`.
@@ -26,7 +25,6 @@ osrm_contract <- function(
   input_osrm,
   threads = 8L,
   verbosity = c("INFO", "NONE", "ERROR", "WARNING", "DEBUG"),
-  core = 1.0,
   segment_speed_file = NULL,
   turn_penalty_file = NULL,
   edge_weight_updates_over_factor = 0,
@@ -73,9 +71,7 @@ osrm_contract <- function(
     "-l",
     verbosity,
     "-t",
-    as.character(threads),
-    "-k",
-    as.character(core)
+    as.character(threads)
   )
   if (!is.null(segment_speed_file)) {
     arguments <- c(arguments, "--segment-speed-file", segment_speed_file)

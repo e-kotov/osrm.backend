@@ -8,7 +8,6 @@ osrm_contract(
   input_osrm,
   threads = 8L,
   verbosity = c("INFO", "NONE", "ERROR", "WARNING", "DEBUG"),
-  core = 1,
   segment_speed_file = NULL,
   turn_penalty_file = NULL,
   edge_weight_updates_over_factor = 0,
@@ -26,8 +25,6 @@ osrm_contract(
 
 \item{verbosity}{A string. Log verbosity level passed to \code{-l/--verbosity}
 (one of \verb{"NONE","ERROR","WARNING","INFO","DEBUG"}); default \code{"INFO"}.}
-
-\item{core}{A numeric. Percentage of the graph to contract \link{0..1}; default \code{1.0}.}
 
 \item{segment_speed_file}{A string or \code{NULL}. Path to nodeA,nodeB,speed CSV; default \code{NULL}.}
 
