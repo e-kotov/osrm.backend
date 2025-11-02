@@ -550,34 +550,106 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   dir.create(tmp_profiles_extract)
   on.exit(unlink(tmp_profiles_extract, recursive = TRUE), add = TRUE)
 
-  message("Extracting profiles...")
-  tryCatch(
-    utils::untar(tmp_tarball, exdir = tmp_profiles_extract),
-    error = function(e) {
-      stop("Failed to extract profiles archive: ", e$message, call. = FALSE)
-    }
-  )
+  list_args <- list(tarfile = tmp_tarball, list = TRUE)
+  list_attempts <- list(list_args)
+  if (.Platform$OS.type == "windows") {
+    list_attempts[[1]]$tar <- "internal"
+    list_attempts[[2]] <- list_args
+  }
 
-  top_level_dirs <- list.dirs(
-    tmp_profiles_extract,
-    recursive = FALSE,
-    full.names = TRUE
-  )
-  profile_source <- NULL
-  for (root in top_level_dirs) {
-    candidate <- file.path(root, "profiles")
-    if (dir.exists(candidate)) {
-      profile_source <- candidate
+  tar_members <- NULL
+  last_list_error <- NULL
+  for (args in list_attempts) {
+    tar_members <- tryCatch(
+      do.call(utils::untar, args),
+      error = function(e) {
+        last_list_error <<- e
+        NULL
+      }
+    )
+    if (!is.null(tar_members)) {
       break
     }
   }
 
-  if (is.null(profile_source)) {
+  if (is.null(tar_members)) {
+    stop(
+      "Failed to inspect source tarball for profiles: ",
+      last_list_error$message,
+      call. = FALSE
+    )
+  }
+
+  # Extract only the profiles subtree to dodge Windows tar path limitations.
+  profile_members <- tar_members[
+    grepl("(^|/)profiles(/|$)", tar_members)
+  ]
+
+  if (length(profile_members) == 0) {
     stop(
       "The release tarball did not contain a 'profiles' directory.",
       call. = FALSE
     )
   }
+
+  profile_dirs <- unique(
+    sub("^(.*?/profiles)(?:/.*)?$", "\\1", profile_members, perl = TRUE)
+  )
+  profile_dirs <- profile_dirs[nzchar(profile_dirs)]
+  extract_members <- unique(c(profile_members, profile_dirs))
+
+  message("Extracting profiles...")
+  untar_args <- list(
+    tarfile = tmp_tarball,
+    files = extract_members,
+    exdir = tmp_profiles_extract
+  )
+  untar_attempts <- list(untar_args)
+  if (.Platform$OS.type == "windows") {
+    untar_attempts[[1]]$tar <- "internal"
+    untar_attempts[[2]] <- untar_args
+  }
+
+  last_extract_error <- NULL
+  extracted <- FALSE
+  for (args in untar_attempts) {
+    tryCatch(
+      {
+        do.call(utils::untar, args)
+        extracted <- TRUE
+      },
+      error = function(e) {
+        last_extract_error <<- e
+      }
+    )
+    if (isTRUE(extracted)) {
+      break
+    }
+  }
+
+  if (!isTRUE(extracted)) {
+    stop(
+      "Failed to extract profiles archive: ",
+      last_extract_error$message,
+      call. = FALSE
+    )
+  }
+
+  profile_dirs_found <- list.dirs(
+    tmp_profiles_extract,
+    recursive = TRUE,
+    full.names = TRUE
+  )
+  profile_dirs_found <- profile_dirs_found[
+    basename(profile_dirs_found) == "profiles"
+  ]
+  if (length(profile_dirs_found) == 0) {
+    stop(
+      "The release tarball did not contain a 'profiles' directory.",
+      call. = FALSE
+    )
+  }
+  profile_source <- profile_dirs_found[[which.min(nchar(profile_dirs_found))]]
 
   dest_profiles_dir <- file.path(dest_dir, "profiles")
   if (dir.exists(dest_profiles_dir)) {
