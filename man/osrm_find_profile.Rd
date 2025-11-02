@@ -15,7 +15,7 @@ The normalized filesystem path to the profile.
 }
 \description{
 By default OSRM ships profiles for "car", "bike" and "foot" in a
-\verb{profiles/} directory alongside the binaries.  This function will try to locate \code{osrm-routed} on the \code{PATH}, resolve symlinks, and look for sibling directories \code{share/osrm/profiles} and \code{share/osrm-backend/profiles}. IF that fails, it will try to fall back on \code{/usr/local/share/osrm/profiles},\code{/usr/local/share/osrm-backend/profiles}, \code{/usr/share/osrm/profiles}, and \code{/usr/share/osrm-backend/profiles}.
+\verb{profiles/} directory alongside the binaries.  This function will try to locate \code{osrm-routed} on the \code{PATH}, resolve symlinks, and look first for a \verb{profiles/} directory next to the binary (as placed there by \code{osrm_install()}). If that fails, it looks for sibling directories \code{share/osrm/profiles} and \code{share/osrm-backend/profiles}. IF that fails, it will try to fall back on \code{/usr/local/share/osrm/profiles},\code{/usr/local/share/osrm-backend/profiles}, \code{/usr/share/osrm/profiles}, and \code{/usr/share/osrm-backend/profiles}.
 }
 \examples{
 \donttest{

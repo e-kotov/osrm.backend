@@ -50,6 +50,7 @@ The function performs the following steps:
 \item Downloads the archive to a temporary location.
 \item Extracts the archive and locates the OSRM executables (e.g., \code{osrm-routed}, \code{osrm-extract}).
 \item Copies these executables to a local directory (defaults to \code{tools::R_user_dir("osrm.backend", which = "cache")}).
+\item Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 \item Optionally modifies the \code{PATH} environment variable for the current session or project.
 }
 }
