@@ -533,15 +533,12 @@ release_has_binaries <- function(release, platform) {
 find_asset_url <- function(release_info, platform) {
   pattern <- sprintf(".*%s-%s-Release\\.tar\\.gz$", platform$os, platform$arch)
 
-  asset_url <- NULL
-  for (asset in release_info$assets) {
-    if (grepl(pattern, asset$name, ignore.case = TRUE)) {
-      asset_url <- asset$browser_download_url
-      break
-    }
-  }
+  matching_assets <- Filter(
+    function(asset) grepl(pattern, asset$name, ignore.case = TRUE),
+    release_info$assets
+  )
 
-  if (is.null(asset_url)) {
+  if (!length(matching_assets)) {
     stop(
       "Could not find a compatible binary for your platform in release '",
       release_info$tag_name,
@@ -550,7 +547,29 @@ find_asset_url <- function(release_info, platform) {
       call. = FALSE
     )
   }
-  return(asset_url)
+
+  node_versions <- vapply(
+    matching_assets,
+    function(asset) {
+      matches <- regexec("node-v([0-9]+)", asset$name, ignore.case = TRUE)
+      captured <- regmatches(asset$name, matches)[[1]]
+      if (length(captured) >= 2) {
+        return(suppressWarnings(as.integer(captured[2])))
+      }
+      NA_integer_
+    },
+    integer(1)
+  )
+
+  if (all(is.na(node_versions))) {
+    selected_asset <- matching_assets[[1]]
+  } else {
+    max_node <- max(node_versions, na.rm = TRUE)
+    idx <- which(node_versions == max_node)[1]
+    selected_asset <- matching_assets[[idx]]
+  }
+
+  selected_asset$browser_download_url
 }
 
 #' @noRd
