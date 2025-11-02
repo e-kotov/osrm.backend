@@ -84,23 +84,33 @@ using a specified Lua profile.  After running, a companion
 \verb{<base>.osrm.timestamp} file must exist to confirm success.
 }
 \examples{
-\dontrun{
-result <- osrm_extract(
-  input_osm                  = "berlin-latest.osm.pbf",
-  profile                    = osrm_find_profile("car.lua"),
-  overwrite                  = FALSE,
-  verbosity                  = "INFO",
-  data_version               = NULL,
-  threads                    = 8L,
-  small_component_size       = 1000L,
-  with_osm_metadata          = FALSE,
-  parse_conditional_restrictions = FALSE,
-  location_dependent_data    = NULL,
-  disable_location_cache     = FALSE,
-  dump_nbg_graph             = FALSE
+\donttest{
+# install osrm and set up PATH for the session
+osrm_executable <- osrm_install(
+ version = "v5.27.1",
+ path_action = "session"
 )
-result$logs
+# copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+workspace <- tempdir()
+tmp_prefix <- file.path(workspace, paste0("osrm-example-", Sys.getpid()))
+pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+tmp_pbf <- paste0(tmp_prefix, ".osm.pbf")
+file.copy(pbf_path, tmp_pbf, overwrite = TRUE)
+# extract OSRM graph files
+result <- osrm_extract(
+  input_osm                  = tmp_pbf,
+  profile                    = osrm_find_profile("car.lua"),
+  overwrite                  = TRUE,
+  threads                    = 1L
+)
+# path to generated .osrm files (specifically, the .osrm.timestamp file)
 result$osrm_path
-# e.g. "berlin-latest.osrm"
+# clean up the temporary workspace
+generated <- list.files(
+  workspace,
+  pattern = paste0("^", basename(tmp_prefix), ".*"),
+  full.names = TRUE
+)
+unlink(generated, recursive = TRUE)
 }
 }
