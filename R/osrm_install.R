@@ -237,6 +237,7 @@ osrm_install <- function(
     runtime_version <- version
   }
   maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir)
+  maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir)
   maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir)
 
   # --- 8. Download and install Lua profiles ---
@@ -670,8 +671,15 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   profile_dirs <- unique(
     sub("^(.*?/profiles)(?:/.*)?$", "\\1", profile_members, perl = TRUE)
   )
-  profile_dirs <- profile_dirs[nzchar(profile_dirs)]
+  profile_dirs <- profile_dirs[
+    nzchar(profile_dirs) &
+      !grepl("[[:cntrl:]]", profile_dirs, perl = TRUE)
+  ]
   extract_members <- unique(c(profile_members, profile_dirs))
+  extract_members <- extract_members[
+    nzchar(extract_members) &
+      !grepl("[[:cntrl:]]", extract_members, perl = TRUE)
+  ]
 
   message("Extracting profiles...")
   untar_args <- list(
@@ -775,6 +783,19 @@ maybe_install_windows_v6_runtime <- function(version, platform, dest_dir) {
 }
 
 #' @noRd
+maybe_install_linux_v6_runtime <- function(version, platform, dest_dir) {
+  if (!identical(platform$os, "linux")) {
+    return(invisible(NULL))
+  }
+
+  if (!version_at_least(version, "v6.0.0")) {
+    return(invisible(NULL))
+  }
+
+  ensure_linux_tbb_runtime(dest_dir, platform)
+}
+
+#' @noRd
 install_windows_v6_runtime <- function(dest_dir) {
   message("Fetching additional Windows runtime dependencies (TBB, BZip2)...")
 
@@ -817,6 +838,123 @@ maybe_install_macos_v6_runtime <- function(version, platform, dest_dir) {
 
   ensure_macos_tbb_runtime(dest_dir, platform)
   patch_macos_bzip2_rpath(dest_dir)
+}
+
+#' @noRd
+ensure_linux_tbb_runtime <- function(dest_dir, platform, reference_version = "v5.27.1") {
+  required_libs <- c(
+    "libtbbmalloc.so.2.3",
+    "libtbbmalloc.so.2",
+    "libtbbmalloc.so",
+    "libtbbmalloc_proxy.so.2.3",
+    "libtbbmalloc_proxy.so.2",
+    "libtbbmalloc_proxy.so",
+    "libtbb.so.12.3",
+    "libtbb.so.12",
+    "libtbb.so"
+  )
+
+  missing_libs <- required_libs[!file.exists(file.path(dest_dir, required_libs))]
+  if (length(missing_libs)) {
+    message(
+      "Fetching Linux TBB runtime components from OSRM release ",
+      reference_version,
+      "..."
+    )
+  } else {
+    message(
+      "Refreshing Linux TBB runtime components from OSRM release ",
+      reference_version,
+      "..."
+    )
+  }
+
+  release_info <- get_release_by_tag(reference_version)
+  asset_url <- find_asset_url(release_info, platform)
+
+  tmp_tar <- tempfile(fileext = ".tar.gz")
+  on.exit(unlink(tmp_tar), add = TRUE)
+
+  tryCatch(
+    {
+      req <- httr2::request(asset_url)
+      httr2::req_perform(req, path = tmp_tar)
+    },
+    error = function(e) {
+      stop(
+        "Failed to download Linux TBB runtime from OSRM release ",
+        reference_version,
+        ": ",
+        e$message,
+        call. = FALSE
+      )
+    }
+  )
+
+  tmp_extract_dir <- tempfile()
+  dir.create(tmp_extract_dir)
+  on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
+
+  tryCatch(
+    utils::untar(tmp_tar, exdir = tmp_extract_dir),
+    error = function(e) {
+      stop(
+        "Failed to extract OSRM release ",
+        reference_version,
+        " while retrieving Linux TBB runtime: ",
+        e$message,
+        call. = FALSE
+      )
+    }
+  )
+
+  extracted_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
+
+  locate_lib <- function(lib) {
+    matches <- extracted_files[tolower(basename(extracted_files)) == tolower(lib)]
+    if (!length(matches)) {
+      return(NA_character_)
+    }
+    matches[[1]]
+  }
+
+  lib_sources <- vapply(required_libs, locate_lib, FUN.VALUE = character(1))
+
+  if (anyNA(lib_sources)) {
+    missing <- required_libs[is.na(lib_sources)]
+    stop(
+      "Could not locate required Linux TBB libraries in OSRM release ",
+      reference_version,
+      ": ",
+      paste(missing, collapse = ", "),
+      call. = FALSE
+    )
+  }
+
+  dest_paths <- file.path(dest_dir, required_libs)
+  copied <- mapply(
+    function(src, dest) {
+      if (is.na(src)) {
+        return(TRUE)
+      }
+      file.copy(src, dest, overwrite = TRUE)
+    },
+    lib_sources,
+    dest_paths,
+    USE.NAMES = FALSE
+  )
+
+  if (!all(copied)) {
+    stop(
+      "Failed to copy one or more Linux TBB runtime libraries into ",
+      dest_dir,
+      call. = FALSE
+    )
+  }
+
+  Sys.chmod(dest_paths, mode = "0644", use_umask = FALSE)
+
+  invisible(dest_dir)
 }
 
 #' @noRd
