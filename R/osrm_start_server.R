@@ -94,8 +94,12 @@ osrm_start_server <- function(
   arguments <- character()
 
   # standalone flags
-  if (version) arguments <- c(arguments, "-v")
-  if (help) arguments <- c(arguments, "-h")
+  if (version) {
+    arguments <- c(arguments, "-v")
+  }
+  if (help) {
+    arguments <- c(arguments, "-h")
+  }
 
   # verbosity only if not default
   verbosity <- match.arg(verbosity)
@@ -123,51 +127,64 @@ osrm_start_server <- function(
   }
 
   # other flags
-  if (shared_memory) arguments <- c(arguments, "--shared-memory")
-  if (!is.null(memory_file))
+  if (shared_memory) {
+    arguments <- c(arguments, "--shared-memory")
+  }
+  if (!is.null(memory_file)) {
     arguments <- c(arguments, "--memory_file", memory_file)
-  if (mmap) arguments <- c(arguments, "-m")
-  if (!is.null(dataset_name))
+  }
+  if (mmap) {
+    arguments <- c(arguments, "-m")
+  }
+  if (!is.null(dataset_name)) {
     arguments <- c(arguments, "--dataset-name", dataset_name)
+  }
 
   # always pass algorithm
   arguments <- c(arguments, "-a", algorithm)
 
   # size-limits only if different from defaults
-  if (max_viaroute_size != 500L)
+  if (max_viaroute_size != 500L) {
     arguments <- c(
       arguments,
       "--max-viaroute-size",
       as.character(max_viaroute_size)
     )
-  if (max_trip_size != 100L)
+  }
+  if (max_trip_size != 100L) {
     arguments <- c(arguments, "--max-trip-size", as.character(max_trip_size))
-  if (max_table_size != 100L)
+  }
+  if (max_table_size != 100L) {
     arguments <- c(arguments, "--max-table-size", as.character(max_table_size))
-  if (max_matching_size != 100L)
+  }
+  if (max_matching_size != 100L) {
     arguments <- c(
       arguments,
       "--max-matching-size",
       as.character(max_matching_size)
     )
-  if (max_nearest_size != 100L)
+  }
+  if (max_nearest_size != 100L) {
     arguments <- c(
       arguments,
       "--max-nearest-size",
       as.character(max_nearest_size)
     )
-  if (max_alternatives != 3L)
+  }
+  if (max_alternatives != 3L) {
     arguments <- c(
       arguments,
       "--max-alternatives",
       as.character(max_alternatives)
     )
-  if (max_matching_radius != -1L)
+  }
+  if (max_matching_radius != -1L) {
     arguments <- c(
       arguments,
       "--max-matching-radius",
       as.character(max_matching_radius)
     )
+  }
 
   # finally, add the graph prefix
   arguments <- c(arguments, prefix)
@@ -179,7 +196,9 @@ osrm_start_server <- function(
   osrm_server <- processx::process$new(
     "osrm-routed",
     args = arguments,
-    echo_cmd = echo_cmd
+    echo_cmd = echo_cmd,
+    stdout = "|",
+    stderr = "|"
   )
   invisible(osrm_server)
 }
