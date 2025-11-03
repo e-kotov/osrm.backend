@@ -63,6 +63,11 @@ v2022.3.0} and the BZip2 runtime from
 v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
 extra libraries, the OSRM v6 binaries shipped for Windows cannot start.
 
+On macOS, OSRM v6.x binaries also miss the bundled TBB runtime. The installer
+reuses the libraries from release \code{v5.27.1} to keep the binaries functional
+and patches their \code{libbz2} linkage using \code{install_name_tool} so that they load
+the system-provided BZip2 runtime.
+
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options
 \code{osrm.backend.override_os} and \code{osrm.backend.override_arch} (e.g.,

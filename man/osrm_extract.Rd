@@ -106,6 +106,6 @@ result <- osrm_extract(
 # path to generated .osrm files (specifically, the .osrm.timestamp file)
 result$osrm_path
 # clean up the temporary workspace
-unlink(generated, recursive = TRUE)
+unlink(workspace, recursive = TRUE)
 }
 }
