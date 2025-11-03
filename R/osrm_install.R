@@ -12,6 +12,10 @@
 #' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 #' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
+#' macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia) or newer.
+#' `osrm_install()` automatically blocks v6 installs on older macOS releases and, when `version = "latest"`,
+#' selects the most recent v5 build instead while warning about the requirement.
+#'
 #' When installing OSRM v6.x for Windows, the upstream release omits the Intel
 #' Threading Building Blocks (TBB) runtime and a compatible `bz2` DLL. To keep
 #' the executables runnable out of the box, `osrm_install()` fetches TBB from
@@ -72,6 +76,9 @@ osrm_install <- function(
   quiet = FALSE
 ) {
   path_action <- match.arg(path_action)
+  sys_info <- Sys.info()
+  platform <- get_platform_info(sys_info = sys_info)
+  mac_release_info <- get_macos_release_info(sys_info)
 
   # --- 1. Determine destination directory ---
   if (is.null(dest_dir)) {
@@ -113,10 +120,39 @@ osrm_install <- function(
   # --- 3. Determine version and get release info ---
   tested_versions <- c("v5.27.1", "v6.0.0")
   requested_version <- version
-  if (version == "latest") {
+  mac_release_display <- mac_release_info$release
+  if (is.na(mac_release_display) || !nzchar(mac_release_display)) {
+    mac_release_display <- "unknown"
+  }
+  is_macos <- identical(platform$os, "darwin")
+  mac_too_old_for_v6 <- is_macos && isFALSE(mac_release_info$meets_v6_requirement)
+
+  if (identical(version, "latest")) {
     message("Finding latest stable version with available binaries...")
-    version <- osrm_check_latest_version()
-    message("Latest stable version is '", version, "'")
+    if (mac_too_old_for_v6) {
+      version <- find_latest_pre_v6_release(platform)
+      message("Latest compatible version is '", version, "'")
+      warning(
+        sprintf(
+          "macOS release '%s' detected. OSRM v6.x requires macOS 15.0 (Sequoia) or newer. Upgrade macOS to install v6.",
+          mac_release_display
+        ),
+        call. = FALSE
+      )
+    } else {
+      version <- osrm_check_latest_version()
+      message("Latest stable version is '", version, "'")
+    }
+  }
+
+  if (mac_too_old_for_v6 && version_at_least(version, "v6.0.0")) {
+    stop(
+      sprintf(
+        "macOS release '%s' detected. OSRM v6.x requires macOS 15.0 (Sequoia) or newer. Please install a v5.x release instead.",
+        mac_release_display
+      ),
+      call. = FALSE
+    )
   }
   if (!version %in% tested_versions) {
     warning_message <- sprintf(
@@ -162,7 +198,6 @@ osrm_install <- function(
   release_info <- get_release_by_tag(version)
 
   # --- 4. Detect platform ---
-  platform <- get_platform_info()
   message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
   message(sprintf(
     "Found release: %s (%s)",
@@ -295,6 +330,28 @@ osrm_check_latest_version <- function() {
   }
   stop(
     "Could not find any stable releases with binaries for your platform.",
+    call. = FALSE
+  )
+}
+
+#' @noRd
+find_latest_pre_v6_release <- function(platform) {
+  releases <- get_all_releases()
+  for (rel in releases) {
+    if (isTRUE(rel$prerelease)) {
+      next
+    }
+    if (!release_has_binaries(rel, platform)) {
+      next
+    }
+    if (version_at_least(rel$tag_name, "v6.0.0")) {
+      next
+    }
+    return(rel$tag_name)
+  }
+
+  stop(
+    "No pre-v6 releases with compatible binaries were found for this platform. Upgrade macOS to install OSRM v6.x or later.",
     call. = FALSE
   )
 }
@@ -482,6 +539,45 @@ get_platform_info <- function(sys_info = Sys.info()) {
   }
 
   list(os = os, arch = arch)
+}
+
+#' @noRd
+get_macos_release_info <- function(sys_info) {
+  release <- NA_character_
+  if (!is.null(sys_info)) {
+    sys_info <- as.list(sys_info)
+    raw_release <- sys_info[["release"]]
+    if (!is.null(raw_release) && length(raw_release)) {
+      release_candidate <- as.character(raw_release)[1]
+      release_candidate <- trimws(release_candidate)
+      if (nzchar(release_candidate)) {
+        release <- release_candidate
+      }
+    }
+  }
+
+  meets_requirement <- NA
+  if (!is.na(release)) {
+    numeric_release <- suppressWarnings(as.numeric_version(release))
+    if (length(numeric_release)) {
+      components <- unclass(numeric_release)[[1]]
+      if (length(components)) {
+        major_component <- components[1]
+        if (!is.na(major_component)) {
+          if (major_component >= 20) {
+            meets_requirement <- major_component >= 24
+          } else {
+            meets_requirement <- major_component >= 15
+          }
+        }
+      }
+    }
+  }
+
+  list(
+    release = release,
+    meets_v6_requirement = meets_requirement
+  )
 }
 
 #' @noRd
