@@ -19,6 +19,8 @@ By default OSRM ships profiles for "car", "bike" and "foot" in a
 }
 \examples{
 \donttest{
+# make sure osrm backend is installed and on PATH
+osrm_install()
 osrm_find_profile("car.lua")
 }
 
