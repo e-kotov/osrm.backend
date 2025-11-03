@@ -8,7 +8,8 @@
 #' 2.  Identifies the correct binary (`.tar.gz` archive) for the user's OS (Linux, macOS, or Windows) and architecture (x64, arm64).
 #' 3.  Downloads the archive to a temporary location.
 #' 4.  Extracts the archive and locates the OSRM executables (e.g., `osrm-routed`, `osrm-extract`).
-#' 5.  Copies these executables to a local directory (defaults to `tools::R_user_dir("osrm.backend", which = "cache")`).
+#' 5.  Copies these executables to a local directory (defaults to
+#'     `file.path(tools::R_user_dir("osrm.backend", which = "cache"), <version>)`).
 #' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 #' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
@@ -45,7 +46,8 @@
 #'   attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be installed.
 #'   If `NULL` (the default), a user-friendly, persistent location is chosen via
-#'   `tools::R_user_dir("osrm.backend", which = "cache")`.
+#'   `tools::R_user_dir("osrm.backend", which = "cache")`, and the binaries are installed
+#'   into a subdirectory named after the OSRM version (e.g. `.../cache/v6.0.0`).
 #' @param force A logical value. If `TRUE`, reinstall OSRM even if it's already found in `dest_dir`.
 #'   If `FALSE` (default), the function will stop if an existing installation is detected.
 #' @param path_action A string specifying how to handle the system `PATH`. One of:
@@ -81,44 +83,15 @@ osrm_install <- function(
   platform <- get_platform_info(sys_info = sys_info)
   mac_release_info <- get_macos_release_info(sys_info)
 
-  # --- 1. Determine destination directory ---
-  if (is.null(dest_dir)) {
-    dest_dir <- tools::R_user_dir("osrm.backend", which = "cache")
-  }
-  if (!dir.exists(dest_dir)) {
-    dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
-  }
-  dest_dir <- normalizePath(dest_dir)
-
-  # --- 2. Check for existing installation ---
-  existing_bin <- file.path(dest_dir, "osrm-routed")
-  if (.Platform$OS.type == "windows") {
-    existing_bin <- paste0(existing_bin, ".exe")
-  }
-  profiles_dir <- file.path(dest_dir, "profiles")
-  profiles_missing <- !dir.exists(profiles_dir)
-
-  if (file.exists(existing_bin)) {
-    if (!force && !profiles_missing) {
-      message("OSRM backend already found in: ", dest_dir)
-      message("Use force = TRUE to reinstall.")
-      # Handle path and return
-      handle_path_setting(path_action, dest_dir, quiet)
-      return(invisible(dest_dir))
-    }
-
-    if (profiles_missing) {
-      message(
-        "Existing OSRM installation in ",
-        dest_dir,
-        " is missing Lua profiles. Reinstalling to restore them."
-      )
-    } else if (force) {
-      message("force = TRUE; reinstalling OSRM backend in ", dest_dir)
-    }
+  # --- 1. Determine installation root (final directory depends on version) ---
+  using_default_dest <- is.null(dest_dir)
+  install_root <- if (using_default_dest) {
+    osrm_default_install_root()
+  } else {
+    dest_dir
   }
 
-  # --- 3. Determine version and get release info ---
+  # --- 2. Determine version and get release info ---
   tested_versions <- c("v5.27.1", "v6.0.0")
   requested_version <- version
   mac_release_display <- mac_release_info$display_name
@@ -205,9 +178,46 @@ osrm_install <- function(
     }
   }
 
+  # --- 3. Resolve final destination directory for this version ---
+  if (using_default_dest) {
+    dest_dir <- file.path(install_root, version)
+  } else {
+    dest_dir <- install_root
+  }
+  if (!dir.exists(dest_dir)) {
+    dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
+  }
+  dest_dir <- normalizePath(dest_dir, winslash = "/", mustWork = FALSE)
+
+  bin_candidates <- file.path(dest_dir, c("osrm-routed", "osrm-routed.exe"))
+  has_existing_install <- any(file.exists(bin_candidates))
+  profiles_dir <- file.path(dest_dir, "profiles")
+  profiles_missing <- !dir.exists(profiles_dir)
+
+  if (has_existing_install) {
+    if (!force && !profiles_missing) {
+      message("OSRM backend already found in: ", dest_dir)
+      message("Use force = TRUE to reinstall.")
+      # Handle path and return
+      handle_path_setting(path_action, dest_dir, quiet)
+      return(invisible(dest_dir))
+    }
+
+    if (profiles_missing) {
+      message(
+        "Existing OSRM installation in ",
+        dest_dir,
+        " is missing Lua profiles. Reinstalling to restore them."
+      )
+    } else if (force) {
+      message("force = TRUE; reinstalling OSRM backend in ", dest_dir)
+    }
+  }
+
+  # --- 4. Fetch release metadata ---
   release_info <- get_release_by_tag(version)
 
-  # --- 4. Detect platform ---
+  # --- 5. Detect platform ---
   message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
   message(sprintf(
     "Found release: %s (%s)",
@@ -215,11 +225,11 @@ osrm_install <- function(
     release_info$name
   ))
 
-  # --- 5. Find matching asset download URL ---
+  # --- 6. Find matching asset download URL ---
   asset_url <- find_asset_url(release_info, platform)
   message("Found matching binary: ", basename(asset_url))
 
-  # --- 6. Download and extract ---
+  # --- 7. Download and extract ---
   message("Downloading from ", asset_url)
   tmp_file <- tempfile(fileext = ".tar.gz")
   on.exit(unlink(tmp_file), add = TRUE)
@@ -245,7 +255,7 @@ osrm_install <- function(
     }
   )
 
-  # --- 7. Locate and install binaries ---
+  # --- 8. Locate and install binaries ---
   bin_regex <- "osrm-(routed|extract|contract|partition|customize|datastore)"
 
   all_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
@@ -289,10 +299,10 @@ osrm_install <- function(
   maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir)
   maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir)
 
-  # --- 8. Download and install Lua profiles ---
+  # --- 9. Download and install Lua profiles ---
   install_profiles_for_release(release_info, dest_dir)
 
-  # --- 9. Set permissions and update PATH ---
+  # --- 10. Set permissions and update PATH ---
   installed_bins <- file.path(dest_dir, basename(files_to_copy))
   if (.Platform$OS.type != "windows") {
     message("Setting executable permissions...")
@@ -310,7 +320,7 @@ osrm_install <- function(
 
   handle_path_setting(path_action, dest_dir, quiet)
 
-  # --- 10. Final verification and user message ---
+  # --- 11. Final verification and user message ---
   osrm_path_check <- Sys.which("osrm-routed")
   if (path_action != "none" && !nzchar(osrm_path_check)) {
     warning(
@@ -470,6 +480,59 @@ osrm_clear_path <- function(quiet = FALSE) {
 
 
 # --- Helper functions (not exported) ---
+
+#' @noRd
+osrm_default_install_root <- function() {
+  tools::R_user_dir("osrm.backend", which = "cache")
+}
+
+#' @noRd
+osrm_try_normalize_path <- function(path) {
+  tryCatch(
+    normalizePath(path, winslash = "/", mustWork = FALSE),
+    error = function(...) path
+  )
+}
+
+#' @noRd
+osrm_is_install_dir <- function(path) {
+  if (is.null(path) || !length(path)) {
+    return(FALSE)
+  }
+  candidate <- osrm_try_normalize_path(path)
+  if (!dir.exists(candidate)) {
+    return(FALSE)
+  }
+  bin_candidates <- file.path(candidate, c("osrm-routed", "osrm-routed.exe"))
+  any(file.exists(bin_candidates))
+}
+
+#' @noRd
+osrm_detect_installations <- function(root = osrm_default_install_root()) {
+  root_norm <- osrm_try_normalize_path(root)
+  installs <- character(0)
+
+  if (dir.exists(root_norm)) {
+    entries <- dir(
+      root_norm,
+      full.names = TRUE,
+      recursive = FALSE,
+      include.dirs = TRUE,
+      no.. = TRUE
+    )
+    if (length(entries)) {
+      info <- file.info(entries)
+      dirs <- entries[!is.na(info$isdir) & info$isdir]
+      if (length(dirs)) {
+        dir_norms <- vapply(dirs, osrm_try_normalize_path, character(1))
+        valid <- vapply(dir_norms, osrm_is_install_dir, logical(1))
+        installs <- unique(dir_norms[valid])
+      }
+    }
+  }
+
+  installs
+}
 
 #' @noRd
 get_platform_info <- function(sys_info = Sys.info()) {

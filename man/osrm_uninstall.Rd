@@ -8,7 +8,11 @@ osrm_uninstall(dest_dir = NULL, clear_path = TRUE, quiet = FALSE)
 }
 \arguments{
 \item{dest_dir}{A string specifying the directory from which to remove OSRM binaries.
-If \code{NULL} (the default), the default user cache directory is used.}
+If \code{NULL} (the default), the function looks for an installation in the
+per-version subdirectories inside \code{tools::R_user_dir("osrm.backend", which = "cache")}
+and removes it. When multiple versions are installed, interactive sessions
+that are not \code{quiet} will be prompted (with a numbered menu and \code{0} to cancel)
+to choose a directory; otherwise, \code{dest_dir} must be supplied.}
 
 \item{clear_path}{A logical value. If \code{TRUE} (default), also removes the
 \code{PATH} configuration from the project's \code{.Rprofile} by calling \code{osrm_clear_path()}.}

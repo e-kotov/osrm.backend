@@ -21,7 +21,8 @@ attempted if binaries are available.}
 
 \item{dest_dir}{A string specifying the directory where OSRM binaries should be installed.
 If \code{NULL} (the default), a user-friendly, persistent location is chosen via
-\code{tools::R_user_dir("osrm.backend", which = "cache")}.}
+\code{tools::R_user_dir("osrm.backend", which = "cache")}, and the binaries are installed
+into a subdirectory named after the OSRM version (e.g. \code{.../cache/v6.0.0}).}
 
 \item{force}{A logical value. If \code{TRUE}, reinstall OSRM even if it's already found in \code{dest_dir}.
 If \code{FALSE} (default), the function will stop if an existing installation is detected.}
@@ -49,7 +50,8 @@ The function performs the following steps:
 \item Identifies the correct binary (\code{.tar.gz} archive) for the user's OS (Linux, macOS, or Windows) and architecture (x64, arm64).
 \item Downloads the archive to a temporary location.
 \item Extracts the archive and locates the OSRM executables (e.g., \code{osrm-routed}, \code{osrm-extract}).
-\item Copies these executables to a local directory (defaults to \code{tools::R_user_dir("osrm.backend", which = "cache")}).
+\item Copies these executables to a local directory (defaults to
+\verb{file.path(tools::R_user_dir("osrm.backend", which = "cache"), <version>)}).
 \item Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 \item Optionally modifies the \code{PATH} environment variable for the current session or project.
 }
