@@ -51,3 +51,5 @@ rsconnect/
 docs
 .DS_Store
 private
+inst/doc
+**/.quarto/

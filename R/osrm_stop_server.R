@@ -57,15 +57,24 @@ osrm_servers <- function() {
   out
 }
 
-#' Stop an OSRM server
+#' Stop an OSRM Server
 #'
-#' Terminates an `osrm-routed` process that was launched by [osrm_start_server()].
-#' You may pass the original `processx::process` object **or** select a server by
-#' `id`, `port`, or `pid`. If nothing is specified, the most recently started
-#' *alive* server is stopped.
+#' Terminates an `osrm-routed` process launched by `osrm_start()` or
+#' `osrm_start_server()`.
 #'
-#' @param server Optional `processx::process` returned by [osrm_start_server()].
-#' @param id Optional character id from [osrm_servers()].
+#' @details
+#' This function provides a flexible way to stop a running OSRM process. If no
+#' arguments are specified, it defaults to stopping the most recently started
+#' server that is still alive.
+#'
+#' You can also stop a specific server by providing:
+#' \itemize{
+#'   \item The `processx::process` object returned by `osrm_start()` or `osrm_start_server()`.
+#'   \item The server's `id`, `port`, or `pid` (use `osrm_servers()` to find these).
+#' }
+#'
+#' @param server Optional `processx::process` object returned by `osrm_start_server()`.
+#' @param id Optional character id from `osrm_servers()`.
 #' @param port Optional integer TCP port.
 #' @param pid Optional integer process id.
 #' @param wait Integer milliseconds to wait for clean shutdown (default `1000`).
@@ -73,7 +82,8 @@ osrm_servers <- function() {
 #'
 #' @return Invisibly, a list with fields `id`, `pid`, `port`, `stopped` (logical).
 #' @export
-osrm_stop_server <- function(
+#' @seealso [osrm_start()], [osrm_servers()], [osrm_stop_all()]
+osrm_stop <- function(
   server = NULL,
   id = NULL,
   port = NULL,
@@ -81,14 +91,14 @@ osrm_stop_server <- function(
   wait = 1000L,
   quiet = FALSE
 ) {
-  # Case 1: legacy API — user supplied a process object
+  # Case 1: user supplied a process object directly
   if (!is.null(server)) {
     if (!inherits(server, "process")) {
       stop("'server' must be a processx::process object", call. = FALSE)
     }
     targ_pid <- suppressWarnings(try(server$get_pid(), silent = TRUE))
     if (!inherits(targ_pid, "try-error")) {
-      # Try to find and deregister by pid
+      # Try to find and deregister by pid from the internal registry
       reg <- .osrm_state$registry
       hit <- names(reg)[vapply(
         reg,
@@ -127,7 +137,7 @@ osrm_stop_server <- function(
     }
   }
 
-  # Case 2: selection via registry
+  # Case 2: selection via registry (id, port, pid, or default)
   reg <- .osrm_state$registry
   if (!length(reg)) {
     if (!quiet) {
@@ -177,16 +187,23 @@ osrm_stop_server <- function(
 
   idx <- pick_index()
   if (!length(idx) || is.na(idx) || idx < 1) {
-    stop(
-      "Could not identify a server to stop. Provide 'id', 'port', or 'pid'.",
-      call. = FALSE
-    )
+    # If a specific selector was used, error. If default, it's just empty.
+    if (!is.null(id) || !is.null(port) || !is.null(pid)) {
+      stop(
+        "Could not identify a server to stop with the specified criteria.",
+        call. = FALSE
+      )
+    }
+    if (!quiet) {
+      message("No running OSRM servers to stop.")
+    }
+    return(invisible(list(stopped = FALSE)))
   }
 
   entry <- reg[[idx]]
   stopped <- FALSE
 
-  # Prefer live process handle
+  # Prefer to use the live process handle if it exists in the session
   if (!is.null(entry$proc) && inherits(entry$proc, "process")) {
     if (tryCatch(entry$proc$is_alive(), error = function(...) FALSE)) {
       try(entry$proc$kill(), silent = TRUE)
@@ -197,6 +214,7 @@ osrm_stop_server <- function(
       stopped <- TRUE
     }
   } else if (!is.null(entry$pid)) {
+    # Fallback to killing by PID if no process handle
     if (.osrm_pid_is_running(entry$pid)) {
       .osrm_kill_pid(entry$pid)
       stopped <- TRUE

@@ -1,4 +1,4 @@
-url: http://www.ekotov.pro/osrm.backend/
+url: https://www.ekotov.pro/osrm.backend/
 template:
   bootstrap: 5
   bootswatch: flatly
@@ -28,3 +28,38 @@ navbar:
   structure:
     left:  [intro, reference, articles, tutorials, news]
     right: [search, github, lightswitch]
+
+reference:
+  - title: "Quick Start"
+    desc: >
+      Automate installation, graph preparation, and server launch.
+    contents:
+      - osrm_start
+      - osrm_stop
+  - title: "Install and update OSRM binaries"
+    desc: >
+      Discover, install, or remove OSRM backend releases and keep your PATH tidy.
+    contents:
+      - osrm_install
+      - osrm_uninstall
+      - osrm_clear_path
+      - osrm_check_latest_version
+      - osrm_check_available_versions
+  - title: "Build routing graphs"
+    desc: >
+      Prepare OSRM graphs from raw OSM extracts or run specific pipeline stages when you need finer control.
+    contents:
+      - osrm_prepare_graph
+      - osrm_extract
+      - osrm_partition
+      - osrm_customize
+      - osrm_contract
+      - osrm_find_profile
+  - title: "Run and monitor servers"
+    desc: >
+      Launch `osrm-routed` manually, inspect registered processes, and stop them cleanly.
+    contents:
+      - osrm_start_server
+      - osrm_servers
+      - osrm_stop
+      - osrm_stop_all
