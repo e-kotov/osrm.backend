@@ -72,7 +72,8 @@ attempted if binaries are available.</p></dd>
 <dt id="arg-dest-dir">dest_dir<a class="anchor" aria-label="anchor" href="#arg-dest-dir"></a></dt>
 <dd><p>A string specifying the directory where OSRM binaries should be installed.
 If <code>NULL</code> (the default), a user-friendly, persistent location is chosen via
-<code>tools::R_user_dir("osrm.backend", which = "cache")</code>.</p></dd>
+<code>tools::R_user_dir("osrm.backend", which = "cache")</code>, and the binaries are installed
+into a subdirectory named after the OSRM version (e.g. <code>.../cache/v6.0.0</code>).</p></dd>
 
 
 <dt id="arg-force">force<a class="anchor" aria-label="anchor" href="#arg-force"></a></dt>
@@ -102,7 +103,8 @@ Defaults to <code>FALSE</code>.</p></dd>
 <li><p>Identifies the correct binary (<code>.tar.gz</code> archive) for the user's OS (Linux, macOS, or Windows) and architecture (x64, arm64).</p></li>
 <li><p>Downloads the archive to a temporary location.</p></li>
 <li><p>Extracts the archive and locates the OSRM executables (e.g., <code>osrm-routed</code>, <code>osrm-extract</code>).</p></li>
-<li><p>Copies these executables to a local directory (defaults to <code>tools::R_user_dir("osrm.backend", which = "cache")</code>).</p></li>
+<li><p>Copies these executables to a local directory (defaults to
+<code>file.path(tools::R_user_dir("osrm.backend", which = "cache"), &lt;version&gt;)</code>).</p></li>
 <li><p>Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.</p></li>
 <li><p>Optionally modifies the <code>PATH</code> environment variable for the current session or project.</p></li>
 </ol><p>macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.

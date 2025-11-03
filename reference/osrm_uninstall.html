@@ -60,7 +60,11 @@ configuration from the project's <code>.Rprofile</code>.</p>
 
 <dl><dt id="arg-dest-dir">dest_dir<a class="anchor" aria-label="anchor" href="#arg-dest-dir"></a></dt>
 <dd><p>A string specifying the directory from which to remove OSRM binaries.
-If <code>NULL</code> (the default), the default user cache directory is used.</p></dd>
+If <code>NULL</code> (the default), the function looks for an installation in the
+per-version subdirectories inside <code>tools::R_user_dir("osrm.backend", which = "cache")</code>
+and removes it. When multiple versions are installed, interactive sessions
+that are not <code>quiet</code> will be prompted (with a numbered menu and <code>0</code> to cancel)
+to choose a directory; otherwise, <code>dest_dir</code> must be supplied.</p></dd>
 
 
 <dt id="arg-clear-path">clear_path<a class="anchor" aria-label="anchor" href="#arg-clear-path"></a></dt>
