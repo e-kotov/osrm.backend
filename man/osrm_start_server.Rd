@@ -77,3 +77,25 @@ A \code{processx::process} object for the running server
 \description{
 Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either \code{.osrm.mldgr} for MLD or \code{.osrm.hsgr} for CH/CoreCH).
 }
+\details{
+The server's standard output and error streams can be controlled via R options
+for non-interactive use or persistent logging. By default, they are captured
+as pipes, which allows for reading output directly within the R session
+(e.g., via \code{osrm_server$read_output_lines()}).
+
+To redirect the server's output to one or more files, you can set the
+\code{osrm.server.log_file} R option before calling this function:
+\itemize{
+\item \strong{Combined Log:} To send both \code{stdout} and \code{stderr} to a single file,
+provide a file path:
+\code{options(osrm.server.log_file = "path/to/osrm.log")}
+
+\item \strong{Separate Logs:} To send \code{stdout} and \code{stderr} to separate files,
+provide a named list:
+\code{options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))}
+
+\item \strong{Default Behavior:} To restore the default behavior of using pipes,
+set the option to \code{NULL}:
+\code{options(osrm.server.log_file = NULL)}
+}
+}

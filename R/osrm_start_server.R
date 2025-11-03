@@ -3,6 +3,28 @@
 #' @description
 #' Launches an `osrm-routed` process pointing at a localized OSRM graph (either `.osrm.mldgr` for MLD or `.osrm.hsgr` for CH/CoreCH).
 #'
+#' @details
+#' The server's standard output and error streams can be controlled via R options
+#' for non-interactive use or persistent logging. By default, they are captured
+#' as pipes, which allows for reading output directly within the R session
+#' (e.g., via `osrm_server$read_output_lines()`).
+#'
+#' To redirect the server's output to one or more files, you can set the
+#' `osrm.server.log_file` R option before calling this function:
+#' \itemize{
+#'   \item **Combined Log:** To send both `stdout` and `stderr` to a single file,
+#'     provide a file path:
+#'     `options(osrm.server.log_file = "path/to/osrm.log")`
+#'
+#'   \item **Separate Logs:** To send `stdout` and `stderr` to separate files,
+#'     provide a named list:
+#'     `options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))`
+#'
+#'   \item **Default Behavior:** To restore the default behavior of using pipes,
+#'     set the option to `NULL`:
+#'     `options(osrm.server.log_file = NULL)`
+#' }
+#'
 #' @param osrm_path Character(1). Path to the `.osrm.mldgr` or `.osrm.hsgr` file
 #' @param version Logical; if `TRUE`, prints version and exits
 #' @param help Logical; if `TRUE`, prints help and exits
@@ -189,6 +211,50 @@ osrm_start_server <- function(
   # finally, add the graph prefix
   arguments <- c(arguments, prefix)
 
+  # --- Check R options for log file redirection ---
+  stdout_dest <- "|"
+  stderr_dest <- "|"
+  log_opt <- getOption("osrm.server.log_file")
+
+  # Helper to prepare a path: normalize it and ensure its directory exists
+  prepare_log_path <- function(path) {
+    if (
+      is.null(path) || !is.character(path) || length(path) != 1 || !nzchar(path)
+    ) {
+      return(NULL)
+    }
+    abs_path <- normalizePath(path, mustWork = FALSE)
+    log_dir <- dirname(abs_path)
+    if (!dir.exists(log_dir)) {
+      dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    return(abs_path)
+  }
+
+  if (!is.null(log_opt)) {
+    if (is.character(log_opt)) {
+      # Option 1: A single path for both stdout and stderr
+      log_path <- prepare_log_path(log_opt)
+      if (!is.null(log_path)) {
+        stdout_dest <- log_path
+        stderr_dest <- log_path
+        message("Redirecting server stdout and stderr to: ", log_path)
+      }
+    } else if (is.list(log_opt)) {
+      # Option 2: A list for separate stdout and stderr
+      stdout_path <- prepare_log_path(log_opt$stdout)
+      if (!is.null(stdout_path)) {
+        stdout_dest <- stdout_path
+        message("Redirecting server stdout to: ", stdout_path)
+      }
+      stderr_path <- prepare_log_path(log_opt$stderr)
+      if (!is.null(stderr_path)) {
+        stderr_dest <- stderr_path
+        message("Redirecting server stderr to: ", stderr_path)
+      }
+    }
+  }
+
   # echo & launch
   if (isTRUE(echo_cmd)) {
     message("osrm-routed ", paste(shQuote(arguments), collapse = " "))
@@ -197,8 +263,8 @@ osrm_start_server <- function(
     "osrm-routed",
     args = arguments,
     echo_cmd = echo_cmd,
-    stdout = "|",
-    stderr = "|"
+    stdout = stdout_dest,
+    stderr = stderr_dest
   )
   invisible(osrm_server)
 }
