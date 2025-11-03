@@ -12,9 +12,10 @@
 #' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
 #' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
 #'
-#' macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia) or newer.
+#' macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.
 #' `osrm_install()` automatically blocks v6 installs on older macOS releases and, when `version = "latest"`,
-#' selects the most recent v5 build instead while warning about the requirement.
+#' selects the most recent v5 build instead while warning about the requirement. Warnings include both the
+#' marketing version and Darwin kernel so you'll see messages like `macOS 13 Ventura [Darwin 22.6.0]`.
 #'
 #' When installing OSRM v6.x for Windows, the upstream release omits the Intel
 #' Threading Building Blocks (TBB) runtime and a compatible `bz2` DLL. To keep
@@ -120,12 +121,19 @@ osrm_install <- function(
   # --- 3. Determine version and get release info ---
   tested_versions <- c("v5.27.1", "v6.0.0")
   requested_version <- version
-  mac_release_display <- mac_release_info$release
-  if (is.na(mac_release_display) || !nzchar(mac_release_display)) {
-    mac_release_display <- "unknown"
+  mac_release_display <- mac_release_info$display_name
+  if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
+    raw_release <- mac_release_info$release
+    if (!is.na(raw_release) && nzchar(raw_release)) {
+      mac_release_display <- paste0("Darwin ", raw_release)
+    } else {
+      mac_release_display <- "unknown macOS release"
+    }
   }
+  mac_required_display <- "macOS 15.0 (Sequoia) [Darwin 24]"
   is_macos <- identical(platform$os, "darwin")
-  mac_too_old_for_v6 <- is_macos && isFALSE(mac_release_info$meets_v6_requirement)
+  mac_too_old_for_v6 <- is_macos &&
+    isFALSE(mac_release_info$meets_v6_requirement)
 
   if (identical(version, "latest")) {
     message("Finding latest stable version with available binaries...")
@@ -134,8 +142,9 @@ osrm_install <- function(
       message("Latest compatible version is '", version, "'")
       warning(
         sprintf(
-          "macOS release '%s' detected. OSRM v6.x requires macOS 15.0 (Sequoia) or newer. Upgrade macOS to install v6.",
-          mac_release_display
+          "%s detected. OSRM v6.x requires %s or newer. Upgrade macOS to install v6.",
+          mac_release_display,
+          mac_required_display
         ),
         call. = FALSE
       )
@@ -148,8 +157,9 @@ osrm_install <- function(
   if (mac_too_old_for_v6 && version_at_least(version, "v6.0.0")) {
     stop(
       sprintf(
-        "macOS release '%s' detected. OSRM v6.x requires macOS 15.0 (Sequoia) or newer. Please install a v5.x release instead.",
-        mac_release_display
+        "%s detected. OSRM v6.x requires %s or newer. Please install a v5.x release instead.",
+        mac_release_display,
+        mac_required_display
       ),
       call. = FALSE
     )
@@ -240,7 +250,11 @@ osrm_install <- function(
 
   all_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
   found_bins <- all_files[
-    grepl(paste0("^", bin_regex, "(\\.exe)?$"), basename(all_files), ignore.case = TRUE)
+    grepl(
+      paste0("^", bin_regex, "(\\.exe)?$"),
+      basename(all_files),
+      ignore.case = TRUE
+    )
   ]
 
   # Fallback for archives that place binaries alongside additional artefacts (e.g. node bindings)
@@ -284,7 +298,11 @@ osrm_install <- function(
     message("Setting executable permissions...")
     Sys.chmod(
       installed_bins[
-        grepl(paste0("^", bin_regex, "$"), basename(installed_bins), ignore.case = TRUE)
+        grepl(
+          paste0("^", bin_regex, "$"),
+          basename(installed_bins),
+          ignore.case = TRUE
+        )
       ],
       mode = "0755"
     )
@@ -556,6 +574,7 @@ get_macos_release_info <- function(sys_info) {
     }
   }
 
+  darwin_major <- NA_integer_
   meets_requirement <- NA
   if (!is.na(release)) {
     numeric_release <- suppressWarnings(as.numeric_version(release))
@@ -564,19 +583,73 @@ get_macos_release_info <- function(sys_info) {
       if (length(components)) {
         major_component <- components[1]
         if (!is.na(major_component)) {
-          if (major_component >= 20) {
-            meets_requirement <- major_component >= 24
-          } else {
-            meets_requirement <- major_component >= 15
-          }
+          darwin_major <- major_component
+          meets_requirement <- major_component >= 24
         }
       }
     }
   }
 
+  darwin_map <- list(
+    `14` = list(version = "10.10", codename = "Yosemite"),
+    `15` = list(version = "10.11", codename = "El Capitan"),
+    `16` = list(version = "10.12", codename = "Sierra"),
+    `17` = list(version = "10.13", codename = "High Sierra"),
+    `18` = list(version = "10.14", codename = "Mojave"),
+    `19` = list(version = "10.15", codename = "Catalina"),
+    `20` = list(version = "11", codename = "Big Sur"),
+    `21` = list(version = "12", codename = "Monterey"),
+    `22` = list(version = "13", codename = "Ventura"),
+    `23` = list(version = "14", codename = "Sonoma"),
+    `24` = list(version = "15", codename = "Sequoia")
+  )
+
+  marketing <- NULL
+  if (!is.na(darwin_major)) {
+    marketing <- darwin_map[[as.character(darwin_major)]]
+  }
+
+  marketing_label <- NULL
+  if (!is.null(marketing)) {
+    marketing_label <- paste0("macOS ", marketing$version)
+    if (!is.null(marketing$codename) && nzchar(marketing$codename)) {
+      marketing_label <- paste0(marketing_label, " ", marketing$codename)
+    }
+  }
+
+  darwin_label <- NULL
+  if (!is.na(release)) {
+    darwin_label <- paste0("Darwin ", release)
+  }
+
+  display_name <- NULL
+  if (!is.null(marketing_label) && !is.null(darwin_label)) {
+    display_name <- paste0(marketing_label, " [", darwin_label, "]")
+  } else if (!is.null(marketing_label)) {
+    display_name <- marketing_label
+  } else if (!is.null(darwin_label)) {
+    display_name <- darwin_label
+  }
+
   list(
     release = release,
-    meets_v6_requirement = meets_requirement
+    darwin_major = darwin_major,
+    marketing_version = if (!is.null(marketing)) {
+      marketing$version
+    } else {
+      NA_character_
+    },
+    marketing_codename = if (!is.null(marketing)) {
+      marketing$codename
+    } else {
+      NA_character_
+    },
+    display_name = display_name,
+    meets_v6_requirement = if (!is.na(darwin_major)) {
+      darwin_major >= 24
+    } else {
+      meets_requirement
+    }
   )
 }
 
@@ -944,7 +1017,11 @@ maybe_install_macos_v6_runtime <- function(version, platform, dest_dir) {
 }
 
 #' @noRd
-ensure_linux_tbb_runtime <- function(dest_dir, platform, reference_version = "v5.27.1") {
+ensure_linux_tbb_runtime <- function(
+  dest_dir,
+  platform,
+  reference_version = "v5.27.1"
+) {
   required_libs <- c(
     "libtbbmalloc.so.2.3",
     "libtbbmalloc.so.2",
@@ -957,7 +1034,9 @@ ensure_linux_tbb_runtime <- function(dest_dir, platform, reference_version = "v5
     "libtbb.so"
   )
 
-  missing_libs <- required_libs[!file.exists(file.path(dest_dir, required_libs))]
+  missing_libs <- required_libs[
+    !file.exists(file.path(dest_dir, required_libs))
+  ]
   if (length(missing_libs)) {
     message(
       "Fetching Linux TBB runtime components from OSRM release ",
@@ -1011,10 +1090,16 @@ ensure_linux_tbb_runtime <- function(dest_dir, platform, reference_version = "v5
     }
   )
 
-  extracted_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
+  extracted_files <- list.files(
+    tmp_extract_dir,
+    recursive = TRUE,
+    full.names = TRUE
+  )
 
   locate_lib <- function(lib) {
-    matches <- extracted_files[tolower(basename(extracted_files)) == tolower(lib)]
+    matches <- extracted_files[
+      tolower(basename(extracted_files)) == tolower(lib)
+    ]
     if (!length(matches)) {
       return(NA_character_)
     }
@@ -1061,7 +1146,11 @@ ensure_linux_tbb_runtime <- function(dest_dir, platform, reference_version = "v5
 }
 
 #' @noRd
-ensure_macos_tbb_runtime <- function(dest_dir, platform, reference_version = "v5.27.1") {
+ensure_macos_tbb_runtime <- function(
+  dest_dir,
+  platform,
+  reference_version = "v5.27.1"
+) {
   required_libs <- c(
     "libtbbmalloc.dylib",
     "libtbbmalloc.2.3.dylib",
@@ -1074,7 +1163,9 @@ ensure_macos_tbb_runtime <- function(dest_dir, platform, reference_version = "v5
     "libtbb.12.dylib"
   )
 
-  missing_libs <- required_libs[!file.exists(file.path(dest_dir, required_libs))]
+  missing_libs <- required_libs[
+    !file.exists(file.path(dest_dir, required_libs))
+  ]
   if (length(missing_libs)) {
     message(
       "Fetching macOS TBB runtime components from OSRM release ",
@@ -1128,10 +1219,16 @@ ensure_macos_tbb_runtime <- function(dest_dir, platform, reference_version = "v5
     }
   )
 
-  extracted_files <- list.files(tmp_extract_dir, recursive = TRUE, full.names = TRUE)
+  extracted_files <- list.files(
+    tmp_extract_dir,
+    recursive = TRUE,
+    full.names = TRUE
+  )
 
   locate_lib <- function(lib) {
-    matches <- extracted_files[tolower(basename(extracted_files)) == tolower(lib)]
+    matches <- extracted_files[
+      tolower(basename(extracted_files)) == tolower(lib)
+    ]
     if (!length(matches)) {
       return(NA_character_)
     }

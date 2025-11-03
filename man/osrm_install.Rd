@@ -54,9 +54,10 @@ The function performs the following steps:
 \item Optionally modifies the \code{PATH} environment variable for the current session or project.
 }
 
-macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia) or newer.
+macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.
 \code{osrm_install()} automatically blocks v6 installs on older macOS releases and, when \code{version = "latest"},
-selects the most recent v5 build instead while warning about the requirement.
+selects the most recent v5 build instead while warning about the requirement. Warnings include both the
+marketing version and Darwin kernel so you'll see messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
 
 When installing OSRM v6.x for Windows, the upstream release omits the Intel
 Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL. To keep
