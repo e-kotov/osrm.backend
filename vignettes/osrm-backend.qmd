@@ -62,7 +62,7 @@ osm_points <- read_sf(internal_pbf, layer = "points")
 osm_streets <- read_sf(internal_pbf, layer = "multilinestrings")
 
 set.seed(100)
-sampled_points <- osm_data[sample(nrow(osm_data), 2), ]
+sampled_points <- osm_points[sample(nrow(osm_data), 2), ]
 ```
 
 # Calculate route between sampled points
