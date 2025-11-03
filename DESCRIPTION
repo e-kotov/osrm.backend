@@ -14,11 +14,14 @@ BugReports: https://github.com/e-kotov/osrm.backend/issues
 Imports: 
     digest,
     httr2,
-    processx
+    jsonlite,
+    processx,
+    ps
 Suggests: 
     knitr,
     osrm,
     quarto,
+    sf,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 Encoding: UTF-8

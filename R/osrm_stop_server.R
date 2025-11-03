@@ -2,10 +2,10 @@
 
 #' List OSRM servers started via this package
 #'
-#' Returns a snapshot of servers registered by [osrm_start_server()].
-#' You can stop one by passing its `id`, `port`, or `pid` to [osrm_stop_server()].
+#' Returns a snapshot of servers registered by [osrm_start_server()] or [osrm_start()].
+#' You can stop one by passing its `id`, `port`, or `pid` to [osrm_stop()].
 #'
-#' @return A tibble (if available) or data.frame with columns:
+#' @return A data.frame with columns:
 #'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`.
 #' @export
 osrm_servers <- function() {
@@ -21,9 +21,6 @@ osrm_servers <- function() {
       has_handle = logical(),
       stringsAsFactors = FALSE
     )
-    if (requireNamespace("tibble", quietly = TRUE)) {
-      return(tibble::as_tibble(out))
-    }
     return(out)
   }
 
@@ -50,10 +47,6 @@ osrm_servers <- function() {
     has_handle = handle_vec,
     stringsAsFactors = FALSE
   )
-
-  if (requireNamespace("tibble", quietly = TRUE)) {
-    return(tibble::as_tibble(out))
-  }
   out
 }
 
@@ -160,14 +153,14 @@ osrm_stop <- function(
         function(e) identical(e$port, as.integer(port)),
         logical(1)
       ))
-      if (length(hits)) tail(hits, 1) else integer()
+      if (length(hits)) utils::tail(hits, 1) else integer()
     } else if (!is.null(pid)) {
       hits <- which(vapply(
         reg,
         function(e) identical(e$pid, as.integer(pid)),
         logical(1)
       ))
-      if (length(hits)) tail(hits, 1) else integer()
+      if (length(hits)) utils::tail(hits, 1) else integer()
     } else {
       # Default: most recently started alive server
       alive <- vapply(
@@ -181,7 +174,7 @@ osrm_stop <- function(
         },
         logical(1)
       )
-      tail(which(alive), 1)
+      utils::tail(which(alive), 1)
     }
   }
 
@@ -258,7 +251,7 @@ osrm_stop_all <- function() {
   n <- 0L
   for (id in ids) {
     n <- n + 1L
-    try(osrm_stop_server(id = id, quiet = TRUE), silent = TRUE)
+    try(osrm_stop(id = id, quiet = TRUE), silent = TRUE)
   }
   invisible(n)
 }

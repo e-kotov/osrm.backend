@@ -7,10 +7,10 @@
 osrm_servers()
 }
 \value{
-A tibble (if available) or data.frame with columns:
+A data.frame with columns:
 \code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}.
 }
 \description{
-Returns a snapshot of servers registered by \code{\link[=osrm_start_server]{osrm_start_server()}}.
-You can stop one by passing its \code{id}, \code{port}, or \code{pid} to \code{\link[=osrm_stop_server]{osrm_stop_server()}}.
+Returns a snapshot of servers registered by \code{\link[=osrm_start_server]{osrm_start_server()}} or \code{\link[=osrm_start]{osrm_start()}}.
+You can stop one by passing its \code{id}, \code{port}, or \code{pid} to \code{\link[=osrm_stop]{osrm_stop()}}.
 }
