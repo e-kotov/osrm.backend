@@ -561,16 +561,33 @@ get_platform_info <- function(sys_info = Sys.info()) {
 
 #' @noRd
 get_macos_release_info <- function(sys_info) {
+  if (is.null(sys_info)) {
+    sys_info <- list()
+  }
+  sys_info <- as.list(sys_info)
+
+  sysname <- sys_info[["sysname"]]
+  if (!is.null(sysname) && length(sysname)) {
+    sysname <- as.character(sysname)[1]
+  }
+  if (is.null(sysname) || tolower(sysname) != "darwin") {
+    return(list(
+      release = NA_character_,
+      darwin_major = NA_integer_,
+      marketing_version = NA_character_,
+      marketing_codename = NA_character_,
+      display_name = NULL,
+      meets_v6_requirement = TRUE
+    ))
+  }
+
   release <- NA_character_
-  if (!is.null(sys_info)) {
-    sys_info <- as.list(sys_info)
-    raw_release <- sys_info[["release"]]
-    if (!is.null(raw_release) && length(raw_release)) {
-      release_candidate <- as.character(raw_release)[1]
-      release_candidate <- trimws(release_candidate)
-      if (nzchar(release_candidate)) {
-        release <- release_candidate
-      }
+  raw_release <- sys_info[["release"]]
+  if (!is.null(raw_release) && length(raw_release)) {
+    release_candidate <- as.character(raw_release)[1]
+    release_candidate <- trimws(release_candidate)
+    if (nzchar(release_candidate)) {
+      release <- release_candidate
     }
   }
 
