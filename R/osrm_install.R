@@ -656,10 +656,24 @@ install_profiles_for_release <- function(release_info, dest_dir) {
     )
   }
 
-  # Extract only the profiles subtree to dodge Windows tar path limitations.
-  profile_members <- tar_members[
-    grepl("(^|/)profiles(/|$)", tar_members)
-  ]
+  # Extract only the top-level 'profiles' subtree shipped with the release.
+  top_level_dirs <- unique(sub("/.*$", "", tar_members))
+  top_level_dirs <- top_level_dirs[nzchar(top_level_dirs)]
+  top_level_dir <- top_level_dirs[[1]]
+
+  prefix <- paste0(top_level_dir, "/")
+  relative_members <- tar_members
+  matches_prefix <- startsWith(relative_members, prefix)
+  relative_members[matches_prefix] <- substr(
+    relative_members[matches_prefix],
+    nchar(prefix) + 1,
+    nchar(relative_members[matches_prefix])
+  )
+
+  profile_mask <- startsWith(relative_members, "profiles/") |
+    relative_members %in% c("profiles", "profiles/")
+
+  profile_members <- tar_members[profile_mask]
 
   if (length(profile_members) == 0) {
     stop(
