@@ -42,6 +42,7 @@ reference:
     contents:
       - osrm_install
       - osrm_uninstall
+      - osrm_which
       - osrm_clear_path
       - osrm_check_latest_version
       - osrm_check_available_versions
