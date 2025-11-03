@@ -169,266 +169,33 @@ i.e. the timestamp file path with <code>.timestamp</code> dropped.</p></dd>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="kw">if</span> <span class="op">(</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">{</span> <span class="co"># \dontrun{</span></span></span>
 <span class="r-in"><span><span class="co"># install osrm and set up PATH for the session</span></span></span>
 <span class="r-in"><span><span class="va">osrm_executable</span> <span class="op">&lt;-</span> <span class="fu"><a href="osrm_install.html">osrm_install</a></span><span class="op">(</span></span></span>
 <span class="r-in"><span> version <span class="op">=</span> <span class="st">"v5.27.1"</span>,</span></span>
 <span class="r-in"><span> path_action <span class="op">=</span> <span class="st">"session"</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Detected platform: linux-x64</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Found release: v5.27.1 (v5.27.1)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Found matching binary: node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Downloading from https://github.com/Project-OSRM/osrm-backend/releases/download/v5.27.1/node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Extracting binaries...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installing binaries to /home/runner/.cache/R/osrm.backend</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Downloading profiles from release tarball...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Extracting profiles...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installed profiles to /home/runner/.cache/R/osrm.backend/profiles</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Setting executable permissions...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Added '/home/runner/.cache/R/osrm.backend' to PATH for this session.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installation successful!</span>
 <span class="r-in"><span><span class="co"># copy example OSM PBF into a temporary workspace to avoid polluting pkg data</span></span></span>
 <span class="r-in"><span><span class="va">workspace</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempdir</a></span><span class="op">(</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tmp_prefix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">workspace</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"osrm-example-"</span>, <span class="fu"><a href="https://rdrr.io/r/base/Sys.getpid.html" class="external-link">Sys.getpid</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">pbf_path</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/cur.osm.pbf"</span>, package <span class="op">=</span> <span class="st">"osrm.backend"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">tmp_pbf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="va">tmp_prefix</span>, <span class="st">".osm.pbf"</span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span><span class="va">pbf_path</span>, <span class="va">tmp_pbf</span>, overwrite <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-in"><span><span class="co"># Find the path to the profile first</span></span></span>
+<span class="r-in"><span><span class="va">car_profile</span> <span class="op">&lt;-</span> <span class="fu"><a href="osrm_find_profile.html">osrm_find_profile</a></span><span class="op">(</span><span class="st">"car.lua"</span><span class="op">)</span></span></span>
+<span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># extract OSRM graph files</span></span></span>
 <span class="r-in"><span><span class="va">result</span> <span class="op">&lt;-</span> <span class="fu">osrm_extract</span><span class="op">(</span></span></span>
 <span class="r-in"><span>  input_osm                  <span class="op">=</span> <span class="va">tmp_pbf</span>,</span></span>
-<span class="r-in"><span>  profile                    <span class="op">=</span> <span class="fu"><a href="osrm_find_profile.html">osrm_find_profile</a></span><span class="op">(</span><span class="st">"car.lua"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  profile                    <span class="op">=</span> <span class="va">car_profile</span>,</span></span>
 <span class="r-in"><span>  overwrite                  <span class="op">=</span> <span class="cn">TRUE</span>,</span></span>
 <span class="r-in"><span>  threads                    <span class="op">=</span> <span class="fl">1L</span></span></span>
 <span class="r-in"><span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559176286] [info] Parsed 0 location-dependent features with 0 GeoJSON polygons</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559238342] [info] Using script /home/runner/.cache/R/osrm.backend/profiles/car.lua</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559278588] [info] Input file: osrm-example-7484.osm.pbf</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559288947] [info] Profile: car.lua</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559294427] [info] Threads: 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559354740] [info] Parsing in progress..</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559536841] [info] input file generated by 0.48.3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.559645324] [info] timestamp: n/a</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562003921] [info] Using profile api version 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562261554] [info] Found 3 turn restriction tags:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562269298] [info]   motor_vehicle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562272975] [info]   motorcar</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562275901] [info]   vehicle</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.562294465] [info] Parse relations ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.573618883] [info] Parse ways and nodes ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.700634496] [info] Parsing finished after 0.141266 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.700671946] [info] Raw input contains 40185 nodes, 6884 ways, and 158 relations, 197 restrictions</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.700693166] [info] Collecting way information on 197 restrictions...ok, after 7.9e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.700804184] [info] Collecting way information on 0 maneuver overrides...ok, after 4e-06s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.700830263] [info] Collecting traffic signal information on 489 signals...<span style="color: #BB0000;">[2025-11-03T08:02:23.700954405] [warn] OSM node 668980138 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700961929] [warn] OSM node 324363539 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700966598] [warn] OSM node 324363572 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700970816] [warn] OSM node 1752683978 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700975114] [warn] OSM node 3608068424 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700979542] [warn] OSM node 3135347631 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700983800] [warn] OSM node 3621910085 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ok, after 0.000159s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701003547] [info] Sorting used nodes        ... ok, after 0.000304s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701318567] [info] Erasing duplicate nodes   ... ok, after 1.8e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701347631] [info] Sorting all nodes         ... ok, after 5.4e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701413625] [info] Building node id map      ... ok, after 2.8e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701454471] [info] Confirming/Writing used nodes     ... ok, after 3.7e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701503594] [info] Writing barrier nodes     ... ok, after 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701514634] [info] Processed 4712 nodes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701519293] [info] Sorting edges by start    ... <span style="color: #BB0000;">[2025-11-03T08:02:23.700988178] [warn] OSM node 3135347629 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BB0000;">[2025-11-03T08:02:23.700992466] [warn] OSM node 325672566 has a unidirectional traffic signal ambiguously applied to multiple ways</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ok, after 0.000301s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.701831698] [info] Setting start coords      ... ok, after 0.000222s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.702065516] [info] Sorting edges by target   ... ok, after 0.000265s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.702342004] [info] Computing edge weights    ... ok, after 0.000544s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.702902213] [info] Sorting edges by renumbered start ... ok, after 0.00033s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703365250] [info] Writing used edges       ... ok, after 1e-05s -- Processed 5460 edges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703392942] [info] Preparing traffic light signals for 470 bidirectional, 25 unidirectional nodes ...ok, after 5.3e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703464706] [info] Collecting node information on 0 maneuver overrides...ok, after 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703477210] [info] Collecting node information on 197 restrictions...ok, after 5.2e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703543654] [info] writing street name index ... ok, after 0.000119s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.703781048] [info] extraction finished after 0.144502s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.704480148] [info] Generating edge-expanded graph representation</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.710357825] [info] .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  10% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  30% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  40% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  50% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  60% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  70% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  80% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  90% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  100%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.711880657] [info] Node compression ratio: 0.38264</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.711892419] [info] Edge compression ratio: 0.466532</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.713635794] [info]  graph compression removed 1342 annotations of 1655 in 0.000581 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.713735561] [info] Find segregated edges in node-based graph ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.715698456] [info] ok, after 0.001953s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.715711871] [info] Segregated edges count = 70</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.715717081] [info] Writing nodes for nodes-based and edges-based graphs ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.716003488] [info] Geometry successfully removed:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   compressed edges: 5100</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   compressed geometries: 11040</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   longest chain length: 34</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   cmpr ratio: 0.461957</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   avg chain length: 2.16471</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.716015300] [info] Removing invalid turn restrictions...removed 0 invalid turn restrictions, after 6e-06s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.716042390] [info] Removing invalid maneuver overrides...removed 0 invalid maneuver overrides, after 0s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.716060875] [info] Constructing restriction graph on 149 restrictions...ok, after 1.9e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.717907233] [info] Generating edge expanded nodes ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.717919285] [info] .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  10% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  30% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  40% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  50% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  60% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  70% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  80% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  90% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  100%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.718362325] [info] Expanding via-way turn restrictions ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.718367094] [info] .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  10% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  30% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  40% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  50% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  60% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  70% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  80% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  100%</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.718447685] [info] Generated 3346 nodes (7 of which are duplicates)  and 5460 segments in edge-expanded graph</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.718541100] [info] Generating edge-expanded edges </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.718564664] [info] .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  10% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  30% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  40% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  50% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  60% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  70% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  80% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  90% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  100% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741405839] [info] Sorting and writing 0 maneuver overrides...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741497100] [info] done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741503792] [info] Renumbering turns</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741543687] [info] Writing 0 conditional turn penalties...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741939839] [info] Generated 5460 edge based node segments</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741949206] [info] Node-based graph contains 3339 edges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741953875] [info] Edge-expanded graph ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741958063] [info]   contains 5515 edges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741963213] [info] Timing statistics for edge-expanded graph:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741967310] [info] Renumbering edges: 5.7e-05s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741973642] [info] Generating nodes: 0.000634s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.741978371] [info] Generating edges: 0.023422s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.742181451] [info] Generating guidance turns </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.742196560] [info] .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  10% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  20% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  30% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  40% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  50% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  60% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  70% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  80% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  90% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> .</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  100% </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779345038] [info] done.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779352191] [info] Created 24 entry classes and 463 Bearing Classes</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779357221] [info] Handled: 127 of 207 lanes: 61.3527 %.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779365126] [info] Assigned 6738 turn instruction types:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779369223] [info]   new name: 114 (1.69%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779375174] [info]   continue: 339 (5.03%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779379963] [info]   turn: 2685 (39.85%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779384832] [info]   fork: 26 (0.39%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779389741] [info]   end of road: 747 (11.09%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779394410] [info]   (noturn): 648 (9.62%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779399209] [info]   (suppressed): 2165 (32.13%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779403908] [info]   (sliproad): 14 (0.21%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779408567] [info] Assigned 6738 turn instruction modifiers:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779412845] [info]   uturn: 281 (4.17%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779417604] [info]   sharp right: 44 (0.65%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779422112] [info]   right: 1791 (26.58%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779426741] [info]   slight right: 195 (2.89%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779431149] [info]   straight: 2637 (39.14%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779435748] [info]   slight left: 189 (2.80%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779440146] [info]   left: 1556 (23.09%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779444724] [info]   sharp left: 45 (0.67%)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779450475] [info] Guidance turn annotations took 0.03728s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779455445] [info] Writing Intersection Classification Data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779633769] [info] ok, after 0.000173s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779641223] [info] Writing Turns and Lane Data...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.779949670] [info] ok, after 0.000303s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.780256655] [info] Saving edge-based node weights to file.</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.780379615] [info] Done writing. (0.000116)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.780386468] [info] Computing strictly connected components ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.781096468] [info] Found 240 SCC (1 large, 239 small)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.781108160] [info] SCC run took: 0.000111809s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.781119040] [info] Building r-tree ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.781123408] [info] Constructing r-tree of 5460 segments build on-top of 4712 coordinates</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.782725168] [info] finished r-tree construction in 0.001591 seconds</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.782881050] [info] Writing edge-based-graph edges       ... </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.783182334] [info] ok, after 0.000291s</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.783190329] [info] Processed 5515 edges</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.783194858] [info] Expansion: 62427 nodes/sec and 44330 edges/sec</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.783199186] [info] To prepare the data for routing, run: ./osrm-contract "/tmp/RtmpdPoiVO/osrm-example-7484"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [2025-11-03T08:02:23.784106365] [info] RAM: peak bytes used: 245002240</span>
 <span class="r-in"><span><span class="co"># path to generated .osrm files (specifically, the .osrm.timestamp file)</span></span></span>
 <span class="r-in"><span><span class="va">result</span><span class="op">$</span><span class="va">osrm_path</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/tmp/RtmpdPoiVO/osrm-example-7484.osrm.timestamp"</span>
 <span class="r-in"><span><span class="co"># clean up the temporary workspace</span></span></span>
-<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">generated</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
-<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> object 'generated' not found</span>
-<span class="r-in"><span><span class="co"># }</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">workspace</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">}</span> <span class="co"># }</span></span></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
