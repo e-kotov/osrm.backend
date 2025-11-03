@@ -43,7 +43,7 @@
 #' }
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # install osrm and set up PATH for the session
 #' osrm_executable <- osrm_install(
 #'  version = "v5.27.1",
@@ -55,10 +55,13 @@
 #' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
 #' tmp_pbf <- paste0(tmp_prefix, ".osm.pbf")
 #' file.copy(pbf_path, tmp_pbf, overwrite = TRUE)
+#' # Find the path to the profile first
+#' car_profile <- osrm_find_profile("car.lua")
+#'
 #' # extract OSRM graph files
 #' result <- osrm_extract(
 #'   input_osm                  = tmp_pbf,
-#'   profile                    = osrm_find_profile("car.lua"),
+#'   profile                    = car_profile,
 #'   overwrite                  = TRUE,
 #'   threads                    = 1L
 #' )
