@@ -73,20 +73,9 @@ profiles/ directory alongside the binaries.  This function will try to locate os
     <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co"># \donttest{</span></span></span>
 <span class="r-in"><span><span class="co"># make sure osrm backend is installed and on PATH</span></span></span>
 <span class="r-in"><span><span class="fu"><a href="osrm_install.html">osrm_install</a></span><span class="op">(</span><span class="op">)</span></span></span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Detected platform: linux-x64</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Found release: v5.27.1 (v5.27.1)</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Found matching binary: node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Downloading from https://github.com/Project-OSRM/osrm-backend/releases/download/v5.27.1/node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Extracting binaries...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installing binaries to /home/runner/.cache/R/osrm.backend</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Downloading profiles from release tarball...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Extracting profiles...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installed profiles to /home/runner/.cache/R/osrm.backend/profiles</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Setting executable permissions...</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Added '/home/runner/.cache/R/osrm.backend' to PATH for this session.</span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Installation successful!</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> invalid version specification ‘6.11.0-1018-azure’</span>
 <span class="r-in"><span><span class="fu">osrm_find_profile</span><span class="op">(</span><span class="st">"car.lua"</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "/home/runner/.cache/R/osrm.backend/profiles/car.lua"</span>
+<span class="r-err co"><span class="r-pr">#&gt;</span> <span class="error">Error:</span> `osrm-routed` not found in PATH; please install OSRM backend</span>
 <span class="r-in"><span><span class="co"># }</span></span></span>
 <span class="r-in"><span></span></span>
 </code></pre></div>
