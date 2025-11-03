@@ -41,7 +41,7 @@ osrm_start_server(
 
 \item{ip}{Character; IP address to bind (default: \code{"0.0.0.0"})}
 
-\item{port}{Integer; TCP port to listen on (default: \code{5000})}
+\item{port}{Integer; TCP port to listen on (default: \code{5001})}
 
 \item{threads}{Integer; number of worker threads (default: \code{8})}
 
@@ -69,13 +69,14 @@ osrm_start_server(
 
 \item{max_matching_radius}{Integer; use \code{-1} for unlimited (default: \code{-1})}
 
-\item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
+\item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
 }
 \value{
-A \code{processx::process} object for the running server
+A \code{processx::process} object for the running server (also registered internally)
 }
 \description{
-Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either \code{.osrm.mldgr} for MLD or \code{.osrm.hsgr} for CH/CoreCH).
+Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either
+\code{.osrm.mldgr} for MLD or \code{.osrm.hsgr} for CH/CoreCH).
 }
 \details{
 The server's standard output and error streams can be controlled via R options
@@ -98,4 +99,7 @@ provide a named list:
 set the option to \code{NULL}:
 \code{options(osrm.server.log_file = NULL)}
 }
+
+You can override the \code{osrm-routed} executable via
+\code{options(osrm.routed.exec = "/full/path/to/osrm-routed")}.
 }

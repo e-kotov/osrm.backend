@@ -2,16 +2,36 @@
 % Please edit documentation in R/osrm_stop_server.R
 \name{osrm_stop_server}
 \alias{osrm_stop_server}
-\title{Stop an OSRM server started with \code{osrm_start_server}}
+\title{Stop an OSRM server}
 \usage{
-osrm_stop_server(server)
+osrm_stop_server(
+  server = NULL,
+  id = NULL,
+  port = NULL,
+  pid = NULL,
+  wait = 1000L,
+  quiet = FALSE
+)
 }
 \arguments{
-\item{server}{A \code{processx::process} object returned by \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+\item{server}{Optional \code{processx::process} returned by \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+
+\item{id}{Optional character id from \code{\link[=osrm_servers]{osrm_servers()}}.}
+
+\item{port}{Optional integer TCP port.}
+
+\item{pid}{Optional integer process id.}
+
+\item{wait}{Integer milliseconds to wait for clean shutdown (default \code{1000}).}
+
+\item{quiet}{Logical; suppress messages (default \code{FALSE}).}
 }
 \value{
-Invisibly returns the same \code{processx::process} object (now stopped).
+Invisibly, a list with fields \code{id}, \code{pid}, \code{port}, \code{stopped} (logical).
 }
 \description{
 Terminates an \code{osrm-routed} process that was launched by \code{\link[=osrm_start_server]{osrm_start_server()}}.
+You may pass the original \code{processx::process} object \strong{or} select a server by
+\code{id}, \code{port}, or \code{pid}. If nothing is specified, the most recently started
+\emph{alive} server is stopped.
 }
