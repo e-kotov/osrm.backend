@@ -36,20 +36,26 @@ osrm_find_profile <- function(
     file.path(bindir, "..", "share", "osrm", "profiles", profile),
     file.path(bindir, "..", "share", "osrm-backend", "profiles", profile),
     file.path(bindir, "..", "lib", "osrm", "profiles", profile),
-    file.path(bindir, "..", "lib", "osrm-backend", "profiles", profile),
-    file.path("/", "usr", "local", "share", "osrm", "profiles", profile),
-    file.path(
-      "/",
-      "usr",
-      "local",
-      "share",
-      "osrm-backend",
-      "profiles",
-      profile
-    ),
-    file.path("/", "usr", "share", "osrm", "profiles", profile),
-    file.path("/", "usr", "share", "osrm-backend", "profiles", profile)
+    file.path(bindir, "..", "lib", "osrm-backend", "profiles", profile)
   )
+
+  if (.Platform$OS.type != "windows") {
+    unix_candidates <- c(
+      file.path("/", "usr", "local", "share", "osrm", "profiles", profile),
+      file.path(
+        "/",
+        "usr",
+        "local",
+        "share",
+        "osrm-backend",
+        "profiles",
+        profile
+      ),
+      file.path("/", "usr", "share", "osrm", "profiles", profile),
+      file.path("/", "usr", "share", "osrm-backend", "profiles", profile)
+    )
+    candidates <- c(candidates, unix_candidates)
+  }
   for (p in candidates) {
     if (file.exists(p)) {
       return(normalizePath(p))
