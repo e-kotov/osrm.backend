@@ -752,24 +752,17 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   if (dir.exists(dest_profiles_dir)) {
     unlink(dest_profiles_dir, recursive = TRUE)
   }
-  dir.create(dest_profiles_dir, recursive = TRUE, showWarnings = FALSE)
 
-  files_to_copy <- list.files(
-    profile_source,
-    full.names = TRUE,
-    all.files = TRUE,
-    no.. = TRUE
-  )
   copied <- file.copy(
-    from = files_to_copy,
-    to = dest_profiles_dir,
+    from = profile_source,
+    to = dest_dir,
     recursive = TRUE,
     overwrite = TRUE
   )
 
   if (!all(copied)) {
     stop(
-      "Failed to copy one or more profile files to the destination directory.",
+      "Failed to copy the profiles directory to the destination.",
       call. = FALSE
     )
   }
