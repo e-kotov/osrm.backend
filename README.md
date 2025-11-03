@@ -11,7 +11,7 @@ experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](h
 [![CRAN
 status](https://www.r-pkg.org/badges/version/osrm.backend)](https://CRAN.R-project.org/package=osrm.backend)
 [![gridmaker status
-badge](https://e-kotov.r-universe.dev/gridmaker/badges/version.png)](https://e-kotov.r-universe.dev/osrm.backend)
+badge](https://e-kotov.r-universe.dev/gridmaker/badges/version)](https://e-kotov.r-universe.dev/osrm.backend)
 [![R-CMD-check](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml)
 [![pkgcheck](https://github.com/e-kotov/gridmaker/workflows/pkgcheck/badge.svg)](https://github.com/e-kotov/osrm.backend/actions?query=workflow%3Apkgcheck)
 [![Codecov test

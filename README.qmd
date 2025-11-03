@@ -1,5 +1,7 @@
 ---
 format: gfm
+eval: false
+default-image-extension: ""
 ---
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
