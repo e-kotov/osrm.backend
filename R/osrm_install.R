@@ -689,7 +689,7 @@ install_profiles_for_release <- function(release_info, dest_dir) {
     nzchar(profile_dirs) &
       !grepl("[[:cntrl:]]", profile_dirs, perl = TRUE)
   ]
-  extract_members <- profile_dirs
+  extract_members <- profile_members
   extract_members <- extract_members[
     nzchar(extract_members) &
       !grepl("[[:cntrl:]]", extract_members, perl = TRUE)
