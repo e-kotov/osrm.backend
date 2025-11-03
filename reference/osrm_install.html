@@ -105,9 +105,10 @@ Defaults to <code>FALSE</code>.</p></dd>
 <li><p>Copies these executables to a local directory (defaults to <code>tools::R_user_dir("osrm.backend", which = "cache")</code>).</p></li>
 <li><p>Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.</p></li>
 <li><p>Optionally modifies the <code>PATH</code> environment variable for the current session or project.</p></li>
-</ol><p>macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia) or newer.
+</ol><p>macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.
 <code>osrm_install()</code> automatically blocks v6 installs on older macOS releases and, when <code>version = "latest"</code>,
-selects the most recent v5 build instead while warning about the requirement.</p>
+selects the most recent v5 build instead while warning about the requirement. Warnings include both the
+marketing version and Darwin kernel so you'll see messages like <code>macOS 13 Ventura [Darwin 22.6.0]</code>.</p>
 <p>When installing OSRM v6.x for Windows, the upstream release omits the Intel
 Threading Building Blocks (TBB) runtime and a compatible <code>bz2</code> DLL. To keep
 the executables runnable out of the box, <code>osrm_install()</code> fetches TBB from
