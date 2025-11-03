@@ -41,6 +41,7 @@
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto">
+<li class="nav-item"><a class="nav-link" href="articles/osrm-backend.html">Get started</a></li>
 <li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
       </ul>
 <ul class="navbar-nav">
@@ -66,6 +67,7 @@
 <li><p>provide wrapper functions to prepare data for <code>osrm</code> routing;</p></li>
 <li><p>provide wrapper to start/stop local OSRM backend server.</p></li>
 </ul>
+<p>You can prepare the OpenStreetMap data for routing with one function <code>osrm_start(&lt;path_to_osm_file_or_folder_with_osm_file&gt;)</code>, set the <code>osrm.server</code> option to <code>http://localhost:5001/</code> and use all the <a href="https://github.com/riatelab/osrm" class="external-link">osrm</a> functions as usual. You do not need to have <code>osrm-backend</code> installed or have <code>Docker</code> to run <code>osrm-backend</code> from a container, everything is handled automatically an all major operating systems. Just follow the <a href="https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html">Get started</a> guide. For advanced control over each step of the process, see the full <a href="https://www.ekotov.pro/osrm.backend/reference/index.html">function reference</a>.</p>
 </div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
@@ -112,7 +114,9 @@
 <ul class="list-unstyled">
 <li><a href="https://lifecycle.r-lib.org/articles/stages.html#experimental" class="external-link"><img src="https://img.shields.io/badge/lifecycle-experimental-orange.svg" alt="Lifecycle: experimental"></a></li>
 <li><a href="https://CRAN.R-project.org/package=osrm.backend" class="external-link"><img src="https://www.r-pkg.org/badges/version/osrm.backend" alt="CRAN status"></a></li>
+<li><a href="https://e-kotov.r-universe.dev/osrm.backend" class="external-link"><img src="https://e-kotov.r-universe.dev/gridmaker/badges/version.png" alt="gridmaker status badge"></a></li>
 <li><a href="https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/e-kotov/osrm.backend/actions?query=workflow%3Apkgcheck" class="external-link"><img src="https://github.com/e-kotov/gridmaker/workflows/pkgcheck/badge.svg" alt="pkgcheck"></a></li>
 <li><a href="https://app.codecov.io/gh/e-kotov/osrm.backend" class="external-link"><img src="https://codecov.io/gh/e-kotov/osrm.backend/graph/badge.svg" alt="Codecov test coverage"></a></li>
 </ul>
 </div>

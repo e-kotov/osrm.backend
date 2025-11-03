@@ -1,8 +1,9 @@
 pandoc: 3.1.11
 pkgdown: 2.1.3
 pkgdown_sha: ~
-articles: {}
-last_built: 2025-11-03T10:03Z
+articles:
+  osrm-backend: osrm-backend.html
+last_built: 2025-11-03T12:30Z
 urls:
-  reference: http://www.ekotov.pro/osrm.backend/reference
-  article: http://www.ekotov.pro/osrm.backend/articles
+  reference: https://www.ekotov.pro/osrm.backend/reference
+  article: https://www.ekotov.pro/osrm.backend/articles

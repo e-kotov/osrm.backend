@@ -24,7 +24,8 @@
     </button>
 
     <div id="navbar" class="collapse navbar-collapse ms-3">
-      <ul class="navbar-nav me-auto"><li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
+      <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="../articles/osrm-backend.html">Get started</a></li>
+<li class="active nav-item"><a class="nav-link" href="../reference/index.html">Reference</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/e-kotov/osrm.backend/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -40,9 +41,9 @@
     </div>
 
     <div class="section level2">
-      <h2 id="all-functions">All functions<a class="anchor" aria-label="anchor" href="#all-functions"></a></h2>
+      <h2 id="quick-start">Quick Start<a class="anchor" aria-label="anchor" href="#quick-start"></a></h2>
 
-
+      <div class="section-desc"><p>Automate installation, graph preparation, and server launch.</p></div>
 
 
     </div><div class="section level2">
@@ -52,16 +53,39 @@
 
       <dl><dt>
 
-          <code><a href="osrm_check_available_versions.html">osrm_check_available_versions()</a></code>
+          <code><a href="osrm_start.html">osrm_start()</a></code>
 
         </dt>
-        <dd>Check for Available OSRM Versions</dd>
+        <dd>Start an OSRM Server with Automatic Setup</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_check_latest_version.html">osrm_check_latest_version()</a></code>
+          <code><a href="osrm_stop.html">osrm_stop()</a></code>
 
         </dt>
-        <dd>Check for the Latest Stable OSRM Version</dd>
+        <dd>Stop an OSRM Server</dd>
+      </dl></div><div class="section level2">
+      <h2 id="install-and-update-osrm-binaries">Install and update OSRM binaries<a class="anchor" aria-label="anchor" href="#install-and-update-osrm-binaries"></a></h2>
+
+      <div class="section-desc"><p>Discover, install, or remove OSRM backend releases and keep your PATH tidy.</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="osrm_install.html">osrm_install()</a></code>
+
+        </dt>
+        <dd>Install OSRM Backend Binaries</dd>
+      </dl><dl><dt>
+
+          <code><a href="osrm_uninstall.html">osrm_uninstall()</a></code>
+
+        </dt>
+        <dd>Uninstall OSRM Backend Binaries</dd>
       </dl><dl><dt>
 
           <code><a href="osrm_clear_path.html">osrm_clear_path()</a></code>
@@ -70,16 +94,33 @@
         <dd>Clear OSRM Path from Project's .Rprofile</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_contract.html">osrm_contract()</a></code>
+          <code><a href="osrm_check_latest_version.html">osrm_check_latest_version()</a></code>
 
         </dt>
-        <dd>Contract OSRM Graph for Contraction Hierarchies (CH)</dd>
+        <dd>Check for the Latest Stable OSRM Version</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_customize.html">osrm_customize()</a></code>
+          <code><a href="osrm_check_available_versions.html">osrm_check_available_versions()</a></code>
 
         </dt>
-        <dd>Customize OSRM Graph for Multi-Level Dijkstra (MLD)</dd>
+        <dd>Check for Available OSRM Versions</dd>
+      </dl></div><div class="section level2">
+      <h2 id="build-routing-graphs">Build routing graphs<a class="anchor" aria-label="anchor" href="#build-routing-graphs"></a></h2>
+
+      <div class="section-desc"><p>Prepare OSRM graphs from raw OSM extracts or run specific pipeline stages when you need finer control.</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
+
+          <code><a href="osrm_prepare_graph.html">osrm_prepare_graph()</a></code>
+
+        </dt>
+        <dd>Prepare OSRM Graph for Routing (Extract + Partition/Contract)</dd>
       </dl><dl><dt>
 
           <code><a href="osrm_extract.html">osrm_extract()</a></code>
@@ -88,29 +129,40 @@
         <dd>Extract OSM into OSRM Graph Files</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_find_profile.html">osrm_find_profile()</a></code>
-
-        </dt>
-        <dd>Locate an OSRM Lua profile (e.g. car.lua) in a host installation</dd>
-      </dl><dl><dt>
-
-          <code><a href="osrm_install.html">osrm_install()</a></code>
-
-        </dt>
-        <dd>Install OSRM Backend Binaries</dd>
-      </dl><dl><dt>
-
           <code><a href="osrm_partition.html">osrm_partition()</a></code>
 
         </dt>
         <dd>Partition OSRM Graph for Multi-Level Dijkstra (MLD)</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_prepare_graph.html">osrm_prepare_graph()</a></code>
+          <code><a href="osrm_customize.html">osrm_customize()</a></code>
 
         </dt>
-        <dd>Prepare OSRM Graph for Routing (Extract + Partition/Contract)</dd>
+        <dd>Customize OSRM Graph for Multi-Level Dijkstra (MLD)</dd>
       </dl><dl><dt>
+
+          <code><a href="osrm_contract.html">osrm_contract()</a></code>
+
+        </dt>
+        <dd>Contract OSRM Graph for Contraction Hierarchies (CH)</dd>
+      </dl><dl><dt>
+
+          <code><a href="osrm_find_profile.html">osrm_find_profile()</a></code>
+
+        </dt>
+        <dd>Locate an OSRM Lua profile (e.g. car.lua) in a host installation</dd>
+      </dl></div><div class="section level2">
+      <h2 id="run-and-monitor-servers">Run and monitor servers<a class="anchor" aria-label="anchor" href="#run-and-monitor-servers"></a></h2>
+
+      <div class="section-desc"><p>Launch <code>osrm-routed</code> manually, inspect registered processes, and stop them cleanly.</p></div>
+
+
+    </div><div class="section level2">
+
+
+
+
+      <dl><dt>
 
           <code><a href="osrm_start_server.html">osrm_start_server()</a></code>
 
@@ -118,18 +170,25 @@
         <dd>Start an OSRM MLD/CH server with <code>osrm-routed</code></dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_stop_server.html">osrm_stop_server()</a></code>
+          <code><a href="osrm_servers.html">osrm_servers()</a></code>
 
         </dt>
-        <dd>Stop an OSRM server started with <code>osrm_start_server</code></dd>
+        <dd>List OSRM servers started via this package</dd>
       </dl><dl><dt>
 
-          <code><a href="osrm_uninstall.html">osrm_uninstall()</a></code>
+          <code><a href="osrm_stop.html">osrm_stop()</a></code>
 
         </dt>
-        <dd>Uninstall OSRM Backend Binaries</dd>
+        <dd>Stop an OSRM Server</dd>
+      </dl><dl><dt>
+
+          <code><a href="osrm_stop_all.html">osrm_stop_all()</a></code>
+
+        </dt>
+        <dd>Stop all running OSRM servers started via this package</dd>
       </dl></div>
-  </main></div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
