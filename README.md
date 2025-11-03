@@ -34,7 +34,7 @@ the `osrm.server` option to `http://localhost:5001/` and use all the
 `{osrm}` functions as usual. You do not need to have `osrm-backend`
 installed or have `Docker` to run `osrm-backend` from a container,
 everything is handled automatically an all major operating systems. Just
-follow the [`Get started`](vignettes/osrm-backend.qmd) guide. There are
-options for advanced users too who want to control every step of the
-process, just see the full [function
-reference](./docs/reference/index.html).
+follow the [Get
+started](https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html)
+guide. See the full [function
+reference](https://www.ekotov.pro/osrm.backend/reference/index.html).
