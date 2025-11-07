@@ -1,6 +1,6 @@
 # osrm.backend
 
-\![[https://www.ekotov.pro/osrm.backend/reference/figures/card.png\\](https://www.ekotov.pro/osrm.backend/reference/figures/card.png%5C)\]
+![](https://www.ekotov.pro/osrm.backend/reference/figures/card.png)
 
 The goal of `osrm.backend` is to be a companion to
 [osrm](https://github.com/riatelab/osrm) R package
