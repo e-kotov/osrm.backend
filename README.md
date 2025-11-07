@@ -18,7 +18,7 @@ badge](https://e-kotov.r-universe.dev/osrm.backend/badges/version)](https://e-ko
 coverage](https://codecov.io/gh/e-kotov/osrm.backend/graph/badge.svg)](https://app.codecov.io/gh/e-kotov/osrm.backend)
 <!-- badges: end -->
 
-\![https://www.ekotov.pro/osrm.backend/reference/figures/card.png\]
+![](https://www.ekotov.pro/osrm.backend/reference/figures/card.png)
 
 The goal of `osrm.backend` is to be a companion to `{osrm}` R package
 <https://github.com/riatelab/osrm>:
