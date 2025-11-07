@@ -187,7 +187,7 @@ osrm_install <- function(
   if (!dir.exists(dest_dir)) {
     dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
   }
-  dest_dir <- normalizePath(dest_dir, winslash = "/", mustWork = FALSE)
+  dest_dir <- normalizePath(dest_dir, mustWork = FALSE)
 
   bin_candidates <- file.path(dest_dir, c("osrm-routed", "osrm-routed.exe"))
   has_existing_install <- any(file.exists(bin_candidates))
@@ -488,8 +488,11 @@ osrm_default_install_root <- function() {
 
 #' @noRd
 osrm_try_normalize_path <- function(path) {
+  if (!file.exists(path)) {
+    return(path)
+  }
   tryCatch(
-    normalizePath(path, winslash = "/", mustWork = FALSE),
+    normalizePath(path),
     error = function(...) path
   )
 }
