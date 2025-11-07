@@ -14,3 +14,4 @@
 ^\.vscode$
 ^vignettes/\.quarto$
 ^vignettes/*_files$
+^man\/figures\/card\.png$

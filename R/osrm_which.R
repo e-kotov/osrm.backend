@@ -5,13 +5,13 @@
 #' `osrm-routed --version` to verify availability, then prints the directory
 #' containing the executable together with the backend version reported by
 #' `osrm-routed` so you know what will be used in the current session.
-#'
+#' @param quiet Logical; if `FALSE` (default), prints information about the located installation. If `TRUE`, suppresses printed output and only returns the information invisibly as a list.
 #' @return Invisibly returns a list with components `executable` (full path to
 #'   `osrm-routed`), `directory` (its parent folder), `osrm_version` (character
 #'   vector of non-empty lines emitted by `osrm-routed --version`), and the raw
 #'   `processx::run` result in `logs`.
 #' @export
-osrm_which <- function() {
+osrm_which <- function(quiet = FALSE) {
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_which", call. = FALSE)
   }
@@ -62,20 +62,22 @@ osrm_which <- function() {
 
   install_dir <- dirname(resolved)
 
-  message("OSRM installation directory: ", install_dir)
-  if (length(version_lines)) {
-    message("osrm-backend version: ", version_lines[1])
-    if (length(version_lines) > 1) {
-      for (extra in version_lines[-1]) {
-        message("  ", extra)
+  if (!quiet) {
+    message("OSRM installation directory: ", install_dir)
+    if (length(version_lines)) {
+      message("osrm-backend version: ", version_lines[1])
+      if (length(version_lines) > 1) {
+        for (extra in version_lines[-1]) {
+          message("  ", extra)
+        }
       }
+    } else {
+      message("osrm-backend version: <no output>")
     }
-  } else {
-    message("osrm-backend version: <no output>")
+    message(
+      "This is the installation that will be used by osrm_start() and other functions."
+    )
   }
-  message(
-    "This is the installation that will be used by osrm_start() and other functions."
-  )
 
   invisible(list(
     executable = resolved,

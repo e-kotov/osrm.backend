@@ -187,7 +187,7 @@ osrm_install <- function(
   if (!dir.exists(dest_dir)) {
     dir.create(dest_dir, recursive = TRUE, showWarnings = FALSE)
   }
-  dest_dir <- normalizePath(dest_dir, winslash = "/", mustWork = FALSE)
+  dest_dir <- normalizePath(dest_dir, mustWork = FALSE)
 
   bin_candidates <- file.path(dest_dir, c("osrm-routed", "osrm-routed.exe"))
   has_existing_install <- any(file.exists(bin_candidates))
@@ -488,8 +488,11 @@ osrm_default_install_root <- function() {
 
 #' @noRd
 osrm_try_normalize_path <- function(path) {
+  if (!file.exists(path)) {
+    return(path)
+  }
   tryCatch(
-    normalizePath(path, winslash = "/", mustWork = FALSE),
+    normalizePath(path),
     error = function(...) path
   )
 }
@@ -551,13 +554,17 @@ get_platform_info <- function(sys_info = Sys.info()) {
     machine <- as.character(machine)[1]
   }
 
-  sysname_key <- tolower(sysname)
-  os <- switch(
-    sysname_key,
-    linux = "linux",
-    darwin = "darwin",
-    windows = "win32"
-  )
+  if (is.null(sysname) || !nzchar(sysname)) {
+    os <- NULL
+  } else {
+    sysname_key <- tolower(sysname)
+    os <- switch(
+      sysname_key,
+      linux = "linux",
+      darwin = "darwin",
+      windows = "win32"
+    )
+  }
 
   normalized_machine <- NULL
   if (!is.null(machine) && isTRUE(nzchar(machine))) {
@@ -576,7 +583,7 @@ get_platform_info <- function(sys_info = Sys.info()) {
     aarch64 = "arm64",
     arm64 = "arm64"
   )
-  arch <- arch_map[[normalized_machine]]
+  arch <- if (!is.null(normalized_machine)) arch_map[[normalized_machine]]
 
   override_os <- getOption("osrm.backend.override_os")
   if (!is.null(override_os)) {
@@ -610,11 +617,11 @@ get_platform_info <- function(sys_info = Sys.info()) {
 
   if (is.null(os) || is.null(arch) || !nzchar(os) || !nzchar(arch)) {
     stop(
-      "Your platform is not supported by pre-compiled OSRM binaries. OS: ",
-      if (!is.null(override_os)) override_os else sysname,
-      ", Arch: ",
-      if (!is.null(override_arch)) override_arch else machine,
-      ".",
+      sprintf(
+        "Your platform is not supported by pre-compiled OSRM binaries. OS: %s, Arch: %s.",
+        if (!is.null(override_os)) override_os else if (!is.null(sysname)) sysname else "unknown",
+        if (!is.null(override_arch)) override_arch else if (!is.null(machine)) machine else "unknown"
+      ),
       call. = FALSE
     )
   }
@@ -657,8 +664,11 @@ get_macos_release_info <- function(sys_info) {
   darwin_major <- NA_integer_
   meets_requirement <- NA
   if (!is.na(release)) {
-    numeric_release <- suppressWarnings(as.numeric_version(release))
-    if (length(numeric_release)) {
+    numeric_release <- tryCatch(
+      suppressWarnings(as.numeric_version(release)),
+      error = function(e) NULL
+    )
+    if (!is.null(numeric_release) && length(numeric_release)) {
       components <- unclass(numeric_release)[[1]]
       if (length(components)) {
         major_component <- components[1]
@@ -1435,7 +1445,11 @@ version_at_least <- function(version, minimum) {
     return(FALSE)
   }
 
-  cmp <- suppressWarnings(utils::compareVersion(v_norm, min_norm))
+  cmp <- tryCatch(
+    suppressWarnings(utils::compareVersion(v_norm, min_norm)),
+    error = function(e) NA_integer_
+  )
+
   if (is.na(cmp)) {
     return(FALSE)
   }

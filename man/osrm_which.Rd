@@ -4,7 +4,10 @@
 \alias{osrm_which}
 \title{Locate the OSRM Installation Used by \code{osrm.backend}}
 \usage{
-osrm_which()
+osrm_which(quiet = FALSE)
+}
+\arguments{
+\item{quiet}{Logical; if \code{FALSE} (default), prints information about the located installation. If \code{TRUE}, suppresses printed output and only returns the information invisibly as a list.}
 }
 \value{
 Invisibly returns a list with components \code{executable} (full path to
