@@ -1,0 +1,106 @@
+# osrm.backend
+
+\![[https://www.ekotov.pro/osrm.backend/reference/figures/card.png\\](https://www.ekotov.pro/osrm.backend/reference/figures/card.png%5C)\]
+
+The goal of `osrm.backend` is to be a companion to
+[osrm](https://github.com/riatelab/osrm) R package
+<https://github.com/riatelab/osrm>:
+
+- easily install `osrm.backend` on major operating systems (Linux,
+  Windows, MacOS);
+
+- provide wrapper functions to prepare data for `osrm` routing;
+
+- provide wrapper to start/stop local OSRM backend server.
+
+You can prepare the OpenStreetMap data for routing with one function
+`osrm_start(<path_to_osm_file_or_folder_with_osm_file>)`, set the
+`osrm.server` option to `http://localhost:5001/` and use all the
+[osrm](https://github.com/riatelab/osrm) functions as usual. You do not
+need to have `osrm-backend` installed or have `Docker` to run
+`osrm-backend` from a container, everything is handled automatically an
+all major operating systems. Just follow the [Get
+started](https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html)
+guide. For advanced control over each step of the process, see the full
+[function
+reference](https://www.ekotov.pro/osrm.backend/reference/index.html).
+
+# Package index
+
+## Quick Start
+
+Automate installation, graph preparation, and server launch.
+
+- [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
+  : Start an OSRM Server with Automatic Setup
+- [`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md)
+  : Stop an OSRM Server
+
+## Install and update OSRM binaries
+
+Discover, install, or remove OSRM backend releases and keep your PATH
+tidy.
+
+- [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
+  : Install OSRM Backend Binaries
+
+- [`osrm_uninstall()`](https://www.ekotov.pro/osrm.backend/reference/osrm_uninstall.md)
+  : Uninstall OSRM Backend Binaries
+
+- [`osrm_which()`](https://www.ekotov.pro/osrm.backend/reference/osrm_which.md)
+  :
+
+  Locate the OSRM Installation Used by `osrm.backend`
+
+- [`osrm_clear_path()`](https://www.ekotov.pro/osrm.backend/reference/osrm_clear_path.md)
+  : Clear OSRM Path from Project's .Rprofile
+
+- [`osrm_check_latest_version()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_latest_version.md)
+  : Check for the Latest Stable OSRM Version
+
+- [`osrm_check_available_versions()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_available_versions.md)
+  : Check for Available OSRM Versions
+
+## Build routing graphs
+
+Prepare OSRM graphs from raw OSM extracts or run specific pipeline
+stages when you need finer control.
+
+- [`osrm_prepare_graph()`](https://www.ekotov.pro/osrm.backend/reference/osrm_prepare_graph.md)
+  : Prepare OSRM Graph for Routing (Extract + Partition/Contract)
+- [`osrm_extract()`](https://www.ekotov.pro/osrm.backend/reference/osrm_extract.md)
+  : Extract OSM into OSRM Graph Files
+- [`osrm_partition()`](https://www.ekotov.pro/osrm.backend/reference/osrm_partition.md)
+  : Partition OSRM Graph for Multi-Level Dijkstra (MLD)
+- [`osrm_customize()`](https://www.ekotov.pro/osrm.backend/reference/osrm_customize.md)
+  : Customize OSRM Graph for Multi-Level Dijkstra (MLD)
+- [`osrm_contract()`](https://www.ekotov.pro/osrm.backend/reference/osrm_contract.md)
+  : Contract OSRM Graph for Contraction Hierarchies (CH)
+- [`osrm_find_profile()`](https://www.ekotov.pro/osrm.backend/reference/osrm_find_profile.md)
+  : Locate an OSRM Lua profile (e.g. car.lua) in a host installation
+
+## Run and monitor servers
+
+Launch `osrm-routed` manually, inspect registered processes, and stop
+them cleanly.
+
+- [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md)
+  :
+
+  Start an OSRM MLD/CH server with `osrm-routed`
+
+- [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md)
+  : List OSRM servers started via this package
+
+- [`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md)
+  : Stop an OSRM Server
+
+- [`osrm_stop_all()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop_all.md)
+  : Stop all running OSRM servers started via this package
+
+# Articles
+
+### All vignettes
+
+- [Quick Start: Install OSRM and calculate
+  routes](https://www.ekotov.pro/osrm.backend/articles/osrm-backend.md):

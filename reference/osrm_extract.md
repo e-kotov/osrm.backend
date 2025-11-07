@@ -1,0 +1,148 @@
+# Extract OSM into OSRM Graph Files
+
+Run the `osrm-extract` tool to preprocess an OSM file (`.osm`,
+`.osm.bz2`, or `.osm.pbf`) into the base `.osrm` graph files using a
+specified Lua profile. After running, a companion
+`<base>.osrm.timestamp` file must exist to confirm success.
+
+## Usage
+
+``` r
+osrm_extract(
+  input_osm,
+  profile = osrm_find_profile("car.lua"),
+  threads = 8L,
+  overwrite = FALSE,
+  verbosity = c("INFO", "NONE", "ERROR", "WARNING", "DEBUG"),
+  data_version = NULL,
+  small_component_size = 1000L,
+  with_osm_metadata = FALSE,
+  parse_conditional_restrictions = FALSE,
+  location_dependent_data = NULL,
+  disable_location_cache = FALSE,
+  dump_nbg_graph = FALSE,
+  echo_cmd = FALSE,
+  echo = TRUE,
+  spinner = TRUE
+)
+```
+
+## Arguments
+
+- input_osm:
+
+  A string. Path to the input OSM file: `.osm`, `.osm.bz2`, or
+  `.osm.pbf`.
+
+- profile:
+
+  A string. Path to the OSRM Lua profile (e.g. returned by
+  `osrm_find_profile("car.lua")`).
+
+- threads:
+
+  An integer. Number of threads for `-t/--threads`; default `8` (OSRM's
+  default).
+
+- overwrite:
+
+  A logical. If `FALSE` (default), stops when any existing `.osrm*`
+  files matching the base name are found alongside `input_osm`. Set to
+  `TRUE` to proceed regardless.
+
+- verbosity:
+
+  A string. Log verbosity level passed to `-l/--verbosity` (one of
+  `"NONE","ERROR","WARNING","INFO","DEBUG"`), default `"INFO"`.
+
+- data_version:
+
+  A string or `NULL`. Passed to `-d/--data_version`; default `NULL`, in
+  which case the option is omitted.
+
+- small_component_size:
+
+  An integer. For `--small-component-size`; default `1000` (OSRM's
+  default).
+
+- with_osm_metadata:
+
+  A logical. If `TRUE`, adds `--with-osm-metadata`; default `FALSE`.
+
+- parse_conditional_restrictions:
+
+  A logical. If `TRUE`, adds `--parse-conditional-restrictions`; default
+  `FALSE`.
+
+- location_dependent_data:
+
+  A string or `NULL`. Path to GeoJSON, passed to
+  `--location-dependent-data`; default `NULL`, in which case the option
+  is omitted.
+
+- disable_location_cache:
+
+  A logical. If `TRUE`, adds `--disable-location-cache`; default
+  `FALSE`.
+
+- dump_nbg_graph:
+
+  A logical. If `TRUE`, adds `--dump-nbg-graph`; default `FALSE`.
+
+- echo_cmd:
+
+  A logical. Print each command before running; default `FALSE`.
+
+- echo:
+
+  A logical. Stream stdout/stderr; default `TRUE`.
+
+- spinner:
+
+  A logical. Show spinner instead of live logs; default `TRUE`.
+
+## Value
+
+A list with two elements:
+
+- osrm_path:
+
+  The expected path to the generated `.osrm` base, i.e. the timestamp
+  file path with `.timestamp` dropped.
+
+- logs:
+
+  The [`processx::run`](http://processx.r-lib.org/reference/run.md)
+  result object.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# install osrm and set up PATH for the session
+osrm_executable <- osrm_install(
+ version = "v5.27.1",
+ path_action = "session"
+)
+# copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+workspace <- tempdir()
+tmp_prefix <- file.path(workspace, paste0("osrm-example-", Sys.getpid()))
+pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+tmp_pbf <- paste0(tmp_prefix, ".osm.pbf")
+file.copy(pbf_path, tmp_pbf, overwrite = TRUE)
+# Find the path to the profile first
+car_profile <- osrm_find_profile("car.lua")
+
+# extract OSRM graph files
+result <- osrm_extract(
+  input_osm                  = tmp_pbf,
+  profile                    = car_profile,
+  overwrite                  = TRUE,
+  threads                    = 1L
+)
+# path to generated .osrm files (specifically, the .osrm.timestamp file)
+result$osrm_path
+# clean up the temporary workspace
+unlink(workspace, recursive = TRUE)
+} # }
+```
