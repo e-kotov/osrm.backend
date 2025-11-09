@@ -762,10 +762,12 @@ github_api_request_with_retries <- function(url, error_message, verb = "GET") {
     httr2::req_error(body = function(resp) {
       httr2::resp_body_json(resp)$message
     }) |>
+    # Correctly define transient errors using public functions.
+    # We retry on GitHub's rate-limiting status (403), as well as the
+    # standard 429 (Too Many Requests) and 503 (Service Unavailable).
     httr2::req_retry(
       max_tries = 4,
-      is_transient = ~ httr2::resp_is_transient(.x) ||
-        httr2::resp_status(.x) == 403
+      is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
     )
 
   resp <- tryCatch(
