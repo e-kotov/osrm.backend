@@ -8,7 +8,13 @@ with minimal steps.
 ## Usage
 
 ``` r
-osrm_start(path, algorithm = c("mld", "ch"), verbose = FALSE, ...)
+osrm_start(
+  path,
+  algorithm = c("mld", "ch"),
+  quiet = FALSE,
+  verbose = FALSE,
+  ...
+)
 ```
 
 ## Arguments
@@ -29,6 +35,11 @@ osrm_start(path, algorithm = c("mld", "ch"), verbose = FALSE, ...)
   preparation, either `"mld"` (Multi-Level Dijkstra, default) or `"ch"`
   (Contraction Hierarchies). This is only used when `osrm_prepare_graph`
   is automatically called.
+
+- quiet:
+
+  A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
+  Defaults to `FALSE`.
 
 - verbose:
 

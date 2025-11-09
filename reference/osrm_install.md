@@ -59,8 +59,8 @@ osrm_install(
 
 - quiet:
 
-  A logical value. If `TRUE`, suppresses the confirmation prompt when
-  `path_action = "project"`. Defaults to `FALSE`.
+  A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
+  Defaults to `FALSE`.
 
 ## Value
 
