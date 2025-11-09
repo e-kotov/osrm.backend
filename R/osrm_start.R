@@ -25,7 +25,7 @@
 #' console output from the installation and graph preparation steps. For full
 #' manual control, use the lower-level functions like `osrm_prepare_graph()` and
 #' `osrm_start_server()` directly.
-#'
+#' @inheritParams osrm_install
 #' @param path A string. Path to the input data. Can be one of:
 #'   \itemize{
 #'     \item A path to an OSM file (e.g., `/path/to/data.osm.pbf`).
@@ -69,6 +69,7 @@
 osrm_start <- function(
   path,
   algorithm = c("mld", "ch"),
+  quiet = FALSE,
   verbose = FALSE,
   ...
 ) {
@@ -88,15 +89,11 @@ osrm_start <- function(
   # 1. Check if OSRM is installed, if not, install it
   osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
   if (!nzchar(Sys.which(osrm_exec))) {
-    message("OSRM backend not found. Installing latest version...")
-    if (isTRUE(verbose)) {
-      osrm_install(version = "latest", path_action = "session")
-    } else {
-      suppressMessages({
-        osrm_install(version = "latest", path_action = "session")
-      })
+    if (!quiet) {
+      message("OSRM backend not found. Installing latest version...")
     }
-    message("Installation complete.")
+    osrm_install(version = "latest", path_action = "session", quiet = quiet)
+    if (!quiet) message("Installation complete.")
   }
 
   # 2. Resolve input path and prepare graph if necessary
@@ -133,19 +130,20 @@ osrm_start <- function(
       }
       osm_input <- osm_files[1]
 
-      message(
-        "OSRM graph not found. Preparing graph from '",
-        basename(osm_input),
-        "', this may take a while..."
-      )
+      if (!quiet) {
+        message(
+          "OSRM graph not found. Preparing graph from '",
+          basename(osm_input),
+          "', this may take a while..."
+        )
+      }
       prepare_args$input_osm <- osm_input
       prepare_args$algorithm <- algorithm
-      prepare_args$echo <- dot_args$echo %||% verbose
-      prepare_args$spinner <- dot_args$spinner %||% !verbose # Show spinner if not verbose
+      prepare_args$quiet <- quiet
 
       prepared_graph <- do.call(osrm_prepare_graph, prepare_args)
       final_graph_path <- prepared_graph$osrm_path
-      message("Graph preparation complete.")
+      if (!quiet) message("Graph preparation complete.")
     }
   } else {
     # Input is a file
@@ -159,19 +157,20 @@ osrm_start <- function(
       } else if (file.exists(ch_graph)) {
         final_graph_path <- ch_graph
       } else {
-        message(
-          "OSRM graph not found. Preparing graph from '",
-          basename(path),
-          "', this may take a while..."
-        )
+        if (!quiet) {
+          message(
+            "OSRM graph not found. Preparing graph from '",
+            basename(path),
+            "', this may take a while..."
+          )
+        }
         prepare_args$input_osm <- path
         prepare_args$algorithm <- algorithm
-        prepare_args$echo <- dot_args$echo %||% verbose
-        prepare_args$spinner <- dot_args$spinner %||% !verbose
+        prepare_args$quiet <- quiet
 
         prepared_graph <- do.call(osrm_prepare_graph, prepare_args)
         final_graph_path <- prepared_graph$osrm_path
-        message("Graph preparation complete.")
+        if (!quiet) message("Graph preparation complete.")
       }
     } else if (grepl("\\.osrm\\.(mldgr|hsgr)$", path, ignore.case = TRUE)) {
       final_graph_path <- path
@@ -189,11 +188,13 @@ osrm_start <- function(
 
   # 3. Start the server
   server_args$osrm_path <- final_graph_path
-  message(
-    "Starting OSRM server with graph '",
-    basename(final_graph_path),
-    "'..."
-  )
+  if (!quiet) {
+    message(
+      "Starting OSRM server with graph '",
+      basename(final_graph_path),
+      "'..."
+    )
+  }
 
   osrm_process <- do.call(osrm_start_server, server_args)
 
@@ -201,11 +202,13 @@ osrm_start <- function(
   pid <- osrm_process$get_pid()
   port <- server_args$port %||% 5001L # Get port from args or use default
 
-  message(sprintf(
-    "OSRM server started successfully (pid %s, port %s).",
-    pid,
-    port
-  ))
+  if (!quiet) {
+    message(sprintf(
+      "OSRM server started successfully (pid %s, port %s).",
+      pid,
+      port
+    ))
+  }
 
   return(osrm_process)
 }

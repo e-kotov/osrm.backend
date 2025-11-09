@@ -34,7 +34,7 @@ If \code{FALSE} (default), the function will stop if an existing installation is
 \item \code{"none"}: Does not modify the \code{PATH}.
 }}
 
-\item{quiet}{A logical value. If \code{TRUE}, suppresses the confirmation prompt when \code{path_action = "project"}.
+\item{quiet}{A logical value. If \code{TRUE}, suppresses messages. Defaults to \code{FALSE}.
 Defaults to \code{FALSE}.}
 }
 \value{
