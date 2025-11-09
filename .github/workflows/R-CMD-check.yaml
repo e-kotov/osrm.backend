@@ -59,24 +59,7 @@ jobs:
           extra-packages: any::rcmdcheck
           needs: check
 
-      - name: Pre-build vignettes
-        run: |
-          if (!dir.exists("inst/doc")) dir.create("inst/doc", recursive = TRUE)
-          if (file.exists("vignettes/gridmaker.qmd")) {
-            message("Rendering vignette...")
-            quarto::quarto_render("vignettes/gridmaker.qmd")
-            if (file.exists("vignettes/gridmaker.html")) {
-              file.copy("vignettes/gridmaker.html", "inst/doc/gridmaker.html", overwrite = TRUE)
-            }
-            file.copy("vignettes/gridmaker.qmd", "inst/doc/gridmaker.qmd", overwrite = TRUE)
-            if (dir.exists("vignettes/figures")) {
-              if (!dir.exists("inst/doc/figures")) dir.create("inst/doc/figures", recursive = TRUE)
-              file.copy("vignettes/figures", "inst/doc", recursive = TRUE, overwrite = TRUE)
-            }
-          }
-        shell: Rscript {0}
-
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: 'c("--no-manual","--compact-vignettes=gs+qpdf")'
+          build_args: 'c("--no-manual")'
