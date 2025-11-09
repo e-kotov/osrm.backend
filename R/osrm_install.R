@@ -758,17 +758,25 @@ get_macos_release_info <- function(sys_info) {
 
 #' @noRd
 github_api_request_with_retries <- function(url, error_message, verb = "GET") {
+  # Base request with error handling and retry policy
   req <- httr2::request(url) |>
     httr2::req_error(body = function(resp) {
       httr2::resp_body_json(resp)$message
     }) |>
-    # Correctly define transient errors using public functions.
-    # We retry on GitHub's rate-limiting status (403), as well as the
+    # Retry on GitHub's rate-limiting status (403), as well as the
     # standard 429 (Too Many Requests) and 503 (Service Unavailable).
     httr2::req_retry(
       max_tries = 4,
       is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
     )
+
+  # Check for a GitHub Personal Access Token to increase rate limits.
+  # This is especially important for CI/CD environments.
+  token <- Sys.getenv("GITHUB_PAT")
+  if (nzchar(token)) {
+    # Add authentication header if token is found
+    req <- req |> httr2::req_auth_bearer_token(token)
+  }
 
   resp <- tryCatch(
     httr2::req_perform(req),
