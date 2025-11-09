@@ -56,7 +56,7 @@
 #'     \item `"project"`: Modifies the `.Rprofile` in the current project to set the `PATH` for all future sessions in that project.
 #'     \item `"none"`: Does not modify the `PATH`.
 #'   }
-#' @param quiet A logical value. If `TRUE`, suppresses the confirmation prompt when `path_action = "project"`.
+#' @param quiet A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
 #'   Defaults to `FALSE`.
 #' @return The path to the installation directory, invisibly.
 #' @export
@@ -236,7 +236,8 @@ osrm_install <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url)
+      req <- httr2::request(asset_url) |>
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_file)
     },
     error = function(e) {
@@ -619,8 +620,20 @@ get_platform_info <- function(sys_info = Sys.info()) {
     stop(
       sprintf(
         "Your platform is not supported by pre-compiled OSRM binaries. OS: %s, Arch: %s.",
-        if (!is.null(override_os)) override_os else if (!is.null(sysname)) sysname else "unknown",
-        if (!is.null(override_arch)) override_arch else if (!is.null(machine)) machine else "unknown"
+        if (!is.null(override_os)) {
+          override_os
+        } else if (!is.null(sysname)) {
+          sysname
+        } else {
+          "unknown"
+        },
+        if (!is.null(override_arch)) {
+          override_arch
+        } else if (!is.null(machine)) {
+          machine
+        } else {
+          "unknown"
+        }
       ),
       call. = FALSE
     )
@@ -744,18 +757,44 @@ get_macos_release_info <- function(sys_info) {
 }
 
 #' @noRd
-get_all_releases <- function() {
-  repo <- "Project-OSRM/osrm-backend"
-  url <- paste0("https://api.github.com/repos/", repo, "/releases")
-
+github_api_request_with_retries <- function(url, error_message, verb = "GET") {
+  # Base request with error handling and retry policy
   req <- httr2::request(url) |>
-    httr2::req_error(body = function(resp) httr2::resp_body_json(resp)$message)
+    httr2::req_error(body = function(resp) {
+      httr2::resp_body_json(resp)$message
+    }) |>
+    # Retry on GitHub's rate-limiting status (403), as well as the
+    # standard 429 (Too Many Requests) and 503 (Service Unavailable).
+    httr2::req_retry(
+      max_tries = 4,
+      is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
+    )
+
+  # Check for a GitHub Personal Access Token to increase rate limits.
+  # This is especially important for CI/CD environments.
+  token <- Sys.getenv("GITHUB_PAT")
+  if (nzchar(token)) {
+    # Add authentication header if token is found
+    req <- req |> httr2::req_auth_bearer_token(token)
+  }
 
   resp <- tryCatch(
     httr2::req_perform(req),
     error = function(e) {
-      stop("GitHub API request failed: ", e$message, call. = FALSE)
+      stop(error_message, e$message, call. = FALSE)
     }
+  )
+  return(resp)
+}
+
+#' @noRd
+get_all_releases <- function() {
+  repo <- "Project-OSRM/osrm-backend"
+  url <- paste0("https://api.github.com/repos/", repo, "/releases")
+
+  resp <- github_api_request_with_retries(
+    url,
+    error_message = "GitHub API request failed: "
   )
 
   httr2::resp_body_json(resp)
@@ -771,14 +810,9 @@ get_release_by_tag <- function(version) {
     version
   )
 
-  req <- httr2::request(url) |>
-    httr2::req_error(body = function(resp) httr2::resp_body_json(resp)$message)
-
-  resp <- tryCatch(
-    httr2::req_perform(req),
-    error = function(e) {
-      stop("GitHub API request failed: ", e$message, call. = FALSE)
-    }
+  resp <- github_api_request_with_retries(
+    url,
+    error_message = "GitHub API request failed: "
   )
 
   httr2::resp_body_json(resp)
@@ -856,7 +890,8 @@ install_profiles_for_release <- function(release_info, dest_dir) {
 
   tryCatch(
     {
-      req <- httr2::request(tarball_url)
+      req <- httr2::request(tarball_url) |>
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tarball)
     },
     error = function(e) {
@@ -1149,7 +1184,8 @@ ensure_linux_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url)
+      req <- httr2::request(asset_url) |>
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1278,7 +1314,8 @@ ensure_macos_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url)
+      req <- httr2::request(asset_url) |>
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1466,7 +1503,8 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   tmp_zip <- tempfile(fileext = ".zip")
   on.exit(unlink(tmp_zip), add = TRUE)
 
-  req <- httr2::request(url)
+  req <- httr2::request(url) |>
+    httr2::req_retry(max_tries = 3)
   tryCatch(
     httr2::req_perform(req, path = tmp_zip),
     error = function(e) {
