@@ -237,7 +237,7 @@ osrm_install <- function(
   tryCatch(
     {
       req <- httr2::request(asset_url) |>
-        httr2::req_backoff(max_tries = 3)
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_file)
     },
     error = function(e) {
@@ -762,7 +762,11 @@ github_api_request_with_retries <- function(url, error_message, verb = "GET") {
     httr2::req_error(body = function(resp) {
       httr2::resp_body_json(resp)$message
     }) |>
-    httr2::req_retry(max_tries = 3, backoff = 1)
+    httr2::req_retry(
+      max_tries = 4,
+      is_transient = ~ httr2::resp_is_transient(.x) ||
+        httr2::resp_status(.x) == 403
+    )
 
   resp <- tryCatch(
     httr2::req_perform(req),
@@ -877,7 +881,7 @@ install_profiles_for_release <- function(release_info, dest_dir) {
   tryCatch(
     {
       req <- httr2::request(tarball_url) |>
-        httr2::req_backoff(max_tries = 3)
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tarball)
     },
     error = function(e) {
@@ -1171,7 +1175,7 @@ ensure_linux_tbb_runtime <- function(
   tryCatch(
     {
       req <- httr2::request(asset_url) |>
-        httr2::req_backoff(max_tries = 3)
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1301,7 +1305,7 @@ ensure_macos_tbb_runtime <- function(
   tryCatch(
     {
       req <- httr2::request(asset_url) |>
-        httr2::req_backoff(max_tries = 3)
+        httr2::req_retry(max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1490,7 +1494,7 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   on.exit(unlink(tmp_zip), add = TRUE)
 
   req <- httr2::request(url) |>
-    httr2::req_backoff(max_tries = 3)
+    httr2::req_retry(max_tries = 3)
   tryCatch(
     httr2::req_perform(req, path = tmp_zip),
     error = function(e) {
