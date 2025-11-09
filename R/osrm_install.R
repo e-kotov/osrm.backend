@@ -762,12 +762,7 @@ github_api_request_with_retries <- function(url, error_message, verb = "GET") {
     httr2::req_error(body = function(resp) {
       httr2::resp_body_json(resp)$message
     }) |>
-    # This call implicitly uses the smart exponential backoff cool-off strategy.
-    httr2::req_backoff(
-      max_tries = 4,
-      is_transient = ~ httr2::resp_is_transient(.x) ||
-        httr2::resp_status(.x) == 403
-    )
+    httr2::req_retry(max_tries = 3, backoff = 1)
 
   resp <- tryCatch(
     httr2::req_perform(req),
