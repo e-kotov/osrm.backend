@@ -17,9 +17,10 @@ osrm_extract(
   location_dependent_data = NULL,
   disable_location_cache = FALSE,
   dump_nbg_graph = FALSE,
-  echo_cmd = FALSE,
   quiet = FALSE,
-  spinner = TRUE
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 )
 }
 \arguments{
@@ -63,9 +64,17 @@ case the option is omitted.}
 \item{dump_nbg_graph}{A logical. If \code{TRUE}, adds
 \code{--dump-nbg-graph}; default \code{FALSE}.}
 
-\item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
+\item{quiet}{A logical. Master switch that suppresses package messages and
+process output when \code{TRUE}; default \code{FALSE}.}
 
-\item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
+\item{verbose}{A logical. When \code{TRUE} and \code{quiet = FALSE}, streams stdout and
+stderr from the underlying \code{processx::run} calls.}
+
+\item{spinner}{A logical. When \code{TRUE} and \code{quiet = FALSE}, shows a spinner
+instead of live logs; default \code{TRUE}.}
+
+\item{echo_cmd}{A logical. When \code{TRUE} and \code{quiet = FALSE}, prints each
+command before running; default \code{FALSE}.}
 }
 \value{
 A list with two elements:

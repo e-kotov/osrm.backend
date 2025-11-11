@@ -84,9 +84,10 @@ osrm_extract <- function(
   location_dependent_data = NULL,
   disable_location_cache = FALSE,
   dump_nbg_graph = FALSE,
-  echo_cmd = FALSE,
   quiet = FALSE,
-  spinner = TRUE
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_extract", call. = FALSE)
@@ -160,13 +161,18 @@ osrm_extract <- function(
     arguments <- c(arguments, "--dump-nbg-graph")
   }
 
+  # Determine final processx parameters
+  show_echo <- !quiet && verbose
+  show_spinner <- !quiet && spinner
+  show_echo_cmd <- !quiet && echo_cmd
+
   # run extraction
   logs <- processx::run(
     "osrm-extract",
     args = arguments,
-    echo = !quiet,
-    spinner = spinner,
-    echo_cmd = echo_cmd
+    echo = show_echo,
+    spinner = show_spinner,
+    echo_cmd = show_echo_cmd
   )
 
   # verify timestamp file

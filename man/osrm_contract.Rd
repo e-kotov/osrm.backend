@@ -13,9 +13,10 @@ osrm_contract(
   edge_weight_updates_over_factor = 0,
   parse_conditionals_from_now = 0,
   time_zone_file = NULL,
-  echo_cmd = FALSE,
   quiet = FALSE,
-  spinner = TRUE
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 )
 }
 \arguments{
@@ -36,9 +37,17 @@ osrm_contract(
 
 \item{time_zone_file}{A string or \code{NULL}. GeoJSON file for time zone boundaries; default \code{NULL}.}
 
-\item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
+\item{quiet}{A logical. Master switch that suppresses package messages and
+process output when \code{TRUE}; default \code{FALSE}.}
 
-\item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
+\item{verbose}{A logical. When \code{TRUE} and \code{quiet = FALSE}, streams stdout and
+stderr from the underlying \code{processx::run} calls.}
+
+\item{spinner}{A logical. When \code{TRUE} and \code{quiet = FALSE}, shows a spinner
+instead of live logs; default \code{TRUE}.}
+
+\item{echo_cmd}{A logical. When \code{TRUE} and \code{quiet = FALSE}, prints each
+command before running; default \code{FALSE}.}
 }
 \value{
 A list with elements:

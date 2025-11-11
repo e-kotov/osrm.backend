@@ -75,6 +75,8 @@ osrm_start <- function(
 ) {
   # Match algorithm argument
   algorithm <- match.arg(algorithm)
+  quiet <- isTRUE(quiet)
+  verbose <- isTRUE(verbose)
 
   # Capture additional arguments
   dot_args <- list(...)
@@ -139,9 +141,12 @@ osrm_start <- function(
       }
       prepare_args$input_osm <- osm_input
       prepare_args$algorithm <- algorithm
-      prepare_args$quiet <- quiet
+      prepare_call_args <- modifyList(
+        prepare_args,
+        list(quiet = quiet, verbose = verbose)
+      )
 
-      prepared_graph <- do.call(osrm_prepare_graph, prepare_args)
+      prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
       final_graph_path <- prepared_graph$osrm_path
       if (!quiet) message("Graph preparation complete.")
     }
@@ -166,9 +171,12 @@ osrm_start <- function(
         }
         prepare_args$input_osm <- path
         prepare_args$algorithm <- algorithm
-        prepare_args$quiet <- quiet
+        prepare_call_args <- modifyList(
+          prepare_args,
+          list(quiet = quiet, verbose = verbose)
+        )
 
-        prepared_graph <- do.call(osrm_prepare_graph, prepare_args)
+        prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
         final_graph_path <- prepared_graph$osrm_path
         if (!quiet) message("Graph preparation complete.")
       }
@@ -188,6 +196,10 @@ osrm_start <- function(
 
   # 3. Start the server
   server_args$osrm_path <- final_graph_path
+  server_call_args <- modifyList(
+    server_args,
+    list(quiet = quiet, verbose = verbose)
+  )
   if (!quiet) {
     message(
       "Starting OSRM server with graph '",
@@ -196,7 +208,7 @@ osrm_start <- function(
     )
   }
 
-  osrm_process <- do.call(osrm_start_server, server_args)
+  osrm_process <- do.call(osrm_start_server, server_call_args)
 
   # Extract info for the final confirmation message
   pid <- osrm_process$get_pid()
