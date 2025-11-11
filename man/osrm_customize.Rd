@@ -14,7 +14,7 @@ osrm_customize(
   parse_conditionals_from_now = 0,
   time_zone_file = NULL,
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 )
 }
@@ -37,8 +37,6 @@ osrm_customize(
 \item{time_zone_file}{A string or \code{NULL}. GeoJSON file with time zone boundaries; default \code{NULL}.}
 
 \item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
-
-\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
 
 \item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
 }

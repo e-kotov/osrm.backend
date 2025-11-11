@@ -23,7 +23,7 @@ osrm_prepare_graph(
   optimizing_cuts = 10L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 )
 }
@@ -66,9 +66,9 @@ the base name are found alongside \code{input_osm}. Set to \code{TRUE} to overwr
 
 \item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
 
-\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
-
 \item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
+
+\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
 }
 \value{
 A list with elements:

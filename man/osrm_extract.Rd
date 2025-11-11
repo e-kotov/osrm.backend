@@ -18,7 +18,7 @@ osrm_extract(
   disable_location_cache = FALSE,
   dump_nbg_graph = FALSE,
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 )
 }
@@ -64,8 +64,6 @@ case the option is omitted.}
 \code{--dump-nbg-graph}; default \code{FALSE}.}
 
 \item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
-
-\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
 
 \item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
 }

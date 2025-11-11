@@ -31,7 +31,7 @@ osrm_partition <- function(
   small_component_size = 1000L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -80,7 +80,7 @@ osrm_partition <- function(
   logs <- processx::run(
     "osrm-partition",
     args = arguments,
-    echo = echo,
+    echo = !quiet,
     spinner = spinner,
     echo_cmd = echo_cmd
   )

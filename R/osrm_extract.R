@@ -85,7 +85,7 @@ osrm_extract <- function(
   disable_location_cache = FALSE,
   dump_nbg_graph = FALSE,
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -164,7 +164,7 @@ osrm_extract <- function(
   logs <- processx::run(
     "osrm-extract",
     args = arguments,
-    echo = echo,
+    echo = !quiet,
     spinner = spinner,
     echo_cmd = echo_cmd
   )

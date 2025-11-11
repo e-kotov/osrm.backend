@@ -31,7 +31,7 @@ osrm_customize <- function(
   parse_conditionals_from_now = 0,
   time_zone_file = NULL,
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -94,7 +94,7 @@ osrm_customize <- function(
   logs <- processx::run(
     "osrm-customize",
     args = arguments,
-    echo = echo,
+    echo = !quiet,
     spinner = spinner,
     echo_cmd = echo_cmd
   )

@@ -54,7 +54,7 @@ osrm_prepare_graph <- function(
   optimizing_cuts = 10L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
   echo_cmd = FALSE,
-  echo = TRUE,
+  quiet = FALSE,
   spinner = TRUE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -76,7 +76,7 @@ osrm_prepare_graph <- function(
     disable_location_cache = disable_location_cache,
     dump_nbg_graph = dump_nbg_graph,
     echo_cmd = echo_cmd,
-    echo = echo,
+    quiet = quiet,
     spinner = spinner
   )
   base <- extract_res$osrm_path
@@ -95,7 +95,7 @@ osrm_prepare_graph <- function(
       small_component_size = small_component_size,
       max_cell_sizes = max_cell_sizes,
       echo_cmd = echo_cmd,
-      echo = echo,
+      quiet = quiet,
       spinner = spinner
     )
     logs_list$partition <- part_res$logs
@@ -110,7 +110,7 @@ osrm_prepare_graph <- function(
       parse_conditionals_from_now = 0,
       time_zone_file = NULL,
       echo_cmd = echo_cmd,
-      echo = echo,
+      quiet = quiet,
       spinner = spinner
     )
     logs_list$customize <- osrm_graph$logs
@@ -125,7 +125,7 @@ osrm_prepare_graph <- function(
       parse_conditionals_from_now = 0,
       time_zone_file = NULL,
       echo_cmd = echo_cmd,
-      echo = echo,
+      quiet = quiet,
       spinner = spinner
     )
     logs_list$contract <- osrm_graph$logs
