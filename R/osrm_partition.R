@@ -30,9 +30,10 @@ osrm_partition <- function(
   optimizing_cuts = 10L,
   small_component_size = 1000L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_partition", call. = FALSE)
@@ -77,12 +78,17 @@ osrm_partition <- function(
     paste(max_cell_sizes, collapse = ",")
   )
 
+  # Determine final processx parameters
+  show_echo <- !quiet && verbose
+  show_spinner <- !quiet && spinner
+  show_echo_cmd <- !quiet && echo_cmd
+
   logs <- processx::run(
     "osrm-partition",
     args = arguments,
-    echo = echo,
-    spinner = spinner,
-    echo_cmd = echo_cmd
+    echo = show_echo,
+    spinner = show_spinner,
+    echo_cmd = show_echo_cmd
   )
 
   partition_file <- paste0(gsub("\\.osrm$", "", osrm_path), ".osrm.partition")

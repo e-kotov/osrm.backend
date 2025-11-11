@@ -50,6 +50,9 @@
 #' @param max_alternatives Integer (default: `3`)
 #' @param max_matching_radius Integer; use `-1` for unlimited (default: `-1`)
 #' @param echo_cmd Logical; echo command line to console before launch (default: `FALSE`)
+#' @param quiet Logical; when `TRUE`, suppresses package messages.
+#' @param verbose Logical; reserved for controlling future server verbosity, included
+#'   for interface consistency with [osrm_start()]. Defaults to `FALSE`.
 #'
 #' @return A `processx::process` object for the running server (also registered internally)
 #' @export
@@ -74,6 +77,8 @@ osrm_start_server <- function(
   max_nearest_size = 100L,
   max_alternatives = 3L,
   max_matching_radius = -1L,
+  quiet = FALSE,
+  verbose = FALSE,
   echo_cmd = FALSE
 ) {
   # Dependencies
@@ -83,6 +88,8 @@ osrm_start_server <- function(
       call. = FALSE
     )
   }
+  quiet <- isTRUE(quiet)
+  verbose <- isTRUE(verbose)
 
   # Validate inputs
   if (!is.character(osrm_path) || length(osrm_path) != 1) {
@@ -261,19 +268,25 @@ osrm_start_server <- function(
       if (!is.null(log_path)) {
         stdout_dest <- log_path
         stderr_dest <- log_path
-        message("Redirecting server stdout and stderr to: ", log_path)
+        if (!quiet) {
+          message("Redirecting server stdout and stderr to: ", log_path)
+        }
       }
     } else if (is.list(log_opt)) {
       # Option 2: Separate stdout and stderr
       stdout_path <- prepare_log_path(log_opt$stdout)
       if (!is.null(stdout_path)) {
         stdout_dest <- stdout_path
-        message("Redirecting server stdout to: ", stdout_path)
+        if (!quiet) {
+          message("Redirecting server stdout to: ", stdout_path)
+        }
       }
       stderr_path <- prepare_log_path(log_opt$stderr)
       if (!is.null(stderr_path)) {
         stderr_dest <- stderr_path
-        message("Redirecting server stderr to: ", stderr_path)
+        if (!quiet) {
+          message("Redirecting server stderr to: ", stderr_path)
+        }
       }
     }
   }
@@ -290,14 +303,16 @@ osrm_start_server <- function(
   }
 
   # Echo & launch
-  if (isTRUE(echo_cmd)) {
+  show_echo_cmd <- !quiet && isTRUE(echo_cmd)
+
+  if (show_echo_cmd) {
     message(osrm_exec, " ", paste(shQuote(arguments), collapse = " "))
   }
 
   osrm_server <- processx::process$new(
     osrm_exec,
     args = arguments,
-    echo_cmd = echo_cmd,
+    echo_cmd = show_echo_cmd,
     stdout = stdout_dest,
     stderr = stderr_dest
   )

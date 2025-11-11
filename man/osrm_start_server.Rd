@@ -25,6 +25,8 @@ osrm_start_server(
   max_nearest_size = 100L,
   max_alternatives = 3L,
   max_matching_radius = -1L,
+  quiet = FALSE,
+  verbose = FALSE,
   echo_cmd = FALSE
 )
 }
@@ -68,6 +70,11 @@ osrm_start_server(
 \item{max_alternatives}{Integer (default: \code{3})}
 
 \item{max_matching_radius}{Integer; use \code{-1} for unlimited (default: \code{-1})}
+
+\item{quiet}{Logical; when \code{TRUE}, suppresses package messages.}
+
+\item{verbose}{Logical; reserved for controlling future server verbosity, included
+for interface consistency with \code{\link[=osrm_start]{osrm_start()}}. Defaults to \code{FALSE}.}
 
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
 }

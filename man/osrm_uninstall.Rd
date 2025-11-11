@@ -17,8 +17,8 @@ to choose a directory; otherwise, \code{dest_dir} must be supplied.}
 \item{clear_path}{A logical value. If \code{TRUE} (default), also removes the
 \code{PATH} configuration from the project's \code{.Rprofile} by calling \code{osrm_clear_path()}.}
 
-\item{quiet}{A logical value. If \code{TRUE}, suppresses confirmation prompts.
-Defaults to \code{FALSE}.}
+\item{quiet}{A logical value. If \code{TRUE}, suppresses informational messages
+and confirmation prompts. Defaults to \code{FALSE}.}
 }
 \value{
 Invisibly returns \code{TRUE} if the directory was successfully removed,

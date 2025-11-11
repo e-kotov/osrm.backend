@@ -37,7 +37,7 @@ Start the server with `osrm_start()` function pointing to the temporary director
 
 ```{r}
 #| label: start-osrm-server
-osrm_start(osrm_temp_dir)
+osrm_start(osrm_temp_dir, verbose = TRUE)
 ```
 
 ::: callout-tip

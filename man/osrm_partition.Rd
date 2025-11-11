@@ -13,9 +13,10 @@ osrm_partition(
   optimizing_cuts = 10L,
   small_component_size = 1000L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 )
 }
 \arguments{
@@ -36,11 +37,17 @@ osrm_partition(
 
 \item{max_cell_sizes}{A numeric vector. Maximum cell sizes starting from level 1; default \code{c(128,4096,65536,2097152)}.}
 
-\item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
+\item{quiet}{A logical. Master switch that suppresses package messages and
+process output when \code{TRUE}; default \code{FALSE}.}
 
-\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
+\item{verbose}{A logical. When \code{TRUE} and \code{quiet = FALSE}, streams stdout and
+stderr from the underlying \code{processx::run} calls.}
 
-\item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
+\item{spinner}{A logical. When \code{TRUE} and \code{quiet = FALSE}, shows a spinner
+instead of live logs; default \code{TRUE}.}
+
+\item{echo_cmd}{A logical. When \code{TRUE} and \code{quiet = FALSE}, prints each
+command before running; default \code{FALSE}.}
 }
 \value{
 A list with elements:

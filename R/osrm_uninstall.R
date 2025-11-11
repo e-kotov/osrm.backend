@@ -11,8 +11,8 @@
 #'   to choose a directory; otherwise, `dest_dir` must be supplied.
 #' @param clear_path A logical value. If `TRUE` (default), also removes the
 #'   `PATH` configuration from the project's `.Rprofile` by calling `osrm_clear_path()`.
-#' @param quiet A logical value. If `TRUE`, suppresses confirmation prompts.
-#'   Defaults to `FALSE`.
+#' @param quiet A logical value. If `TRUE`, suppresses informational messages
+#'   and confirmation prompts. Defaults to `FALSE`.
 #' @return Invisibly returns `TRUE` if the directory was successfully removed,
 #'   and `FALSE` otherwise.
 #' @export
@@ -25,6 +25,7 @@
 #' osrm_uninstall(clear_path = FALSE)
 #' }
 osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
+  quiet <- isTRUE(quiet)
   default_root <- osrm_default_install_root()
   default_root_display <- osrm_try_normalize_path(default_root)
   auto_selected <- FALSE
@@ -33,7 +34,9 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
     version_installs <- osrm_detect_installations(default_root)
 
     if (length(version_installs) == 0) {
-      message("OSRM installation not found under: ", default_root_display)
+      if (!quiet) {
+        message("OSRM installation not found under: ", default_root_display)
+      }
       if (clear_path) {
         osrm_clear_path(quiet = quiet)
       }
@@ -44,7 +47,9 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
       if (interactive() && !quiet) {
         selection <- osrm_prompt_install_selection(version_installs)
         if (is.null(selection)) {
-          message("Uninstall aborted; no selection made.")
+          if (!quiet) {
+            message("Uninstall aborted; no selection made.")
+          }
           if (clear_path) {
             osrm_clear_path(quiet = quiet)
           }
@@ -53,11 +58,13 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
         dest_dir <- selection
         auto_selected <- TRUE
       } else {
-        message("Multiple OSRM installations detected:")
-        for (p in version_installs) {
-          message("  - ", p)
+        if (!quiet) {
+          message("Multiple OSRM installations detected:")
+          for (p in version_installs) {
+            message("  - ", p)
+          }
+          message("Please supply dest_dir to choose which installation to remove.")
         }
-        message("Please supply dest_dir to choose which installation to remove.")
         if (clear_path) {
           osrm_clear_path(quiet = quiet)
         }
@@ -76,8 +83,10 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
   # --- 1. Check if the directory exists ---
   dir_existed <- dir.exists(dest_dir_norm)
   if (!dir_existed) {
-    message("OSRM installation not found at: ", dest_dir_norm)
-    message("Nothing to uninstall.")
+    if (!quiet) {
+      message("OSRM installation not found at: ", dest_dir_norm)
+      message("Nothing to uninstall.")
+    }
     if (clear_path) {
       osrm_clear_path(quiet = quiet)
     }
@@ -86,12 +95,16 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
 
   # --- 2. Ask for confirmation for file deletion ---
   if (auto_selected) {
-    message("Uninstalling OSRM from detected installation: ", dest_dir_norm)
+    if (!quiet) {
+      message("Uninstalling OSRM from detected installation: ", dest_dir_norm)
+    }
   }
 
   proceed <- FALSE
-  message("This will permanently remove the OSRM installation from:")
-  message(dest_dir_norm)
+  if (!quiet) {
+    message("This will permanently remove the OSRM installation from:")
+    message(dest_dir_norm)
+  }
   if (interactive() && !quiet) {
     ans <- utils::askYesNo(
       "Do you want to proceed with deleting files?",
@@ -107,23 +120,31 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
   # --- 3. Perform deletion if confirmed ---
   uninstalled_ok <- FALSE
   if (proceed) {
-    message("Removing directory...")
+    if (!quiet) {
+      message("Removing directory...")
+    }
     tryCatch(
       {
         unlink(dest_dir_norm, recursive = TRUE, force = TRUE)
-        message("Successfully uninstalled OSRM backend binaries.")
+        if (!quiet) {
+          message("Successfully uninstalled OSRM backend binaries.")
+        }
         uninstalled_ok <- TRUE
       },
       error = function(e) {
-        warning(
-          "An error occurred while trying to remove the directory: ",
-          e$message,
-          call. = FALSE
-        )
+        if (!quiet) {
+          warning(
+            "An error occurred while trying to remove the directory: ",
+            e$message,
+            call. = FALSE
+          )
+        }
       }
     )
   } else {
-    message("Uninstall of binaries aborted by user.")
+    if (!quiet) {
+      message("Uninstall of binaries aborted by user.")
+    }
   }
 
   # --- 4. Clear path if requested ---

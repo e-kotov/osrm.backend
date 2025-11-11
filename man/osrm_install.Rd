@@ -34,8 +34,8 @@ If \code{FALSE} (default), the function will stop if an existing installation is
 \item \code{"none"}: Does not modify the \code{PATH}.
 }}
 
-\item{quiet}{A logical value. If \code{TRUE}, suppresses messages. Defaults to \code{FALSE}.
-Defaults to \code{FALSE}.}
+\item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
+warnings. Defaults to \code{FALSE}.}
 }
 \value{
 The path to the installation directory, invisibly.

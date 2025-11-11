@@ -22,9 +22,10 @@ osrm_prepare_graph(
   boundary = 0.25,
   optimizing_cuts = 10L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 )
 }
 \arguments{
@@ -64,11 +65,17 @@ the base name are found alongside \code{input_osm}. Set to \code{TRUE} to overwr
 
 \item{max_cell_sizes}{A numeric vector. Max cell sizes for \code{osrm-partition}; default \code{c(128,4096,65536,2097152)}.}
 
-\item{echo_cmd}{A logical. Print each command before running; default \code{FALSE}.}
+\item{quiet}{A logical. Master switch that suppresses package messages and
+process output when \code{TRUE}; default \code{FALSE}.}
 
-\item{echo}{A logical. Stream stdout/stderr; default \code{TRUE}.}
+\item{verbose}{A logical. When \code{TRUE} and \code{quiet = FALSE}, streams stdout and
+stderr from the underlying \code{processx::run} calls.}
 
-\item{spinner}{A logical. Show spinner instead of live logs; default \code{TRUE}.}
+\item{spinner}{A logical. When \code{TRUE} and \code{quiet = FALSE}, shows a spinner
+instead of live logs; default \code{TRUE}.}
+
+\item{echo_cmd}{A logical. When \code{TRUE} and \code{quiet = FALSE}, prints each
+command before running; default \code{FALSE}.}
 }
 \value{
 A list with elements:

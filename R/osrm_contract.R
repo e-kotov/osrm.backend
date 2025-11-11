@@ -30,9 +30,10 @@ osrm_contract <- function(
   edge_weight_updates_over_factor = 0,
   parse_conditionals_from_now = 0,
   time_zone_file = NULL,
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_contract", call. = FALSE)
@@ -97,12 +98,17 @@ osrm_contract <- function(
     arguments <- c(arguments, "--time-zone-file", time_zone_file)
   }
 
+  # Determine final processx parameters
+  show_echo <- !quiet && verbose
+  show_spinner <- !quiet && spinner
+  show_echo_cmd <- !quiet && echo_cmd
+
   logs <- processx::run(
     "osrm-contract",
     args = arguments,
-    echo = echo,
-    spinner = spinner,
-    echo_cmd = echo_cmd
+    echo = show_echo,
+    spinner = show_spinner,
+    echo_cmd = show_echo_cmd
   )
 
   hsgr_file <- paste0(gsub("\\.osrm$", "", input_osrm), ".osrm.hsgr")

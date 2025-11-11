@@ -56,8 +56,8 @@
 #'     \item `"project"`: Modifies the `.Rprofile` in the current project to set the `PATH` for all future sessions in that project.
 #'     \item `"none"`: Does not modify the `PATH`.
 #'   }
-#' @param quiet A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
-#'   Defaults to `FALSE`.
+#' @param quiet A logical value. If `TRUE`, suppresses installer messages and
+#'   warnings. Defaults to `FALSE`.
 #' @return The path to the installation directory, invisibly.
 #' @export
 #' @examples
@@ -78,6 +78,17 @@ osrm_install <- function(
   path_action = c("session", "project", "none"),
   quiet = FALSE
 ) {
+  quiet <- isTRUE(quiet)
+  emit_message <- function(...) {
+    if (!quiet) {
+      message(...)
+    }
+  }
+  emit_warning <- function(...) {
+    if (!quiet) {
+      warning(...)
+    }
+  }
   path_action <- match.arg(path_action)
   sys_info <- Sys.info()
   platform <- get_platform_info(sys_info = sys_info)
@@ -109,11 +120,11 @@ osrm_install <- function(
     isFALSE(mac_release_info$meets_v6_requirement)
 
   if (identical(version, "latest")) {
-    message("Finding latest stable version with available binaries...")
+    emit_message("Finding latest stable version with available binaries...")
     if (mac_too_old_for_v6) {
       version <- find_latest_pre_v6_release(platform)
-      message("Latest compatible version is '", version, "'")
-      warning(
+      emit_message("Latest compatible version is '", version, "'")
+      emit_warning(
         sprintf(
           "%s detected. OSRM v6.x requires %s or newer. Upgrade macOS to install v6.",
           mac_release_display,
@@ -123,7 +134,7 @@ osrm_install <- function(
       )
     } else {
       version <- osrm_check_latest_version()
-      message("Latest stable version is '", version, "'")
+      emit_message("Latest stable version is '", version, "'")
     }
   }
 
@@ -148,7 +159,7 @@ osrm_install <- function(
         version
       )
     }
-    warning(warning_message, call. = FALSE)
+    emit_warning(warning_message, call. = FALSE)
   }
 
   # Validate requested tag exists for this platform before hitting the API.
@@ -159,7 +170,7 @@ osrm_install <- function(
     )
 
     if (inherits(available_versions, "error")) {
-      warning(
+      emit_warning(
         sprintf(
           "Unable to verify requested version '%s' against available releases: %s",
           version,
@@ -196,21 +207,21 @@ osrm_install <- function(
 
   if (has_existing_install) {
     if (!force && !profiles_missing) {
-      message("OSRM backend already found in: ", dest_dir)
-      message("Use force = TRUE to reinstall.")
+      emit_message("OSRM backend already found in: ", dest_dir)
+      emit_message("Use force = TRUE to reinstall.")
       # Handle path and return
       handle_path_setting(path_action, dest_dir, quiet)
       return(invisible(dest_dir))
     }
 
     if (profiles_missing) {
-      message(
+      emit_message(
         "Existing OSRM installation in ",
         dest_dir,
         " is missing Lua profiles. Reinstalling to restore them."
       )
     } else if (force) {
-      message("force = TRUE; reinstalling OSRM backend in ", dest_dir)
+      emit_message("force = TRUE; reinstalling OSRM backend in ", dest_dir)
     }
   }
 
@@ -218,8 +229,8 @@ osrm_install <- function(
   release_info <- get_release_by_tag(version)
 
   # --- 5. Detect platform ---
-  message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
-  message(sprintf(
+  emit_message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
+  emit_message(sprintf(
     "Found release: %s (%s)",
     release_info$tag_name,
     release_info$name
@@ -227,10 +238,10 @@ osrm_install <- function(
 
   # --- 6. Find matching asset download URL ---
   asset_url <- find_asset_url(release_info, platform)
-  message("Found matching binary: ", basename(asset_url))
+  emit_message("Found matching binary: ", basename(asset_url))
 
   # --- 7. Download and extract ---
-  message("Downloading from ", asset_url)
+  emit_message("Downloading from ", asset_url)
   tmp_file <- tempfile(fileext = ".tar.gz")
   on.exit(unlink(tmp_file), add = TRUE)
 
@@ -248,7 +259,7 @@ osrm_install <- function(
   tmp_extract_dir <- tempfile()
   dir.create(tmp_extract_dir)
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
-  message("Extracting binaries...")
+  emit_message("Extracting binaries...")
   tryCatch(
     utils::untar(tmp_file, exdir = tmp_extract_dir),
     error = function(e) {
@@ -289,24 +300,24 @@ osrm_install <- function(
   bin_source_dir <- dirname(found_bins[1])
   files_to_copy <- list.files(bin_source_dir, full.names = TRUE)
 
-  message("Installing binaries to ", dest_dir)
+  emit_message("Installing binaries to ", dest_dir)
   file.copy(from = files_to_copy, to = dest_dir, overwrite = TRUE)
 
   runtime_version <- release_info$tag_name
   if (is.null(runtime_version) || !nzchar(runtime_version)) {
     runtime_version <- version
   }
-  maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir)
-  maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir)
-  maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir)
+  maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
+  maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
+  maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
 
   # --- 9. Download and install Lua profiles ---
-  install_profiles_for_release(release_info, dest_dir)
+  install_profiles_for_release(release_info, dest_dir, quiet = quiet)
 
   # --- 10. Set permissions and update PATH ---
   installed_bins <- file.path(dest_dir, basename(files_to_copy))
   if (.Platform$OS.type != "windows") {
-    message("Setting executable permissions...")
+    emit_message("Setting executable permissions...")
     Sys.chmod(
       installed_bins[
         grepl(
@@ -324,14 +335,14 @@ osrm_install <- function(
   # --- 11. Final verification and user message ---
   osrm_path_check <- Sys.which("osrm-routed")
   if (path_action != "none" && !nzchar(osrm_path_check)) {
-    warning(
+    emit_warning(
       "Installation completed, but 'osrm-routed' was not found on the PATH immediately. You may need to restart your R session.",
       call. = FALSE
     )
   } else if (path_action != "none") {
-    message("Installation successful!")
+    emit_message("Installation successful!")
   } else {
-    message("Installation successful! Binaries are in ", dest_dir)
+    emit_message("Installation successful! Binaries are in ", dest_dir)
   }
 
   return(invisible(dest_dir))
@@ -873,18 +884,22 @@ find_asset_url <- function(release_info, platform) {
 }
 
 #' @noRd
-install_profiles_for_release <- function(release_info, dest_dir) {
+install_profiles_for_release <- function(release_info, dest_dir, quiet = FALSE) {
   tarball_url <- release_info$tarball_url
 
   if (is.null(tarball_url) || !nzchar(tarball_url)) {
-    warning(
-      "Release metadata did not include a tarball URL. Skipping installation of profiles.",
-      call. = FALSE
-    )
+    if (!quiet) {
+      warning(
+        "Release metadata did not include a tarball URL. Skipping installation of profiles.",
+        call. = FALSE
+      )
+    }
     return(invisible(NULL))
   }
 
-  message("Downloading profiles from release tarball...")
+  if (!quiet) {
+    message("Downloading profiles from release tarball...")
+  }
   tmp_tarball <- tempfile(fileext = ".tar.gz")
   on.exit(unlink(tmp_tarball), add = TRUE)
 
@@ -989,7 +1004,9 @@ install_profiles_for_release <- function(release_info, dest_dir) {
       !grepl("[[:cntrl:]]", extract_members, perl = TRUE)
   ]
 
-  message("Extracting profiles...")
+  if (!quiet) {
+    message("Extracting profiles...")
+  }
   untar_args <- list(
     tarfile = tmp_tarball,
     files = extract_members,
@@ -1061,12 +1078,19 @@ install_profiles_for_release <- function(release_info, dest_dir) {
     )
   }
 
-  message("Installed profiles to ", dest_profiles_dir)
+  if (!quiet) {
+    message("Installed profiles to ", dest_profiles_dir)
+  }
   invisible(dest_profiles_dir)
 }
 
 #' @noRd
-maybe_install_windows_v6_runtime <- function(version, platform, dest_dir) {
+maybe_install_windows_v6_runtime <- function(
+  version,
+  platform,
+  dest_dir,
+  quiet = FALSE
+) {
   if (!identical(platform$os, "win32")) {
     return(invisible(NULL))
   }
@@ -1080,11 +1104,16 @@ maybe_install_windows_v6_runtime <- function(version, platform, dest_dir) {
     return(invisible(NULL))
   }
 
-  install_windows_v6_runtime(dest_dir)
+  install_windows_v6_runtime(dest_dir, quiet = quiet)
 }
 
 #' @noRd
-maybe_install_linux_v6_runtime <- function(version, platform, dest_dir) {
+maybe_install_linux_v6_runtime <- function(
+  version,
+  platform,
+  dest_dir,
+  quiet = FALSE
+) {
   if (!identical(platform$os, "linux")) {
     return(invisible(NULL))
   }
@@ -1093,12 +1122,14 @@ maybe_install_linux_v6_runtime <- function(version, platform, dest_dir) {
     return(invisible(NULL))
   }
 
-  ensure_linux_tbb_runtime(dest_dir, platform)
+  ensure_linux_tbb_runtime(dest_dir, platform, quiet = quiet)
 }
 
 #' @noRd
-install_windows_v6_runtime <- function(dest_dir) {
-  message("Fetching additional Windows runtime dependencies (TBB, BZip2)...")
+install_windows_v6_runtime <- function(dest_dir, quiet = FALSE) {
+  if (!quiet) {
+    message("Fetching additional Windows runtime dependencies (TBB, BZip2)...")
+  }
 
   tbb_url <- paste0(
     "https://github.com/uxlfoundation/oneTBB/releases/download/v2022.3.0/",
@@ -1110,7 +1141,9 @@ install_windows_v6_runtime <- function(dest_dir) {
     dest_path = file.path(dest_dir, "tbb12.dll"),
     sha256 = "e1b2373f25558bf47d16b4c89cf0a31e6689aaf7221400d209e8527afc7c9eee"
   )
-  message("  - Installed tbb12.dll")
+  if (!quiet) {
+    message("  - Installed tbb12.dll")
+  }
 
   bzip_url <- paste0(
     "https://github.com/philr/bzip2-windows/releases/download/v1.0.8.0/",
@@ -1122,13 +1155,20 @@ install_windows_v6_runtime <- function(dest_dir) {
     dest_path = file.path(dest_dir, "bz2.dll"),
     sha256 = "50340fece047960f49cf869034c778ff9f6af27dde2f1ea9773cd89ddb326254"
   )
-  message("  - Installed bz2.dll")
+  if (!quiet) {
+    message("  - Installed bz2.dll")
+  }
 
   invisible(dest_dir)
 }
 
 #' @noRd
-maybe_install_macos_v6_runtime <- function(version, platform, dest_dir) {
+maybe_install_macos_v6_runtime <- function(
+  version,
+  platform,
+  dest_dir,
+  quiet = FALSE
+) {
   if (!identical(platform$os, "darwin")) {
     return(invisible(NULL))
   }
@@ -1137,15 +1177,16 @@ maybe_install_macos_v6_runtime <- function(version, platform, dest_dir) {
     return(invisible(NULL))
   }
 
-  ensure_macos_tbb_runtime(dest_dir, platform)
-  patch_macos_bzip2_rpath(dest_dir)
+  ensure_macos_tbb_runtime(dest_dir, platform, quiet = quiet)
+  patch_macos_bzip2_rpath(dest_dir, quiet = quiet)
 }
 
 #' @noRd
 ensure_linux_tbb_runtime <- function(
   dest_dir,
   platform,
-  reference_version = "v5.27.1"
+  reference_version = "v5.27.1",
+  quiet = FALSE
 ) {
   required_libs <- c(
     "libtbbmalloc.so.2.3",
@@ -1163,17 +1204,21 @@ ensure_linux_tbb_runtime <- function(
     !file.exists(file.path(dest_dir, required_libs))
   ]
   if (length(missing_libs)) {
-    message(
-      "Fetching Linux TBB runtime components from OSRM release ",
-      reference_version,
-      "..."
-    )
+    if (!quiet) {
+      message(
+        "Fetching Linux TBB runtime components from OSRM release ",
+        reference_version,
+        "..."
+      )
+    }
   } else {
-    message(
-      "Refreshing Linux TBB runtime components from OSRM release ",
-      reference_version,
-      "..."
-    )
+    if (!quiet) {
+      message(
+        "Refreshing Linux TBB runtime components from OSRM release ",
+        reference_version,
+        "..."
+      )
+    }
   }
 
   release_info <- get_release_by_tag(reference_version)
@@ -1275,7 +1320,8 @@ ensure_linux_tbb_runtime <- function(
 ensure_macos_tbb_runtime <- function(
   dest_dir,
   platform,
-  reference_version = "v5.27.1"
+  reference_version = "v5.27.1",
+  quiet = FALSE
 ) {
   required_libs <- c(
     "libtbbmalloc.dylib",
@@ -1293,17 +1339,21 @@ ensure_macos_tbb_runtime <- function(
     !file.exists(file.path(dest_dir, required_libs))
   ]
   if (length(missing_libs)) {
-    message(
-      "Fetching macOS TBB runtime components from OSRM release ",
-      reference_version,
-      "..."
-    )
+    if (!quiet) {
+      message(
+        "Fetching macOS TBB runtime components from OSRM release ",
+        reference_version,
+        "..."
+      )
+    }
   } else {
-    message(
-      "Refreshing macOS TBB runtime components from OSRM release ",
-      reference_version,
-      "..."
-    )
+    if (!quiet) {
+      message(
+        "Refreshing macOS TBB runtime components from OSRM release ",
+        reference_version,
+        "..."
+      )
+    }
   }
 
   release_info <- get_release_by_tag(reference_version)
@@ -1396,12 +1446,14 @@ ensure_macos_tbb_runtime <- function(
     )
   }
 
-  message("Installed macOS TBB runtime libraries.")
+  if (!quiet) {
+    message("Installed macOS TBB runtime libraries.")
+  }
   invisible(dest_dir)
 }
 
 #' @noRd
-patch_macos_bzip2_rpath <- function(dest_dir) {
+patch_macos_bzip2_rpath <- function(dest_dir, quiet = FALSE) {
   tool_path <- Sys.which("install_name_tool")
   if (!nzchar(tool_path)) {
     stop(
@@ -1425,15 +1477,19 @@ patch_macos_bzip2_rpath <- function(dest_dir) {
   binaries <- binaries[file.exists(binaries)]
 
   if (!length(binaries)) {
-    warning(
-      "No OSRM executables found to patch in ",
-      dest_dir,
-      call. = FALSE
-    )
+    if (!quiet) {
+      warning(
+        "No OSRM executables found to patch in ",
+        dest_dir,
+        call. = FALSE
+      )
+    }
     return(invisible(dest_dir))
   }
 
-  message("Updating macOS BZip2 linkage...")
+  if (!quiet) {
+    message("Updating macOS BZip2 linkage...")
+  }
   for (bin in binaries) {
     status <- system2(
       tool_path,
@@ -1606,7 +1662,7 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
 #' @noRd
 handle_path_setting <- function(action, dir, quiet = FALSE) {
   if (action == "session") {
-    set_path_session(dir)
+    set_path_session(dir, quiet)
   } else if (action == "project") {
     set_path_project(dir, quiet)
   }
@@ -1614,7 +1670,7 @@ handle_path_setting <- function(action, dir, quiet = FALSE) {
 }
 
 #' @noRd
-set_path_session <- function(dir) {
+set_path_session <- function(dir, quiet = FALSE) {
   path_sep <- .Platform$path.sep
   current_path <- Sys.getenv("PATH")
 
@@ -1625,7 +1681,9 @@ set_path_session <- function(dir) {
   if (!normalized_dir %in% normalized_paths) {
     new_path <- paste(normalized_dir, current_path, sep = path_sep)
     Sys.setenv(PATH = new_path)
-    message(sprintf("Added '%s' to PATH for this session.", normalized_dir))
+    if (!quiet) {
+      message(sprintf("Added '%s' to PATH for this session.", normalized_dir))
+    }
   }
 }
 
@@ -1633,13 +1691,17 @@ set_path_session <- function(dir) {
 set_path_project <- function(dir, quiet = FALSE) {
   r_profile_path <- file.path(getwd(), ".Rprofile")
 
-  message("You chose to set the OSRM path for this project.")
-  message("This will add a line to the following file: ", r_profile_path)
+  if (!quiet) {
+    message("You chose to set the OSRM path for this project.")
+    message("This will add a line to the following file: ", r_profile_path)
+  }
 
   if (interactive() && !quiet) {
     ans <- utils::askYesNo("Do you want to proceed?", default = TRUE)
     if (!isTRUE(ans)) {
-      message("Aborted. .Rprofile was not modified.")
+      if (!quiet) {
+        message("Aborted. .Rprofile was not modified.")
+      }
       return(invisible())
     }
   }
@@ -1653,18 +1715,24 @@ set_path_project <- function(dir, quiet = FALSE) {
   )
 
   if (!file.exists(r_profile_path)) {
-    message("Creating new .Rprofile file.")
+    if (!quiet) {
+      message("Creating new .Rprofile file.")
+    }
     writeLines(line_to_add, r_profile_path)
   } else {
     lines <- readLines(r_profile_path, warn = FALSE)
     # Check if our tag is already there to avoid duplicates
     if (any(grepl(comment_tag, lines, fixed = TRUE))) {
-      message(
-        ".Rprofile already contains OSRM path configuration. No changes made."
-      )
+      if (!quiet) {
+        message(
+          ".Rprofile already contains OSRM path configuration. No changes made."
+        )
+      }
       return(invisible())
     }
-    message("Appending configuration to existing .Rprofile.")
+    if (!quiet) {
+      message("Appending configuration to existing .Rprofile.")
+    }
     # Add a newline for separation if the file doesn't end with one
     if (length(lines) > 0 && nzchar(lines[length(lines)])) {
       lines <- c(lines, "")
@@ -1673,7 +1741,9 @@ set_path_project <- function(dir, quiet = FALSE) {
     writeLines(lines, r_profile_path)
   }
 
-  message(
-    "\nSuccessfully modified .Rprofile. Please restart R for the changes to take effect."
-  )
+  if (!quiet) {
+    message(
+      "\nSuccessfully modified .Rprofile. Please restart R for the changes to take effect."
+    )
+  }
 }

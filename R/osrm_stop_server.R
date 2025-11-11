@@ -84,6 +84,7 @@ osrm_stop <- function(
   wait = 1000L,
   quiet = FALSE
 ) {
+  quiet <- isTRUE(quiet)
   # Case 1: user supplied a process object directly
   if (!is.null(server)) {
     if (!inherits(server, "process")) {

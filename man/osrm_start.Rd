@@ -25,8 +25,8 @@ preparation, either \code{"mld"} (Multi-Level Dijkstra, default) or \code{"ch"}
 (Contraction Hierarchies). This is only used when \code{osrm_prepare_graph} is
 automatically called.}
 
-\item{quiet}{A logical value. If \code{TRUE}, suppresses messages. Defaults to \code{FALSE}.
-Defaults to \code{FALSE}.}
+\item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
+warnings. Defaults to \code{FALSE}.}
 
 \item{verbose}{A logical. If \code{FALSE} (default), suppresses detailed console
 output from backend commands. If \code{TRUE}, shows all output, which is useful

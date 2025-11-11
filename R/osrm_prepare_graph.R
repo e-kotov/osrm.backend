@@ -23,9 +23,14 @@
 #' @param boundary A numeric. Boundary percentage for `osrm-partition`; default `0.25`.
 #' @param optimizing_cuts An integer. Optimizing cuts for `osrm-partition`; default `10`.
 #' @param max_cell_sizes A numeric vector. Max cell sizes for `osrm-partition`; default `c(128,4096,65536,2097152)`.
-#' @param echo_cmd A logical. Print each command before running; default `FALSE`.
-#' @param echo A logical. Stream stdout/stderr; default `TRUE`.
-#' @param spinner A logical. Show spinner instead of live logs; default `TRUE`.
+#' @param quiet A logical. Master switch that suppresses package messages and
+#'   process output when `TRUE`; default `FALSE`.
+#' @param verbose A logical. When `TRUE` and `quiet = FALSE`, streams stdout and
+#'   stderr from the underlying `processx::run` calls.
+#' @param spinner A logical. When `TRUE` and `quiet = FALSE`, shows a spinner
+#'   instead of live logs; default `TRUE`.
+#' @param echo_cmd A logical. When `TRUE` and `quiet = FALSE`, prints each
+#'   command before running; default `FALSE`.
 #'
 #' @return A list with elements:
 #' \describe{
@@ -53,9 +58,10 @@ osrm_prepare_graph <- function(
   boundary = 0.25,
   optimizing_cuts = 10L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 ) {
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_prepare_graph", call. = FALSE)
@@ -75,9 +81,10 @@ osrm_prepare_graph <- function(
     location_dependent_data = location_dependent_data,
     disable_location_cache = disable_location_cache,
     dump_nbg_graph = dump_nbg_graph,
-    echo_cmd = echo_cmd,
-    echo = echo,
-    spinner = spinner
+    quiet = quiet,
+    verbose = verbose,
+    spinner = spinner,
+    echo_cmd = echo_cmd
   )
   base <- extract_res$osrm_path
   logs_list <- list(extract = extract_res$logs)
@@ -94,9 +101,10 @@ osrm_prepare_graph <- function(
       optimizing_cuts = optimizing_cuts,
       small_component_size = small_component_size,
       max_cell_sizes = max_cell_sizes,
-      echo_cmd = echo_cmd,
-      echo = echo,
-      spinner = spinner
+      quiet = quiet,
+      verbose = verbose,
+      spinner = spinner,
+      echo_cmd = echo_cmd
     )
     logs_list$partition <- part_res$logs
 
@@ -109,9 +117,10 @@ osrm_prepare_graph <- function(
       edge_weight_updates_over_factor = 0,
       parse_conditionals_from_now = 0,
       time_zone_file = NULL,
-      echo_cmd = echo_cmd,
-      echo = echo,
-      spinner = spinner
+      quiet = quiet,
+      verbose = verbose,
+      spinner = spinner,
+      echo_cmd = echo_cmd
     )
     logs_list$customize <- osrm_graph$logs
   } else {
@@ -124,9 +133,10 @@ osrm_prepare_graph <- function(
       edge_weight_updates_over_factor = 0,
       parse_conditionals_from_now = 0,
       time_zone_file = NULL,
-      echo_cmd = echo_cmd,
-      echo = echo,
-      spinner = spinner
+      quiet = quiet,
+      verbose = verbose,
+      spinner = spinner,
+      echo_cmd = echo_cmd
     )
     logs_list$contract <- osrm_graph$logs
   }
