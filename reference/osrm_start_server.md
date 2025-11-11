@@ -27,6 +27,8 @@ osrm_start_server(
   max_nearest_size = 100L,
   max_alternatives = 3L,
   max_matching_radius = -1L,
+  quiet = FALSE,
+  verbose = FALSE,
   echo_cmd = FALSE
 )
 ```
@@ -114,6 +116,17 @@ osrm_start_server(
 - max_matching_radius:
 
   Integer; use `-1` for unlimited (default: `-1`)
+
+- quiet:
+
+  Logical; when `TRUE`, suppresses package messages.
+
+- verbose:
+
+  Logical; reserved for controlling future server verbosity, included
+  for interface consistency with
+  [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md).
+  Defaults to `FALSE`.
 
 - echo_cmd:
 

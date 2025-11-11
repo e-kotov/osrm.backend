@@ -26,9 +26,10 @@ osrm_prepare_graph(
   boundary = 0.25,
   optimizing_cuts = 10L,
   max_cell_sizes = c(128, 4096, 65536, 2097152),
-  echo_cmd = FALSE,
-  echo = TRUE,
-  spinner = TRUE
+  quiet = FALSE,
+  verbose = FALSE,
+  spinner = TRUE,
+  echo_cmd = FALSE
 )
 ```
 
@@ -109,17 +110,26 @@ osrm_prepare_graph(
   A numeric vector. Max cell sizes for `osrm-partition`; default
   `c(128,4096,65536,2097152)`.
 
-- echo_cmd:
+- quiet:
 
-  A logical. Print each command before running; default `FALSE`.
+  A logical. Master switch that suppresses package messages and process
+  output when `TRUE`; default `FALSE`.
 
-- echo:
+- verbose:
 
-  A logical. Stream stdout/stderr; default `TRUE`.
+  A logical. When `TRUE` and `quiet = FALSE`, streams stdout and stderr
+  from the underlying
+  [`processx::run`](http://processx.r-lib.org/reference/run.md) calls.
 
 - spinner:
 
-  A logical. Show spinner instead of live logs; default `TRUE`.
+  A logical. When `TRUE` and `quiet = FALSE`, shows a spinner instead of
+  live logs; default `TRUE`.
+
+- echo_cmd:
+
+  A logical. When `TRUE` and `quiet = FALSE`, prints each command before
+  running; default `FALSE`.
 
 ## Value
 

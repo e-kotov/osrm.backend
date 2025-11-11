@@ -70,9 +70,10 @@ using a specified Lua profile.  After running, a companion
 <span>  location_dependent_data <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  disable_location_cache <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  dump_nbg_graph <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  echo_cmd <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  echo <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>  spinner <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  spinner <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  echo_cmd <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -144,16 +145,24 @@ case the option is omitted.</p></dd>
 <code>--dump-nbg-graph</code>; default <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-echo-cmd">echo_cmd<a class="anchor" aria-label="anchor" href="#arg-echo-cmd"></a></dt>
-<dd><p>A logical. Print each command before running; default <code>FALSE</code>.</p></dd>
+<dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
+<dd><p>A logical. Master switch that suppresses package messages and
+process output when <code>TRUE</code>; default <code>FALSE</code>.</p></dd>
 
 
-<dt id="arg-echo">echo<a class="anchor" aria-label="anchor" href="#arg-echo"></a></dt>
-<dd><p>A logical. Stream stdout/stderr; default <code>TRUE</code>.</p></dd>
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>A logical. When <code>TRUE</code> and <code>quiet = FALSE</code>, streams stdout and
+stderr from the underlying <code><a href="http://processx.r-lib.org/reference/run.html" class="external-link">processx::run</a></code> calls.</p></dd>
 
 
 <dt id="arg-spinner">spinner<a class="anchor" aria-label="anchor" href="#arg-spinner"></a></dt>
-<dd><p>A logical. Show spinner instead of live logs; default <code>TRUE</code>.</p></dd>
+<dd><p>A logical. When <code>TRUE</code> and <code>quiet = FALSE</code>, shows a spinner
+instead of live logs; default <code>TRUE</code>.</p></dd>
+
+
+<dt id="arg-echo-cmd">echo_cmd<a class="anchor" aria-label="anchor" href="#arg-echo-cmd"></a></dt>
+<dd><p>A logical. When <code>TRUE</code> and <code>quiet = FALSE</code>, prints each
+command before running; default <code>FALSE</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

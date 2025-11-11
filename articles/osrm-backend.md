@@ -28,7 +28,7 @@ running this funciton will not lead to re-downloading of OSRM binaries
 or re-processing of the OSM PBF file if already done.
 
 ``` r
-osrm_start(osrm_temp_dir)
+osrm_start(osrm_temp_dir, verbose = TRUE)
 ```
 
 > **Tip**

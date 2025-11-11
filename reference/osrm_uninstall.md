@@ -29,8 +29,8 @@ osrm_uninstall(dest_dir = NULL, clear_path = TRUE, quiet = FALSE)
 
 - quiet:
 
-  A logical value. If `TRUE`, suppresses confirmation prompts. Defaults
-  to `FALSE`.
+  A logical value. If `TRUE`, suppresses informational messages and
+  confirmation prompts. Defaults to `FALSE`.
 
 ## Value
 

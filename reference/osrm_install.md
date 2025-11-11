@@ -59,8 +59,8 @@ osrm_install(
 
 - quiet:
 
-  A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
-  Defaults to `FALSE`.
+  A logical value. If `TRUE`, suppresses installer messages and
+  warnings. Defaults to `FALSE`.
 
 ## Value
 

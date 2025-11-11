@@ -72,6 +72,8 @@
 <span>  max_nearest_size <span class="op">=</span> <span class="fl">100L</span>,</span>
 <span>  max_alternatives <span class="op">=</span> <span class="fl">3L</span>,</span>
 <span>  max_matching_radius <span class="op">=</span> <span class="op">-</span><span class="fl">1L</span>,</span>
+<span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  echo_cmd <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
@@ -158,6 +160,15 @@
 
 <dt id="arg-max-matching-radius">max_matching_radius<a class="anchor" aria-label="anchor" href="#arg-max-matching-radius"></a></dt>
 <dd><p>Integer; use <code>-1</code> for unlimited (default: <code>-1</code>)</p></dd>
+
+
+<dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
+<dd><p>Logical; when <code>TRUE</code>, suppresses package messages.</p></dd>
+
+
+<dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
+<dd><p>Logical; reserved for controlling future server verbosity, included
+for interface consistency with <code><a href="osrm_start.html">osrm_start()</a></code>. Defaults to <code>FALSE</code>.</p></dd>
 
 
 <dt id="arg-echo-cmd">echo_cmd<a class="anchor" aria-label="anchor" href="#arg-echo-cmd"></a></dt>
