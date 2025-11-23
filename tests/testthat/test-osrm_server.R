@@ -96,3 +96,246 @@ test_that("osrm_stop handles stopping by object, id, port, and pid", {
     .osrm_kill_pid = function(...) TRUE
   )
 })
+
+# Additional tests for osrm_servers() ----
+test_that("osrm_servers returns empty data frame when no servers", {
+  mock_state <- new.env()
+  mock_state$registry <- list()
+
+  with_mocked_bindings(
+    {
+      result <- osrm_servers()
+
+      expect_s3_class(result, "data.frame")
+      expect_equal(nrow(result), 0)
+      expect_named(
+        result,
+        c("id", "pid", "port", "algorithm", "started_at", "alive", "has_handle")
+      )
+    },
+    .osrm_state = mock_state
+  )
+})
+
+test_that("osrm_servers returns server information correctly", {
+  mock_proc <- list(
+    is_alive = function() TRUE,
+    get_pid = function() 1001L
+  )
+  class(mock_proc) <- c("process", "list")
+
+  mock_state <- new.env()
+  mock_state$registry <- list(
+    "server1" = list(
+      id = "server1",
+      pid = 1001L,
+      port = 5001L,
+      algorithm = "mld",
+      started_at = "2025-01-01T12:00:00.000Z",
+      proc = mock_proc
+    ),
+    "server2" = list(
+      id = "server2",
+      pid = 1002L,
+      port = 5002L,
+      algorithm = "ch",
+      started_at = "2025-01-01T12:00:01.000Z",
+      proc = NULL
+    )
+  )
+
+  with_mocked_bindings(
+    {
+      result <- osrm_servers()
+
+      expect_equal(nrow(result), 2)
+      expect_equal(result$id, c("server1", "server2"))
+      expect_equal(result$pid, c(1001L, 1002L))
+      expect_equal(result$port, c(5001L, 5002L))
+      expect_equal(result$algorithm, c("mld", "ch"))
+      expect_true(result$has_handle[1])
+      expect_false(result$has_handle[2])
+    },
+    .osrm_state = mock_state,
+    .osrm_pid_is_running = function(...) TRUE
+  )
+})
+
+# Tests for osrm_stop_all() ----
+test_that("osrm_stop_all stops all servers", {
+  mock_state <- new.env()
+  mock_state$registry <- list(
+    "server1" = list(id = "server1", pid = 1001L, port = 5001L, proc = NULL),
+    "server2" = list(id = "server2", pid = 1002L, port = 5002L, proc = NULL)
+  )
+
+  stop_calls <- character()
+
+  with_mocked_bindings(
+    {
+      result <- osrm_stop_all()
+
+      expect_equal(result, 2L)
+      expect_length(stop_calls, 2)
+    },
+    .osrm_state = mock_state,
+    osrm_stop = function(id, quiet) {
+      stop_calls <<- c(stop_calls, id)
+      list(id = id, stopped = TRUE)
+    }
+  )
+})
+
+test_that("osrm_stop_all returns 0 when no servers", {
+  mock_state <- new.env()
+  mock_state$registry <- list()
+
+  with_mocked_bindings(
+    {
+      result <- osrm_stop_all()
+      expect_equal(result, 0L)
+    },
+    .osrm_state = mock_state
+  )
+})
+
+# Tests for server registry internal functions ----
+test_that("registry saves and loads correctly", {
+  skip_if_not_installed("jsonlite")
+
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir, recursive = TRUE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  # Create a mock state with registry
+  mock_state <- new.env()
+  mock_state$registry <- list(
+    "test-server" = list(
+      id = "test-server",
+      pid = 1234L,
+      port = 5001L,
+      algorithm = "mld",
+      started_at = "2025-01-01T12:00:00.000Z",
+      prefix = "/tmp/test.osrm"
+    )
+  )
+
+  with_mocked_bindings(
+    {
+      # Test save
+      .osrm_registry_save()
+
+      # Check file exists
+      registry_path <- file.path(tmp_dir, "servers.json")
+      expect_true(file.exists(registry_path))
+
+      # Test load
+      .osrm_state$registry <- list() # Clear registry
+      .osrm_registry_load()
+
+      # Check loaded correctly (excluding proc field which is NULL after load)
+      expect_true("test-server" %in% names(.osrm_state$registry))
+      expect_equal(.osrm_state$registry$`test-server`$pid, 1234L)
+    },
+    .osrm_state = mock_state,
+    .osrm_registry_dir = function() tmp_dir,
+    .osrm_cleanup_orphans = function() invisible(NULL)
+  )
+})
+
+# Tests for osrm_start_server error validation ----
+test_that("osrm_start_server validates input file extension", {
+  tmp_file <- "test.txt"
+  file.create(tmp_file)
+  on.exit(unlink(tmp_file))
+
+  expect_error(
+    osrm_start_server(tmp_file),
+    "must end in .osrm.mldgr or .osrm.hsgr"
+  )
+})
+
+test_that("osrm_start_server accepts dataset_name parameter", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ...) {
+      captured <<- list(command = command, args = args)
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        dataset_name = "my_dataset",
+        quiet = TRUE
+      )
+
+      expect_true("--dataset-name" %in% captured$args)
+      expect_true("my_dataset" %in% captured$args)
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
+
+test_that("osrm_start_server handles max size parameters", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ...) {
+      captured <<- list(command = command, args = args)
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        max_table_size = 200L,
+        max_trip_size = 50L,
+        quiet = TRUE
+      )
+
+      expect_true("--max-table-size" %in% captured$args)
+      expect_true("200" %in% captured$args)
+      expect_true("--max-trip-size" %in% captured$args)
+      expect_true("50" %in% captured$args)
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
