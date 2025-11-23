@@ -111,7 +111,7 @@ osrm_contract <- function(
     echo_cmd = show_echo_cmd
   )
 
-  hsgr_file <- paste0(gsub("\\.osrm$", "", input_osrm), ".osrm.hsgr")
+  hsgr_file <- paste0(gsub("\\.osrm$", "", osrm_path), ".osrm.hsgr")
   if (!file.exists(hsgr_file)) {
     stop(
       "Contracting did not produce CH hierarchy file: ",

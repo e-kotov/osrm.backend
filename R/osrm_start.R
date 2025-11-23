@@ -141,7 +141,7 @@ osrm_start <- function(
       }
       prepare_args$input_osm <- osm_input
       prepare_args$algorithm <- algorithm
-      prepare_call_args <- modifyList(
+      prepare_call_args <- utils::modifyList(
         prepare_args,
         list(quiet = quiet, verbose = verbose)
       )
@@ -171,7 +171,7 @@ osrm_start <- function(
         }
         prepare_args$input_osm <- path
         prepare_args$algorithm <- algorithm
-        prepare_call_args <- modifyList(
+        prepare_call_args <- utils::modifyList(
           prepare_args,
           list(quiet = quiet, verbose = verbose)
         )
@@ -196,7 +196,7 @@ osrm_start <- function(
 
   # 3. Start the server
   server_args$osrm_path <- final_graph_path
-  server_call_args <- modifyList(
+  server_call_args <- utils::modifyList(
     server_args,
     list(quiet = quiet, verbose = verbose)
   )
