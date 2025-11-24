@@ -52,7 +52,8 @@ resolve_osrm_path <- function(input_path,
       )
     }
 
-    input_path <- matching_files[1]
+    # Normalize the selected file path to ensure consistent separators (especially on Windows)
+    input_path <- normalizePath(matching_files[1], mustWork = TRUE)
   }
 
   input_path

@@ -1695,6 +1695,8 @@ set_path_session <- function(dir, quiet = FALSE) {
 
   # Get the default cache root to identify our managed installations
   cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE)
+  # Ensure cache_root ends with separator for consistent prefix matching
+  cache_root_prefix <- paste0(cache_root, .Platform$file.sep)
 
   # Remove any paths that point to other versions in our cache directory
   # but keep system installations (homebrew, manual installs, etc.)
@@ -1703,8 +1705,15 @@ set_path_session <- function(dir, quiet = FALSE) {
     # Keep this path if:
     # 1. It's the directory we're installing to, OR
     # 2. It's not under our cache root (i.e., it's a system/homebrew install)
-    identical(norm_path, normalized_dir) ||
-      !startsWith(norm_path, paste0(cache_root, .Platform$file.sep))
+    if (identical(norm_path, normalized_dir)) {
+      return(TRUE)
+    }
+    # On Windows, use case-insensitive comparison for path prefix check
+    if (.Platform$OS.type == "windows") {
+      !startsWith(tolower(norm_path), tolower(cache_root_prefix))
+    } else {
+      !startsWith(norm_path, cache_root_prefix)
+    }
   }, logical(1))
 
   filtered_paths <- path_elements[paths_to_keep]
