@@ -133,7 +133,7 @@ test_that("osrm_customize accepts a directory with one .osrm.partition file", {
     .package = "processx"
   )
 
-  expect_equal(result$osrm_path, expected_mldgr)
+  expect_equal(result$osrm_job_artifact, expected_mldgr)
 })
 
 test_that("osrm_customize errors when directory has no .osrm.partition files", {

@@ -76,7 +76,7 @@ test_that("osrm_start works with direct path to prepared graph file", {
   # Now test osrm_start with the prepared graph
   server <- try(
     osrm_start(
-      path = graph_result$osrm_path,
+      path = graph_result$osrm_job_artifact,
       quiet = TRUE
     ),
     silent = TRUE

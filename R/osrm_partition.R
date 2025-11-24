@@ -41,7 +41,18 @@ osrm_partition <- function(
     stop("'processx' package is required for osrm_partition", call. = FALSE)
   }
 
-  # Add this at the very beginning of the function body
+  # Extract previous logs if input is an osrm_job object
+  input_logs <- if (inherits(input_osrm, "osrm_job")) {
+    if (is.list(input_osrm$logs) && length(input_osrm$logs) > 0) {
+      input_osrm$logs
+    } else {
+      list()
+    }
+  } else {
+    list()
+  }
+
+  # Extract path from osrm_job object if needed
   input_osrm <- get_osrm_path_from_input(input_osrm)
 
   if (!is.character(input_osrm) || length(input_osrm) != 1) {
@@ -111,9 +122,12 @@ osrm_partition <- function(
     )
   }
 
+  # Accumulate logs from previous stages
+  accumulated_logs <- c(input_logs, list(partition = logs))
+
   as_osrm_job(
     osrm_job_artifact = normalizePath(partition_file),
     osrm_working_dir = dirname(normalizePath(partition_file)),
-    logs = logs
+    logs = accumulated_logs
   )
 }

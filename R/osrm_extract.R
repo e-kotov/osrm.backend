@@ -94,6 +94,20 @@ osrm_extract <- function(
     stop("'processx' package is required for osrm_extract", call. = FALSE)
   }
 
+  # Extract previous logs if input is an osrm_job object
+  input_logs <- if (inherits(input_osm, "osrm_job")) {
+    if (is.list(input_osm$logs) && length(input_osm$logs) > 0) {
+      input_osm$logs
+    } else {
+      list()
+    }
+  } else {
+    list()
+  }
+
+  # Extract path from osrm_job object if needed
+  input_osm <- get_osrm_path_from_input(input_osm)
+
   # Resolve input path (file or directory)
   input_osm <- resolve_osrm_path(
     input_osm,
@@ -190,9 +204,12 @@ osrm_extract <- function(
     )
   }
 
+  # Accumulate logs from previous stages
+  accumulated_logs <- c(input_logs, list(extract = logs))
+
   as_osrm_job(
     osrm_job_artifact = timestamp_file,
     osrm_working_dir = dirname(timestamp_file),
-    logs = logs
+    logs = accumulated_logs
   )
 }

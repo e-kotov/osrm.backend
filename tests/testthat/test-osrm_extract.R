@@ -59,7 +59,7 @@ test_that("osrm_extract runs osrm-extract with expected arguments", {
   expect_true(all(c("-p", "car.lua") %in% captured$args))
   expect_true("--dump-nbg-graph" %in% captured$args)
   expect_true("-d" %in% captured$args && "2024-01" %in% captured$args)
-  expect_equal(result$osrm_path, expected_timestamp)
+  expect_equal(result$osrm_job_artifact, expected_timestamp)
   expect_true(file.exists(expected_timestamp))
 })
 
@@ -122,7 +122,7 @@ test_that("osrm_extract enforces overwrite flag for existing outputs", {
     .package = "processx"
   )
 
-  expect_equal(result$osrm_path, expected_timestamp)
+  expect_equal(result$osrm_job_artifact, expected_timestamp)
   expect_true(file.exists(expected_timestamp))
 })
 
@@ -158,7 +158,7 @@ test_that("osrm_extract accepts a directory with one OSM file", {
     .package = "processx"
   )
 
-  expect_equal(result$osrm_path, expected_timestamp)
+  expect_equal(result$osrm_job_artifact, expected_timestamp)
 })
 
 test_that("osrm_extract errors when directory has no OSM files", {

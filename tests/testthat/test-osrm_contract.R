@@ -133,7 +133,7 @@ test_that("osrm_contract accepts a directory with one .osrm.timestamp file", {
     .package = "processx"
   )
 
-  expect_equal(result$osrm_path, expected_hsgr)
+  expect_equal(result$osrm_job_artifact, expected_hsgr)
 })
 
 test_that("osrm_contract errors when directory has no .osrm.timestamp files", {

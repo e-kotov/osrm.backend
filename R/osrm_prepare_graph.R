@@ -87,46 +87,44 @@ osrm_prepare_graph <- function(
     spinner = spinner,
     echo_cmd = echo_cmd
   )
-  base <- extract_res$osrm_job_artifact
-  logs_list <- list(extract = extract_res$logs)
 
   # 2) Partition+Customize or Contract
   algorithm <- match.arg(algorithm)
   if (algorithm == "mld") {
-    part_res <- osrm_partition(
-      input_osrm = base,
-      threads = threads,
-      verbosity = verbosity,
-      balance = balance,
-      boundary = boundary,
-      optimizing_cuts = optimizing_cuts,
-      small_component_size = small_component_size,
-      max_cell_sizes = max_cell_sizes,
-      quiet = quiet,
-      verbose = verbose,
-      spinner = spinner,
-      echo_cmd = echo_cmd
-    )
-    logs_list$partition <- part_res$logs
-
-    osrm_graph <- osrm_customize(
-      input_osrm = part_res$osrm_job_artifact,
-      threads = threads,
-      verbosity = verbosity,
-      segment_speed_file = NULL,
-      turn_penalty_file = NULL,
-      edge_weight_updates_over_factor = 0,
-      parse_conditionals_from_now = 0,
-      time_zone_file = NULL,
-      quiet = quiet,
-      verbose = verbose,
-      spinner = spinner,
-      echo_cmd = echo_cmd
-    )
-    logs_list$customize <- osrm_graph$logs
+    # MLD pipeline: extract → partition → customize
+    # Each function accumulates logs from the previous step
+    osrm_graph <- extract_res |>
+      osrm_partition(
+        threads = threads,
+        verbosity = verbosity,
+        balance = balance,
+        boundary = boundary,
+        optimizing_cuts = optimizing_cuts,
+        small_component_size = small_component_size,
+        max_cell_sizes = max_cell_sizes,
+        quiet = quiet,
+        verbose = verbose,
+        spinner = spinner,
+        echo_cmd = echo_cmd
+      ) |>
+      osrm_customize(
+        threads = threads,
+        verbosity = verbosity,
+        segment_speed_file = NULL,
+        turn_penalty_file = NULL,
+        edge_weight_updates_over_factor = 0,
+        parse_conditionals_from_now = 0,
+        time_zone_file = NULL,
+        quiet = quiet,
+        verbose = verbose,
+        spinner = spinner,
+        echo_cmd = echo_cmd
+      )
   } else {
+    # CH pipeline: extract → contract
+    # Each function accumulates logs from the previous step
     osrm_graph <- osrm_contract(
-      input_osrm = base,
+      input_osrm = extract_res,
       threads = threads,
       verbosity = verbosity,
       segment_speed_file = NULL,
@@ -139,12 +137,8 @@ osrm_prepare_graph <- function(
       spinner = spinner,
       echo_cmd = echo_cmd
     )
-    logs_list$contract <- osrm_graph$logs
   }
 
-  as_osrm_job(
-    osrm_job_artifact = osrm_graph$osrm_job_artifact,
-    osrm_working_dir = osrm_graph$osrm_working_dir,
-    logs = logs_list
-  )
+  # The final osrm_graph already contains accumulated logs from all stages
+  osrm_graph
 }

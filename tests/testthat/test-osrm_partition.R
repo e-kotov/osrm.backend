@@ -116,7 +116,7 @@ test_that("osrm_partition accepts a directory with one .osrm.timestamp file", {
     .package = "processx"
   )
 
-  expect_equal(result$osrm_path, expected_partition)
+  expect_equal(result$osrm_job_artifact, expected_partition)
 })
 
 test_that("osrm_partition errors when directory has no .osrm.timestamp files", {
