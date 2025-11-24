@@ -15,10 +15,11 @@
 #' @param max_cell_sizes A numeric vector. Maximum cell sizes starting from level 1; default `c(128,4096,65536,2097152)`.
 #' @inheritParams osrm_prepare_graph
 #'
-#' @return A list with elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the partitioned `.osrm.partition` file.}
-#'   \item{logs}{The `processx::run` result object.}
+#'   \item{osrm_job_artifact}{The path to the partitioned `.osrm.partition` file.}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
+#'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
 #' @export
@@ -39,6 +40,10 @@ osrm_partition <- function(
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_partition", call. = FALSE)
   }
+
+  # Add this at the very beginning of the function body
+  input_osrm <- get_osrm_path_from_input(input_osrm)
+
   if (!is.character(input_osrm) || length(input_osrm) != 1) {
     stop(
       "'input_osrm' must be a single string (path to .osrm base)",
@@ -106,8 +111,9 @@ osrm_partition <- function(
     )
   }
 
-  list(
-    osrm_path = normalizePath(partition_file),
+  as_osrm_job(
+    osrm_job_artifact = normalizePath(partition_file),
+    osrm_working_dir = dirname(normalizePath(partition_file)),
     logs = logs
   )
 }

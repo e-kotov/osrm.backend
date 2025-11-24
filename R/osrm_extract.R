@@ -36,9 +36,10 @@
 #'   \code{--dump-nbg-graph}; default \code{FALSE}.
 #' @inheritParams osrm_prepare_graph
 #'
-#' @return A list with two elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The path to the generated `.osrm.timestamp` file (includes the `.timestamp` extension).}
+#'   \item{osrm_job_artifact}{The path to the generated `.osrm.timestamp` file.}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
 #'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
@@ -66,7 +67,7 @@
 #'   threads                    = 1L
 #' )
 #' # path to generated .osrm files (specifically, the .osrm.timestamp file)
-#' result$osrm_path
+#' result$osrm_job_artifact
 #' # clean up the temporary workspace
 #' unlink(workspace, recursive = TRUE)
 #' }
@@ -189,8 +190,9 @@ osrm_extract <- function(
     )
   }
 
-  list(
-    osrm_path = timestamp_file,
+  as_osrm_job(
+    osrm_job_artifact = timestamp_file,
+    osrm_working_dir = dirname(timestamp_file),
     logs = logs
   )
 }

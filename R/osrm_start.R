@@ -147,7 +147,7 @@ osrm_start <- function(
       )
 
       prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-      final_graph_path <- prepared_graph$osrm_path
+      final_graph_path <- prepared_graph$osrm_job_artifact
       if (!quiet) message("Graph preparation complete.")
     }
   } else {
@@ -177,7 +177,7 @@ osrm_start <- function(
         )
 
         prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-        final_graph_path <- prepared_graph$osrm_path
+        final_graph_path <- prepared_graph$osrm_job_artifact
         if (!quiet) message("Graph preparation complete.")
       }
     } else if (grepl("\\.osrm\\.(mldgr|hsgr)$", path, ignore.case = TRUE)) {

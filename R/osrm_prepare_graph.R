@@ -32,11 +32,12 @@
 #' @param echo_cmd A logical. When `TRUE` and `quiet = FALSE`, prints each
 #'   command before running; default `FALSE`.
 #'
-#' @return A list with elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the final routing-ready graph file (`.osrm.hsgr` for CH or `.osrm.mldgr` for MLD). This can be passed over to [osrm_start_server()].}
-#'   \item{logs}{A list of `processx::run` results for each stage:
-#'     `extract`, `partition`/`contract`, and `customize` (if MLD).}
+#'   \item{osrm_job_artifact}{The path to the final routing-ready graph file (`.osrm.hsgr` for CH or `.osrm.mldgr` for MLD).}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
+#'   \item{logs}{A list of \code{processx::run} results for each stage:
+#'     \code{extract}, \code{partition}/\code{contract}, and \code{customize} (if MLD).}
 #' }
 #'
 #' @export
@@ -86,7 +87,7 @@ osrm_prepare_graph <- function(
     spinner = spinner,
     echo_cmd = echo_cmd
   )
-  base <- extract_res$osrm_path
+  base <- extract_res$osrm_job_artifact
   logs_list <- list(extract = extract_res$logs)
 
   # 2) Partition+Customize or Contract
@@ -109,7 +110,7 @@ osrm_prepare_graph <- function(
     logs_list$partition <- part_res$logs
 
     osrm_graph <- osrm_customize(
-      input_osrm = part_res$osrm_path,
+      input_osrm = part_res$osrm_job_artifact,
       threads = threads,
       verbosity = verbosity,
       segment_speed_file = NULL,
@@ -141,10 +142,9 @@ osrm_prepare_graph <- function(
     logs_list$contract <- osrm_graph$logs
   }
 
-  final_path <- osrm_graph$osrm_path
-
-  list(
-    osrm_path = final_path,
+  as_osrm_job(
+    osrm_job_artifact = osrm_graph$osrm_job_artifact,
+    osrm_working_dir = osrm_graph$osrm_working_dir,
     logs = logs_list
   )
 }

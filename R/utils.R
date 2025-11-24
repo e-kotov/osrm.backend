@@ -57,3 +57,54 @@ resolve_osrm_path <- function(input_path,
 
   input_path
 }
+
+#' @export
+print.osrm_job <- function(x, ...) {
+  cat("------------------------------------------------------\n")
+  cat("OSRM Job Completed\n")
+  cat("------------------------------------------------------\n")
+  cat("Working Directory: ", x$osrm_working_dir, "\n")
+  cat("Job Artifact:      ", x$osrm_job_artifact, "\n")
+
+  # Check if logs is a processx object or a list of them
+  if (inherits(x$logs, "process_result")) {
+    status <- x$logs$status
+    cat("Status: ", ifelse(status == 0, "Success", paste("Error code", status)), "\n")
+  } else if (is.list(x$logs)) {
+    cat("Stages completed: ", paste(names(x$logs), collapse = ", "), "\n")
+  }
+
+  cat("Logs available in: <object>$logs\n")
+  cat("------------------------------------------------------\n")
+  invisible(x)
+}
+
+#' Internal helper to extract path from string or osrm_job object
+#' @noRd
+get_osrm_path_from_input <- function(input) {
+  if (inherits(input, "osrm_job")) {
+    # Try artifact first if it exists
+    if (!is.null(input$osrm_job_artifact) && file.exists(input$osrm_job_artifact)) {
+      return(input$osrm_job_artifact)
+    }
+    # Fall back to working dir
+    if (!is.null(input$osrm_working_dir)) {
+      return(input$osrm_working_dir)
+    }
+    stop("osrm_job object has no valid paths", call. = FALSE)
+  }
+  return(input)
+}
+
+#' Internal helper to class return objects
+#' @noRd
+as_osrm_job <- function(osrm_job_artifact, osrm_working_dir, logs) {
+  structure(
+    list(
+      osrm_job_artifact = osrm_job_artifact,
+      osrm_working_dir = osrm_working_dir,
+      logs = logs
+    ),
+    class = "osrm_job"
+  )
+}

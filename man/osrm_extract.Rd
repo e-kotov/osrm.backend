@@ -78,9 +78,10 @@ instead of live logs; default \code{TRUE}.}
 command before running; default \code{FALSE}.}
 }
 \value{
-A list with two elements:
+An object of class \code{osrm_job} with the following elements:
 \describe{
-\item{osrm_path}{The path to the generated \code{.osrm.timestamp} file (includes the \code{.timestamp} extension).}
+\item{osrm_job_artifact}{The path to the generated \code{.osrm.timestamp} file.}
+\item{osrm_working_dir}{The directory containing all OSRM files.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }
@@ -114,7 +115,7 @@ result <- osrm_extract(
   threads                    = 1L
 )
 # path to generated .osrm files (specifically, the .osrm.timestamp file)
-result$osrm_path
+result$osrm_job_artifact
 # clean up the temporary workspace
 unlink(workspace, recursive = TRUE)
 }

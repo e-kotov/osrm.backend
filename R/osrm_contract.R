@@ -15,10 +15,11 @@
 #' @param time_zone_file A string or `NULL`. GeoJSON file for time zone boundaries; default `NULL`.
 #' @inheritParams osrm_prepare_graph
 #'
-#' @return A list with elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the contracted `.osrm.hsgr` file. This can be passed over to [osrm_start_server()].}
-#'   \item{logs}{The `processx::run` result object.}
+#'   \item{osrm_job_artifact}{The path to the contracted `.osrm.hsgr` file.}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
+#'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
 #' @export
@@ -39,6 +40,10 @@ osrm_contract <- function(
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_contract", call. = FALSE)
   }
+
+  # Add this at the very beginning of the function body
+  input_osrm <- get_osrm_path_from_input(input_osrm)
+
   if (!is.character(input_osrm) || length(input_osrm) != 1) {
     stop(
       "'input_osrm' must be a single string (path to .osrm base)",
@@ -126,8 +131,9 @@ osrm_contract <- function(
     )
   }
 
-  list(
-    osrm_path = normalizePath(hsgr_file),
+  as_osrm_job(
+    osrm_job_artifact = normalizePath(hsgr_file),
+    osrm_working_dir = dirname(normalizePath(hsgr_file)),
     logs = logs
   )
 }

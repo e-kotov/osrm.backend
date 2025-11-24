@@ -91,6 +91,9 @@ osrm_start_server <- function(
   quiet <- isTRUE(quiet)
   verbose <- isTRUE(verbose)
 
+  # Add this at the very beginning of the function body
+  osrm_path <- get_osrm_path_from_input(osrm_path)
+
   # Validate inputs
   if (!is.character(osrm_path) || length(osrm_path) != 1) {
     stop(

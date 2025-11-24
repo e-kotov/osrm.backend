@@ -51,9 +51,10 @@ instead of live logs; default \code{TRUE}.}
 command before running; default \code{FALSE}.}
 }
 \value{
-A list with elements:
+An object of class \code{osrm_job} with the following elements:
 \describe{
-\item{osrm_path}{The normalized path to the contracted \code{.osrm.hsgr} file. This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+\item{osrm_job_artifact}{The path to the contracted \code{.osrm.hsgr} file.}
+\item{osrm_working_dir}{The directory containing all OSRM files.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }
