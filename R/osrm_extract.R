@@ -45,7 +45,7 @@
 #' \dontrun{
 #' # install osrm and set up PATH for the session
 #' osrm_executable <- osrm_install(
-#'  version = "v5.27.1",
+#'  version = "latest",
 #'  path_action = "session"
 #' )
 #' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
