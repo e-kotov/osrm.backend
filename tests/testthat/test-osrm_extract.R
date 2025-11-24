@@ -194,6 +194,6 @@ test_that("osrm_extract errors when directory has multiple OSM files", {
       input_osm = tmp_dir,
       profile = "car.lua"
     ),
-    "Multiple OSM files found"
+    "Multiple.*found"
   )
 })

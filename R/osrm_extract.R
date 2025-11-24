@@ -93,37 +93,12 @@ osrm_extract <- function(
     stop("'processx' package is required for osrm_extract", call. = FALSE)
   }
 
-  # normalize and verify input
-  input_osm <- normalizePath(input_osm, mustWork = TRUE)
-
-  # if input_osm is a directory, search for OSM files
-  if (dir.exists(input_osm)) {
-    osm_files <- list.files(
-      input_osm,
-      pattern = "\\.(osm|osm\\.bz2|osm\\.pbf)$",
-      ignore.case = TRUE,
-      full.names = TRUE
-    )
-
-    if (length(osm_files) == 0) {
-      stop(
-        "No OSM files (.osm, .osm.bz2, or .osm.pbf) found in directory: ",
-        input_osm,
-        call. = FALSE
-      )
-    } else if (length(osm_files) > 1) {
-      stop(
-        "Multiple OSM files found in directory: ",
-        input_osm,
-        "\n  Files: ",
-        paste(basename(osm_files), collapse = ", "),
-        "\n  Please specify a single file path instead of a directory.",
-        call. = FALSE
-      )
-    }
-
-    input_osm <- osm_files[1]
-  }
+  # Resolve input path (file or directory)
+  input_osm <- resolve_osrm_path(
+    input_osm,
+    pattern = "\\.(osm|osm\\.bz2|osm\\.pbf)$",
+    file_description = "OSM files (.osm, .osm.bz2, or .osm.pbf)"
+  )
 
   # strip recognized extensions to derive base path
   if (grepl("\\.osm\\.pbf$", input_osm, ignore.case = TRUE)) {

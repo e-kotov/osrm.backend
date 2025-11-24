@@ -46,38 +46,13 @@ osrm_contract <- function(
     )
   }
 
-  # normalize input
-  input_osrm <- normalizePath(input_osrm, mustWork = TRUE)
-
-  # if input_osrm is a directory, search for .osrm.timestamp files
-  if (dir.exists(input_osrm)) {
-    osrm_files <- list.files(
-      input_osrm,
-      pattern = "\\.osrm\\.timestamp$",
-      ignore.case = TRUE,
-      full.names = TRUE
-    )
-
-    if (length(osrm_files) == 0) {
-      stop(
-        "No .osrm.timestamp files found in directory: ",
-        input_osrm,
-        "\nPlease check that you have run `osrm_extract` first.",
-        call. = FALSE
-      )
-    } else if (length(osrm_files) > 1) {
-      stop(
-        "Multiple .osrm.timestamp files found in directory: ",
-        input_osrm,
-        "\n  Files: ",
-        paste(basename(osrm_files), collapse = ", "),
-        "\n  Please specify a single file path instead of a directory.",
-        call. = FALSE
-      )
-    }
-
-    input_osrm <- osrm_files[1]
-  }
+  # Resolve input path (file or directory)
+  input_osrm <- resolve_osrm_path(
+    input_osrm,
+    pattern = "\\.osrm\\.timestamp$",
+    file_description = ".osrm.timestamp files",
+    error_context = "Please check that you have run `osrm_extract` first."
+  )
 
   if (!grepl("\\.timestamp$", input_osrm, ignore.case = TRUE)) {
     stop(

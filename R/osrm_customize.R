@@ -46,38 +46,13 @@ osrm_customize <- function(
     )
   }
 
-  # normalize input
-  input_osrm <- normalizePath(input_osrm, mustWork = TRUE)
-
-  # if input_osrm is a directory, search for .osrm.partition files
-  if (dir.exists(input_osrm)) {
-    osrm_files <- list.files(
-      input_osrm,
-      pattern = "\\.osrm\\.partition$",
-      ignore.case = TRUE,
-      full.names = TRUE
-    )
-
-    if (length(osrm_files) == 0) {
-      stop(
-        "No .osrm.partition files found in directory: ",
-        input_osrm,
-        "\nPlease check that you have run `osrm_partition` first.",
-        call. = FALSE
-      )
-    } else if (length(osrm_files) > 1) {
-      stop(
-        "Multiple .osrm.partition files found in directory: ",
-        input_osrm,
-        "\n  Files: ",
-        paste(basename(osrm_files), collapse = ", "),
-        "\n  Please specify a single file path instead of a directory.",
-        call. = FALSE
-      )
-    }
-
-    input_osrm <- osrm_files[1]
-  }
+  # Resolve input path (file or directory)
+  input_osrm <- resolve_osrm_path(
+    input_osrm,
+    pattern = "\\.osrm\\.partition$",
+    file_description = ".osrm.partition files",
+    error_context = "Please check that you have run `osrm_partition` first."
+  )
 
   if (!grepl("\\.partition$", input_osrm, ignore.case = TRUE)) {
     stop(
