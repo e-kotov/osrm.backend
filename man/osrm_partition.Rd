@@ -20,7 +20,8 @@ osrm_partition(
 )
 }
 \arguments{
-\item{input_osrm}{A string. Base path to the \code{.osrm} files (without extension).}
+\item{input_osrm}{A string. Path to a \code{.osrm.timestamp} file, the base path to the \code{.osrm} files (without extension),
+or a directory containing exactly one \code{.osrm.timestamp} file.}
 
 \item{threads}{An integer. Number of threads to use; default \code{8} (osrm-partition's default).}
 

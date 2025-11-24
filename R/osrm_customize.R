@@ -3,7 +3,8 @@
 #' Run the `osrm-customize` tool to customize a partitioned OSRM graph for the MLD pipeline.
 #' After running, a companion `<base>.osrm.mldgr` file must exist to confirm success.
 #'
-#' @param input_osrm A string. Base path to the partitioned `.osrm` files (without extension).
+#' @param input_osrm A string. Path to a `.osrm.partition` file, the base path to the partitioned `.osrm` files (without extension),
+#'   or a directory containing exactly one `.osrm.partition` file.
 #' @param threads An integer. Number of threads to use; default `8` (osrm-customize's default).
 #' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
 #'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
@@ -45,6 +46,39 @@ osrm_customize <- function(
     )
   }
 
+  # normalize input
+  input_osrm <- normalizePath(input_osrm, mustWork = TRUE)
+
+  # if input_osrm is a directory, search for .osrm.partition files
+  if (dir.exists(input_osrm)) {
+    osrm_files <- list.files(
+      input_osrm,
+      pattern = "\\.osrm\\.partition$",
+      ignore.case = TRUE,
+      full.names = TRUE
+    )
+
+    if (length(osrm_files) == 0) {
+      stop(
+        "No .osrm.partition files found in directory: ",
+        input_osrm,
+        "\nPlease check that you have run `osrm_partition` first.",
+        call. = FALSE
+      )
+    } else if (length(osrm_files) > 1) {
+      stop(
+        "Multiple .osrm.partition files found in directory: ",
+        input_osrm,
+        "\n  Files: ",
+        paste(basename(osrm_files), collapse = ", "),
+        "\n  Please specify a single file path instead of a directory.",
+        call. = FALSE
+      )
+    }
+
+    input_osrm <- osrm_files[1]
+  }
+
   if (!grepl("\\.partition$", input_osrm, ignore.case = TRUE)) {
     stop(
       "'input_osrm' must have extension .partition",
@@ -54,13 +88,10 @@ osrm_customize <- function(
 
   if (!file.exists(input_osrm)) {
     stop(
-      stop(
-        "File does not exist: ",
-        input_osrm,
-        "\n",
-        "Please check that you have run `osrm_partition` first.",
-        call. = FALSE
-      )
+      "File does not exist: ",
+      input_osrm,
+      "\nPlease check that you have run `osrm_partition` first.",
+      call. = FALSE
     )
   }
 

@@ -105,3 +105,62 @@ test_that("osrm_contract checks for output file", {
     "Contracting did not produce CH hierarchy file"
   )
 })
+
+test_that("osrm_contract accepts a directory with one .osrm.timestamp file", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-contract-dir-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  input_osrm <- file.path(tmp_dir, "test.osrm.timestamp")
+  file.create(input_osrm)
+
+  normalized_input <- normalizePath(input_osrm)
+  expected_hsgr <- sub("\\.timestamp$", ".hsgr", normalized_input)
+
+  mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
+    file.create(expected_hsgr)
+    list(status = 0, stdout = "", stderr = "")
+  }
+
+  result <- with_mocked_bindings(
+    osrm_contract(
+      input_osrm = tmp_dir,
+      quiet = TRUE
+    ),
+    run = mock_run,
+    .package = "processx"
+  )
+
+  expect_equal(result$osrm_path, expected_hsgr)
+})
+
+test_that("osrm_contract errors when directory has no .osrm.timestamp files", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-contract-empty-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    osrm_contract(input_osrm = tmp_dir),
+    "No .osrm.timestamp files found"
+  )
+})
+
+test_that("osrm_contract errors when directory has multiple .osrm.timestamp files", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-contract-multi-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  file.create(file.path(tmp_dir, "test1.osrm.timestamp"))
+  file.create(file.path(tmp_dir, "test2.osrm.timestamp"))
+
+  expect_error(
+    osrm_contract(input_osrm = tmp_dir),
+    "Multiple .osrm.timestamp files found"
+  )
+})

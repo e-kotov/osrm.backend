@@ -20,7 +20,8 @@ osrm_customize(
 )
 }
 \arguments{
-\item{input_osrm}{A string. Base path to the partitioned \code{.osrm} files (without extension).}
+\item{input_osrm}{A string. Path to a \code{.osrm.partition} file, the base path to the partitioned \code{.osrm} files (without extension),
+or a directory containing exactly one \code{.osrm.partition} file.}
 
 \item{threads}{An integer. Number of threads to use; default \code{8} (osrm-customize's default).}
 

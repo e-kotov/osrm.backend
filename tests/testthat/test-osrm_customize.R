@@ -105,3 +105,62 @@ test_that("osrm_customize checks for output file", {
     "Customization did not produce MLD graph file"
   )
 })
+
+test_that("osrm_customize accepts a directory with one .osrm.partition file", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-customize-dir-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  input_osrm <- file.path(tmp_dir, "test.osrm.partition")
+  file.create(input_osrm)
+
+  normalized_input <- normalizePath(input_osrm)
+  expected_mldgr <- sub("\\.partition$", ".mldgr", normalized_input)
+
+  mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
+    file.create(expected_mldgr)
+    list(status = 0, stdout = "", stderr = "")
+  }
+
+  result <- with_mocked_bindings(
+    osrm_customize(
+      input_osrm = tmp_dir,
+      quiet = TRUE
+    ),
+    run = mock_run,
+    .package = "processx"
+  )
+
+  expect_equal(result$osrm_path, expected_mldgr)
+})
+
+test_that("osrm_customize errors when directory has no .osrm.partition files", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-customize-empty-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    osrm_customize(input_osrm = tmp_dir),
+    "No .osrm.partition files found"
+  )
+})
+
+test_that("osrm_customize errors when directory has multiple .osrm.partition files", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-customize-multi-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  file.create(file.path(tmp_dir, "test1.osrm.partition"))
+  file.create(file.path(tmp_dir, "test2.osrm.partition"))
+
+  expect_error(
+    osrm_customize(input_osrm = tmp_dir),
+    "Multiple .osrm.partition files found"
+  )
+})

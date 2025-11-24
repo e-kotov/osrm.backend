@@ -3,7 +3,8 @@
 #' Run the `osrm-partition` tool to partition an OSRM graph for the MLD pipeline.
 #' After running, a companion `<base>.osrm.partition` file must exist to confirm success.
 #'
-#' @param input_osrm A string. Base path to the `.osrm` files (without extension).
+#' @param input_osrm A string. Path to a `.osrm.timestamp` file, the base path to the `.osrm` files (without extension),
+#'   or a directory containing exactly one `.osrm.timestamp` file.
 #' @param threads An integer. Number of threads to use; default `8` (osrm-partition's default).
 #' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
 #'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
@@ -45,15 +46,45 @@ osrm_partition <- function(
     )
   }
 
-  if (!file.exists(input_osrm)) {
-    stop(
+  # normalize input
+  input_osrm <- normalizePath(input_osrm, mustWork = TRUE)
+
+  # if input_osrm is a directory, search for .osrm.timestamp files
+  if (dir.exists(input_osrm)) {
+    osrm_files <- list.files(
+      input_osrm,
+      pattern = "\\.osrm\\.timestamp$",
+      ignore.case = TRUE,
+      full.names = TRUE
+    )
+
+    if (length(osrm_files) == 0) {
       stop(
-        "File does not exist: ",
+        "No .osrm.timestamp files found in directory: ",
         input_osrm,
-        "\n",
-        "Please check that you have run `osrm_extract` first.",
+        "\nPlease check that you have run `osrm_extract` first.",
         call. = FALSE
       )
+    } else if (length(osrm_files) > 1) {
+      stop(
+        "Multiple .osrm.timestamp files found in directory: ",
+        input_osrm,
+        "\n  Files: ",
+        paste(basename(osrm_files), collapse = ", "),
+        "\n  Please specify a single file path instead of a directory.",
+        call. = FALSE
+      )
+    }
+
+    input_osrm <- osrm_files[1]
+  }
+
+  if (!file.exists(input_osrm)) {
+    stop(
+      "File does not exist: ",
+      input_osrm,
+      "\nPlease check that you have run `osrm_extract` first.",
+      call. = FALSE
     )
   }
 
