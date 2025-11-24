@@ -5,8 +5,9 @@
 #' using a specified Lua profile.  After running, a companion
 #' `<base>.osrm.timestamp` file must exist to confirm success.
 #'
-#' @param input_osm A string. Path to the input OSM file:
-#'   `.osm`, `.osm.bz2`, or `.osm.pbf`.
+#' @param input_osm A string. Path to the input OSM file
+#'   (`.osm`, `.osm.bz2`, or `.osm.pbf`) or a directory containing exactly one
+#'   OSM file with a supported extension.
 #' @param profile A string. Path to the OSRM Lua profile
 #'   (e.g. returned by \code{osrm_find_profile("car.lua")}).
 #' @param threads An integer. Number of threads for
@@ -94,6 +95,35 @@ osrm_extract <- function(
 
   # normalize and verify input
   input_osm <- normalizePath(input_osm, mustWork = TRUE)
+
+  # if input_osm is a directory, search for OSM files
+  if (dir.exists(input_osm)) {
+    osm_files <- list.files(
+      input_osm,
+      pattern = "\\.(osm|osm\\.bz2|osm\\.pbf)$",
+      ignore.case = TRUE,
+      full.names = TRUE
+    )
+
+    if (length(osm_files) == 0) {
+      stop(
+        "No OSM files (.osm, .osm.bz2, or .osm.pbf) found in directory: ",
+        input_osm,
+        call. = FALSE
+      )
+    } else if (length(osm_files) > 1) {
+      stop(
+        "Multiple OSM files found in directory: ",
+        input_osm,
+        "\n  Files: ",
+        paste(basename(osm_files), collapse = ", "),
+        "\n  Please specify a single file path instead of a directory.",
+        call. = FALSE
+      )
+    }
+
+    input_osm <- osm_files[1]
+  }
 
   # strip recognized extensions to derive base path
   if (grepl("\\.osm\\.pbf$", input_osm, ignore.case = TRUE)) {

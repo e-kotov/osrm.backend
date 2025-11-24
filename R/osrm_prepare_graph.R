@@ -4,7 +4,7 @@
 #' to produce the base `.osrm` graph, then prepares it for routing via
 #' either the MLD pipeline (`osrm-partition` + `osrm-customize`) or the CH pipeline (`osrm-contract`).
 #'
-#' @param input_osm A string. Path to the input OSM file: `.osm`, `.osm.bz2`, or `.osm.pbf`.
+#' @param input_osm A string. Path to the input OSM file (`.osm`, `.osm.bz2`, or `.osm.pbf`) or a directory containing exactly one OSM file with a supported extension.
 #' @param profile A string. Path to the OSRM Lua profile (e.g. returned by `osrm_find_profile("car.lua")`).
 #' @param threads An integer. Number of threads for extract and partition/contract; default `8`.
 #' @param overwrite A logical. If `FALSE`, stops if any existing `.osrm*` files matching

@@ -29,7 +29,7 @@ osrm_prepare_graph(
 )
 }
 \arguments{
-\item{input_osm}{A string. Path to the input OSM file: \code{.osm}, \code{.osm.bz2}, or \code{.osm.pbf}.}
+\item{input_osm}{A string. Path to the input OSM file (\code{.osm}, \code{.osm.bz2}, or \code{.osm.pbf}) or a directory containing exactly one OSM file with a supported extension.}
 
 \item{profile}{A string. Path to the OSRM Lua profile (e.g. returned by \code{osrm_find_profile("car.lua")}).}
 

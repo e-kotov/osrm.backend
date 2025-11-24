@@ -125,3 +125,75 @@ test_that("osrm_extract enforces overwrite flag for existing outputs", {
   expect_equal(result$osrm_path, expected_timestamp)
   expect_true(file.exists(expected_timestamp))
 })
+
+test_that("osrm_extract accepts a directory with one OSM file", {
+  skip_if_no_osrm()
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-dir-test-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  input_osm <- file.path(tmp_dir, "test.osm.pbf")
+  file.create(input_osm)
+
+  normalized_input <- normalizePath(input_osm)
+  expected_timestamp <- paste0(
+    sub("\\.osm\\.pbf$", "", normalized_input, ignore.case = TRUE),
+    ".osrm.timestamp"
+  )
+
+  mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
+    file.create(expected_timestamp)
+    list(status = 0, stdout = "", stderr = "")
+  }
+
+  result <- with_mocked_bindings(
+    osrm_extract(
+      input_osm = tmp_dir,
+      profile = "car.lua",
+      quiet = TRUE
+    ),
+    run = mock_run,
+    .package = "processx"
+  )
+
+  expect_equal(result$osrm_path, expected_timestamp)
+})
+
+test_that("osrm_extract errors when directory has no OSM files", {
+  skip_if_no_osrm()
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-empty-dir-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  expect_error(
+    osrm_extract(
+      input_osm = tmp_dir,
+      profile = "car.lua"
+    ),
+    "No OSM files.*found in directory"
+  )
+})
+
+test_that("osrm_extract errors when directory has multiple OSM files", {
+  skip_if_no_osrm()
+  skip_if_not_installed("processx")
+
+  tmp_dir <- file.path(tempdir(), paste0("osrm-multi-dir-", Sys.getpid()))
+  dir.create(tmp_dir, showWarnings = FALSE)
+  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+
+  file.create(file.path(tmp_dir, "test1.osm.pbf"))
+  file.create(file.path(tmp_dir, "test2.osm.pbf"))
+
+  expect_error(
+    osrm_extract(
+      input_osm = tmp_dir,
+      profile = "car.lua"
+    ),
+    "Multiple OSM files found"
+  )
+})
