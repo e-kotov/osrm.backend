@@ -71,12 +71,86 @@ print.osrm_job <- function(x, ...) {
     status <- x$logs$status
     cat("Status: ", ifelse(status == 0, "Success", paste("Error code", status)), "\n")
   } else if (is.list(x$logs)) {
-    cat("Stages completed: ", paste(names(x$logs), collapse = ", "), "\n")
+    completed_stages <- names(x$logs)
+    cat("Stages completed:  ", paste(completed_stages, collapse = ", "), "\n")
+
+    # Analyze pipeline state
+    pipeline_info <- .analyze_pipeline_state(completed_stages)
+
+    # Show pipeline path and remaining stages
+    if (!is.null(pipeline_info$pipeline)) {
+      cat("Pipeline:          ", pipeline_info$pipeline, "\n")
+
+      if (length(pipeline_info$remaining) > 0) {
+        cat("Remaining stages:  ", paste(pipeline_info$remaining, collapse = ", "), "\n")
+      }
+    }
+
+    # Show next step
+    if (!is.null(pipeline_info$next_step)) {
+      cat("\n")
+      cat("Next step:         ", pipeline_info$next_step, "\n")
+    } else if (length(pipeline_info$alternative_steps) > 0) {
+      cat("\n")
+      cat("Next step options:\n")
+      for (step in pipeline_info$alternative_steps) {
+        cat("  - ", step, "\n", sep = "")
+      }
+    }
+
+    # Show routing readiness
+    if (pipeline_info$ready_for_routing) {
+      cat("\n")
+      cat("Status:            Ready for routing!\n")
+      cat("Usage:             Use osrm_routed() to start routing server,\n")
+      cat("                   then use the 'osrm' R package for routing queries.\n")
+    }
   }
 
-  cat("Logs available in: <object>$logs\n")
+  cat("\nLogs available in: <object>$logs\n")
   cat("------------------------------------------------------\n")
   invisible(x)
+}
+
+#' Analyze OSRM pipeline state
+#' @noRd
+.analyze_pipeline_state <- function(completed_stages) {
+  result <- list(
+    pipeline = NULL,
+    remaining = character(0),
+    next_step = NULL,
+    alternative_steps = character(0),
+    ready_for_routing = FALSE
+  )
+
+  has_extract <- "extract" %in% completed_stages
+  has_partition <- "partition" %in% completed_stages
+  has_contract <- "contract" %in% completed_stages
+  has_customize <- "customize" %in% completed_stages
+
+  # Determine pipeline and state
+  if (has_extract && !has_partition && !has_contract) {
+    # Just extract - two paths available
+    result$alternative_steps <- c(
+      "osrm_contract() for CH pipeline (extract -> contract)",
+      "osrm_partition() for MLD pipeline (extract -> partition -> customize)"
+    )
+  } else if (has_extract && has_partition && !has_customize) {
+    # MLD pipeline in progress
+    result$pipeline <- "MLD (Multi-Level Dijkstra)"
+    result$remaining <- "customize"
+    result$next_step <- "osrm_customize()"
+  } else if (has_extract && has_contract) {
+    # CH pipeline complete
+    result$pipeline <- "CH (Contraction Hierarchies)"
+    result$ready_for_routing <- TRUE
+  } else if (has_extract && has_partition && has_customize) {
+    # MLD pipeline complete
+    result$pipeline <- "MLD (Multi-Level Dijkstra)"
+    result$ready_for_routing <- TRUE
+  }
+
+  result
 }
 
 #' Internal helper to extract path from string or osrm_job object
