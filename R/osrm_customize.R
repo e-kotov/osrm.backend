@@ -62,6 +62,18 @@ osrm_customize <- function(
     )
   }
 
+  # Check if user is trying to use customize without partition
+  if (grepl("\\.timestamp$", input_osrm, ignore.case = TRUE)) {
+    stop(
+      "`osrm_customize` requires a partitioned graph from `osrm_partition`.\n",
+      "These are part of different pipelines:\n",
+      "  - CH pipeline: extract -> contract\n",
+      "  - MLD pipeline: extract -> partition -> customize\n",
+      "After `osrm_extract`, use `osrm_partition` before `osrm_customize`.",
+      call. = FALSE
+    )
+  }
+
   # Resolve input path (file or directory)
   input_osrm <- resolve_osrm_path(
     input_osrm,

@@ -164,3 +164,38 @@ test_that("osrm_contract errors when directory has multiple .osrm.timestamp file
     "Multiple .osrm.timestamp files found"
   )
 })
+
+test_that("osrm_contract gives helpful error when used after osrm_partition", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- tempdir()
+  partition_file <- file.path(
+    tmp_dir,
+    paste0("osrm-partition-test-", Sys.getpid(), ".osrm.partition")
+  )
+  on.exit(unlink(partition_file), add = TRUE)
+  file.create(partition_file)
+
+  # Create a mock osrm_job object with a partition file (simulating osrm_partition output)
+  mock_job <- structure(
+    list(
+      osrm_job_artifact = partition_file,
+      osrm_working_dir = tmp_dir,
+      logs = list()
+    ),
+    class = "osrm_job"
+  )
+
+  expect_error(
+    osrm_contract(input_osrm = mock_job),
+    "cannot be used after.*partition"
+  )
+  expect_error(
+    osrm_contract(input_osrm = mock_job),
+    "MLD pipeline"
+  )
+  expect_error(
+    osrm_contract(input_osrm = mock_job),
+    "osrm_customize"
+  )
+})

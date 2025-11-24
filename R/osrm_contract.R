@@ -62,6 +62,18 @@ osrm_contract <- function(
     )
   }
 
+  # Check if user is trying to use contract after partition
+  if (grepl("\\.partition$", input_osrm, ignore.case = TRUE)) {
+    stop(
+      "`osrm_contract` cannot be used after `osrm_partition`.\n",
+      "These are part of different pipelines:\n",
+      "  - CH pipeline: extract -> contract\n",
+      "  - MLD pipeline: extract -> partition -> customize\n",
+      "After `osrm_partition`, use `osrm_customize` instead.",
+      call. = FALSE
+    )
+  }
+
   # Resolve input path (file or directory)
   input_osrm <- resolve_osrm_path(
     input_osrm,

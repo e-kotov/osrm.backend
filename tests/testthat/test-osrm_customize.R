@@ -164,3 +164,38 @@ test_that("osrm_customize errors when directory has multiple .osrm.partition fil
     "Multiple .osrm.partition files found"
   )
 })
+
+test_that("osrm_customize gives helpful error when used after osrm_extract without partition", {
+  skip_if_not_installed("processx")
+
+  tmp_dir <- tempdir()
+  timestamp_file <- file.path(
+    tmp_dir,
+    paste0("osrm-extract-test-", Sys.getpid(), ".osrm.timestamp")
+  )
+  on.exit(unlink(timestamp_file), add = TRUE)
+  file.create(timestamp_file)
+
+  # Create a mock osrm_job object with a timestamp file (simulating osrm_extract output)
+  mock_job <- structure(
+    list(
+      osrm_job_artifact = timestamp_file,
+      osrm_working_dir = tmp_dir,
+      logs = list()
+    ),
+    class = "osrm_job"
+  )
+
+  expect_error(
+    osrm_customize(input_osrm = mock_job),
+    "requires a partitioned graph"
+  )
+  expect_error(
+    osrm_customize(input_osrm = mock_job),
+    "MLD pipeline"
+  )
+  expect_error(
+    osrm_customize(input_osrm = mock_job),
+    "osrm_partition"
+  )
+})
