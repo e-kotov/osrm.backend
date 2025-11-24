@@ -40,8 +40,8 @@
 #' OS and CPU combination that exists on the GitHub releases.
 #'
 #' @param version A string specifying the OSRM version tag to install.
-#'   Defaults to `"v5.27.1"`. Use `"latest"` to automatically find the most
-#'   recent stable version by calling `osrm_check_latest_version()`. Versions
+#'   Defaults to `"latest"`. Use `"latest"` to automatically find the most
+#'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
 #'   other than `v5.27.1` and `v6.0.0` will trigger a warning but are still
 #'   attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be installed.
@@ -72,7 +72,7 @@
 #' osrm_clear_path()
 #' }
 osrm_install <- function(
-  version = "v5.27.1",
+  version = "latest",
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
@@ -247,8 +247,7 @@ osrm_install <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_file)
     },
     error = function(e) {
@@ -307,9 +306,24 @@ osrm_install <- function(
   if (is.null(runtime_version) || !nzchar(runtime_version)) {
     runtime_version <- version
   }
-  maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
-  maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
-  maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
+  maybe_install_windows_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
+  maybe_install_linux_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
+  maybe_install_macos_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
 
   # --- 9. Download and install Lua profiles ---
   install_profiles_for_release(release_info, dest_dir, quiet = quiet)
@@ -770,23 +784,24 @@ get_macos_release_info <- function(sys_info) {
 #' @noRd
 github_api_request_with_retries <- function(url, error_message, verb = "GET") {
   # Base request with error handling and retry policy
-  req <- httr2::request(url) |>
-    httr2::req_error(body = function(resp) {
-      httr2::resp_body_json(resp)$message
-    }) |>
-    # Retry on GitHub's rate-limiting status (403), as well as the
-    # standard 429 (Too Many Requests) and 503 (Service Unavailable).
-    httr2::req_retry(
-      max_tries = 4,
-      is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
-    )
+  req <- httr2::request(url)
+  req <- httr2::req_error(req, body = function(resp) {
+    httr2::resp_body_json(resp)$message
+  })
+  # Retry on GitHub's rate-limiting status (403), as well as the
+  # standard 429 (Too Many Requests) and 503 (Service Unavailable).
+  req <- httr2::req_retry(
+    req,
+    max_tries = 4,
+    is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
+  )
 
   # Check for a GitHub Personal Access Token to increase rate limits.
   # This is especially important for CI/CD environments.
   token <- Sys.getenv("GITHUB_PAT")
   if (nzchar(token)) {
     # Add authentication header if token is found
-    req <- req |> httr2::req_auth_bearer_token(token)
+    req <- httr2::req_auth_bearer_token(req, token)
   }
 
   resp <- tryCatch(
@@ -884,7 +899,11 @@ find_asset_url <- function(release_info, platform) {
 }
 
 #' @noRd
-install_profiles_for_release <- function(release_info, dest_dir, quiet = FALSE) {
+install_profiles_for_release <- function(
+  release_info,
+  dest_dir,
+  quiet = FALSE
+) {
   tarball_url <- release_info$tarball_url
 
   if (is.null(tarball_url) || !nzchar(tarball_url)) {
@@ -905,8 +924,7 @@ install_profiles_for_release <- function(release_info, dest_dir, quiet = FALSE) 
 
   tryCatch(
     {
-      req <- httr2::request(tarball_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(tarball_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tarball)
     },
     error = function(e) {
@@ -1229,8 +1247,7 @@ ensure_linux_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1364,8 +1381,7 @@ ensure_macos_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1559,8 +1575,7 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   tmp_zip <- tempfile(fileext = ".zip")
   on.exit(unlink(tmp_zip), add = TRUE)
 
-  req <- httr2::request(url) |>
-    httr2::req_retry(max_tries = 3)
+  req <- httr2::req_retry(httr2::request(url), max_tries = 3)
   tryCatch(
     httr2::req_perform(req, path = tmp_zip),
     error = function(e) {
@@ -1694,16 +1709,6 @@ set_path_project <- function(dir, quiet = FALSE) {
   if (!quiet) {
     message("You chose to set the OSRM path for this project.")
     message("This will add a line to the following file: ", r_profile_path)
-  }
-
-  if (interactive() && !quiet) {
-    ans <- utils::askYesNo("Do you want to proceed?", default = TRUE)
-    if (!isTRUE(ans)) {
-      if (!quiet) {
-        message("Aborted. .Rprofile was not modified.")
-      }
-      return(invisible())
-    }
   }
 
   comment_tag <- "#added-by-r-pkg-osrm.backend"

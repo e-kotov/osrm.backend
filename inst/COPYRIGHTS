@@ -1,0 +1,19 @@
+The osrm.backend package downloads and installs the following third-party software:
+
+1. OSRM Backend (Open Source Routing Machine)
+   - Source: https://github.com/Project-OSRM/osrm-backend
+   - License: BSD 2-Clause License
+   - Copyright (c) 2016, Project OSRM contributors
+
+2. Intel Threading Building Blocks (oneTBB)
+   - Source: https://github.com/uxlfoundation/oneTBB
+   - License: Apache License 2.0
+   - Copyright (c) Intel Corporation
+
+3. BZip2 for Windows
+   - Source: https://github.com/philr/bzip2-windows
+   - License: BSD-like (bzip2 license)
+   - Copyright (c) 1996-2010 Julian R Seward
+
+This package (osrm.backend) does not contain these binaries in its source distribution; 
+they are downloaded only upon user request via osrm_install() or osrm_start().

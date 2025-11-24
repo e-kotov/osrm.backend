@@ -5,7 +5,7 @@
 \title{Install OSRM Backend Binaries}
 \usage{
 osrm_install(
-  version = "v5.27.1",
+  version = "latest",
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
@@ -14,8 +14,8 @@ osrm_install(
 }
 \arguments{
 \item{version}{A string specifying the OSRM version tag to install.
-Defaults to \code{"v5.27.1"}. Use \code{"latest"} to automatically find the most
-recent stable version by calling \code{osrm_check_latest_version()}. Versions
+Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
+recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
 other than \code{v5.27.1} and \code{v6.0.0} will trigger a warning but are still
 attempted if binaries are available.}
 

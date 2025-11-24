@@ -8,7 +8,7 @@
 #' @return The normalized filesystem path to the profile.
 #'
 #' @examples
-#' \donttest{
+#' \dontrun{
 #' # make sure osrm backend is installed and on PATH
 #' osrm_install()
 #' osrm_find_profile("car.lua")

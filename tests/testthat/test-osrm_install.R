@@ -408,6 +408,7 @@ test_that("osrm_clear_path handles .Rprofile without our tags", {
 })
 
 # Test set_path_project ----
+# Test set_path_project ----
 test_that("set_path_project creates .Rprofile if missing", {
   tmp_dir <- tempfile()
   dir.create(tmp_dir)

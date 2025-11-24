@@ -83,8 +83,8 @@ test_that("osrm_start works with direct path to prepared graph file", {
   )
 
   if (!inherits(server, "try-error") && server$is_alive()) {
+    on.exit(osrm_stop(server, quiet = TRUE), add = TRUE)
     expect_s3_class(server, "process")
-    osrm_stop(server, quiet = TRUE)
   } else {
     skip("Server failed to start")
   }
@@ -131,8 +131,8 @@ test_that("osrm_start handles directory with graph files", {
   )
 
   if (!inherits(server, "try-error") && server$is_alive()) {
+    on.exit(osrm_stop(server, quiet = TRUE), add = TRUE)
     expect_s3_class(server, "process")
-    osrm_stop(server, quiet = TRUE)
   } else {
     skip("Server failed to start")
   }

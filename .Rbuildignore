@@ -15,3 +15,6 @@
 ^vignettes/\.quarto$
 ^vignettes/*_files$
 ^man\/figures\/card\.png$
+^.claude$
+^CITATION\.cff$
+^codemeta\.json$

@@ -1,5 +1,6 @@
 test_that("osrm_start_server launches osrm-routed with correct arguments", {
   skip_if_not_installed("processx")
+  skip_on_cran()
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
@@ -257,6 +258,7 @@ test_that("osrm_start_server validates input file extension", {
 
 test_that("osrm_start_server accepts dataset_name parameter", {
   skip_if_not_installed("processx")
+  skip_on_cran()
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
@@ -298,6 +300,7 @@ test_that("osrm_start_server accepts dataset_name parameter", {
 
 test_that("osrm_start_server handles max size parameters", {
   skip_if_not_installed("processx")
+  skip_on_cran()
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
