@@ -68,6 +68,52 @@ osrm_prepare_graph <- function(
     stop("'processx' package is required for osrm_prepare_graph", call. = FALSE)
   }
 
+  algorithm <- match.arg(algorithm)
+
+  # Check for algorithm conflicts before starting pipeline
+  # Extract path from input
+  input_osm_resolved <- resolve_osrm_path(
+    input_osm,
+    pattern = "\\.(osm|osm\\.bz2|osm\\.pbf)$",
+    file_description = "OSM files (.osm, .osm.bz2, or .osm.pbf)"
+  )
+
+  # Determine base name and directory
+  if (grepl("\\.osm\\.pbf$", input_osm_resolved, ignore.case = TRUE)) {
+    base <- sub("\\.osm\\.pbf$", "", input_osm_resolved, ignore.case = TRUE)
+  } else if (grepl("\\.osm\\.bz2$", input_osm_resolved, ignore.case = TRUE)) {
+    base <- sub("\\.osm\\.bz2$", "", input_osm_resolved, ignore.case = TRUE)
+  } else if (grepl("\\.osm$", input_osm_resolved, ignore.case = TRUE)) {
+    base <- sub("\\.osm$", "", input_osm_resolved, ignore.case = TRUE)
+  } else {
+    stop(
+      "'input_osm' must have extension .osm, .osm.bz2, or .osm.pbf",
+      call. = FALSE
+    )
+  }
+
+  dir_path <- dirname(base)
+  base_name <- basename(base)
+
+  # Check for existing algorithm files
+  detection <- detect_osrm_algorithm(dir_path, base_name)
+
+  if (detection$state %in% c("ch", "mld", "mixed") && !overwrite) {
+    # Conflict exists and overwrite is FALSE
+    check_algorithm_conflict(dir_path, base_name, algorithm, "prepare_graph")
+  } else if (detection$state %in% c("ch", "mld", "mixed") && overwrite) {
+    # Warn user about overwriting files from a different algorithm
+    current_algo <- if (detection$state == "ch") "CH" else if (detection$state == "mld") "MLD" else "mixed"
+    target_algo <- if (algorithm == "ch") "CH" else "MLD"
+
+    if (!quiet && current_algo != target_algo) {
+      message(
+        "Note: Directory contains existing ", current_algo, " algorithm files.\n",
+        "overwrite=TRUE will remove them and create new ", target_algo, " files."
+      )
+    }
+  }
+
   # 1) Extract
   extract_res <- osrm_extract(
     input_osm = input_osm,

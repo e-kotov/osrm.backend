@@ -100,6 +100,11 @@ osrm_customize <- function(
 
   osrm_path <- gsub("\\.partition$", "", input_osrm)
 
+  # Check for algorithm conflicts (CH files in directory)
+  base_name <- sub("\\.osrm$", "", basename(osrm_path))
+  dir_path <- dirname(osrm_path)
+  check_algorithm_conflict(dir_path, base_name, "mld", "customize")
+
   verbosity <- match.arg(verbosity)
   arguments <- c(osrm_path, "-l", verbosity, "-t", as.character(threads))
   if (!is.null(segment_speed_file)) {

@@ -182,3 +182,154 @@ as_osrm_job <- function(osrm_job_artifact, osrm_working_dir, logs) {
     class = "osrm_job"
   )
 }
+
+#' Known OSRM file patterns by pipeline stage
+#' @noRd
+.osrm_file_patterns <- function() {
+  list(
+    # CH-specific files (created by osrm-contract)
+    # Note: datasource_names is created by both CH and MLD, so not included here
+    ch_specific = c("hsgr"),
+
+    # MLD-specific files (created by osrm-partition and osrm-customize)
+    # Note: datasource_names is created by both CH and MLD, so not included here
+    mld_specific = c("cells", "partition", "cell_metrics", "mldgr"),
+
+    # Files modified by osrm-partition (originally from extract)
+    # These are shared with extract but have different content after partition
+    mld_modified = c("cnbg_to_ebg", "ebg", "ebg_nodes", "enw", "fileIndex"),
+
+    # Extract-only files (created by osrm-extract, not modified by later stages in CH)
+    extract_base = c(
+      "cnbg", "cnbg_to_ebg", "ebg", "ebg_nodes", "edges", "enw",
+      "fileIndex", "geometry", "icd", "maneuver_overrides", "names",
+      "nbg_nodes", "properties", "ramIndex", "restrictions", "timestamp",
+      "tld", "tls", "turn_duration_penalties", "turn_penalties_index",
+      "turn_weight_penalties"
+    )
+  )
+}
+
+#' Detect which OSRM algorithm pipeline has been used in a directory
+#'
+#' @param dir_path A string. Path to directory containing OSRM files
+#' @param base_name A string. Base name of OSRM files (e.g., "data" for "data.osrm.*")
+#'
+#' @return A list with components:
+#'   \describe{
+#'     \item{state}{One of "empty", "extract_only", "ch", "mld", "mixed"}
+#'     \item{has_ch_files}{Logical. Whether CH-specific files exist}
+#'     \item{has_mld_files}{Logical. Whether MLD-specific files exist}
+#'     \item{ch_files}{Character vector of found CH-specific files}
+#'     \item{mld_files}{Character vector of found MLD-specific files}
+#'   }
+#'
+#' @noRd
+detect_osrm_algorithm <- function(dir_path, base_name) {
+  patterns <- .osrm_file_patterns()
+
+  # Check for CH-specific files
+  ch_files <- character()
+  for (ext in patterns$ch_specific) {
+    file_path <- file.path(dir_path, paste0(base_name, ".osrm.", ext))
+    if (file.exists(file_path)) {
+      ch_files <- c(ch_files, basename(file_path))
+    }
+  }
+
+  # Check for MLD-specific files
+  mld_files <- character()
+  for (ext in patterns$mld_specific) {
+    file_path <- file.path(dir_path, paste0(base_name, ".osrm.", ext))
+    if (file.exists(file_path)) {
+      mld_files <- c(mld_files, basename(file_path))
+    }
+  }
+
+  # Check for extract timestamp (indicates extract has been run)
+  has_extract <- file.exists(file.path(dir_path, paste0(base_name, ".osrm.timestamp")))
+
+  has_ch_files <- length(ch_files) > 0
+  has_mld_files <- length(mld_files) > 0
+
+  # Determine state
+  state <- if (!has_extract && !has_ch_files && !has_mld_files) {
+    "empty"
+  } else if (has_extract && !has_ch_files && !has_mld_files) {
+    "extract_only"
+  } else if (has_ch_files && !has_mld_files) {
+    "ch"
+  } else if (has_mld_files && !has_ch_files) {
+    "mld"
+  } else if (has_ch_files && has_mld_files) {
+    "mixed"
+  } else {
+    "unknown"
+  }
+
+  list(
+    state = state,
+    has_ch_files = has_ch_files,
+    has_mld_files = has_mld_files,
+    ch_files = ch_files,
+    mld_files = mld_files
+  )
+}
+
+#' Check for algorithm conflicts and throw informative errors
+#'
+#' @param dir_path A string. Path to directory containing OSRM files
+#' @param base_name A string. Base name of OSRM files
+#' @param target_algorithm A string. The algorithm the user wants to use ("ch" or "mld")
+#' @param stage A string. The pipeline stage being called (e.g., "contract", "partition")
+#'
+#' @noRd
+check_algorithm_conflict <- function(dir_path, base_name, target_algorithm, stage) {
+  detection <- detect_osrm_algorithm(dir_path, base_name)
+
+  # If state is empty or extract_only, no conflict
+  if (detection$state %in% c("empty", "extract_only")) {
+    return(invisible(NULL))
+  }
+
+  # Check for mixed state (critical error)
+  if (detection$state == "mixed") {
+    stop(
+      "Directory contains BOTH CH and MLD algorithm files, which is not supported.\n",
+      "Found CH files: ", paste(detection$ch_files, collapse = ", "), "\n",
+      "Found MLD files: ", paste(detection$mld_files, collapse = ", "), "\n\n",
+      "This occurs when algorithms are mixed in the same directory.\n",
+      "To fix this, use `osrm_cleanup()` to remove all OSRM files and start fresh.",
+      call. = FALSE
+    )
+  }
+
+  # Check for algorithm mismatch
+  if (target_algorithm == "ch" && detection$state == "mld") {
+    stop(
+      "Cannot run CH pipeline (", stage, " stage): directory contains MLD algorithm files.\n",
+      "Found MLD files: ", paste(detection$mld_files, collapse = ", "), "\n\n",
+      "The MLD pipeline modifies extract-stage files in a way that breaks CH compatibility.\n",
+      "To switch from MLD to CH:\n",
+      "  1. Use `osrm_cleanup()` to remove all OSRM files\n",
+      "  2. Re-run the full CH pipeline: osrm_extract() -> osrm_contract()\n\n",
+      "Alternatively, continue with the MLD pipeline using osrm_customize().",
+      call. = FALSE
+    )
+  }
+
+  if (target_algorithm == "mld" && detection$state == "ch") {
+    stop(
+      "Cannot run MLD pipeline (", stage, " stage): directory contains CH algorithm files.\n",
+      "Found CH files: ", paste(detection$ch_files, collapse = ", "), "\n\n",
+      "To switch from CH to MLD:\n",
+      "  1. Use `osrm_cleanup()` to remove algorithm-specific files\n",
+      "  2. Run the MLD pipeline: osrm_partition() -> osrm_customize()\n\n",
+      "Note: Switching to MLD will modify some extract-stage files.\n",
+      "Alternatively, continue with the CH pipeline using osrm_contract().",
+      call. = FALSE
+    )
+  }
+
+  invisible(NULL)
+}

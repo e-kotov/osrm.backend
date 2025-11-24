@@ -81,6 +81,11 @@ osrm_partition <- function(
 
   osrm_path <- gsub("\\.timestamp$", "", input_osrm)
 
+  # Check for algorithm conflicts (CH files in directory)
+  base_name <- sub("\\.osrm$", "", basename(osrm_path))
+  dir_path <- dirname(osrm_path)
+  check_algorithm_conflict(dir_path, base_name, "mld", "partition")
+
   verbosity <- match.arg(verbosity)
   arguments <- c(
     osrm_path,

@@ -3,6 +3,7 @@
 S3method(print,osrm_job)
 export(osrm_check_available_versions)
 export(osrm_check_latest_version)
+export(osrm_cleanup)
 export(osrm_clear_path)
 export(osrm_contract)
 export(osrm_customize)

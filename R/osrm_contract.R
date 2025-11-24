@@ -100,6 +100,11 @@ osrm_contract <- function(
 
   osrm_path <- gsub("\\.timestamp$", "", input_osrm)
 
+  # Check for algorithm conflicts (MLD files in directory)
+  base_name <- sub("\\.osrm$", "", basename(osrm_path))
+  dir_path <- dirname(osrm_path)
+  check_algorithm_conflict(dir_path, base_name, "ch", "contract")
+
   verbosity <- match.arg(verbosity)
   arguments <- c(
     osrm_path,
