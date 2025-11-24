@@ -1693,12 +1693,34 @@ set_path_session <- function(dir, quiet = FALSE) {
   normalized_dir <- normalizePath(dir, mustWork = FALSE)
   normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
 
-  if (!normalized_dir %in% normalized_paths) {
-    new_path <- paste(normalized_dir, current_path, sep = path_sep)
+  # Get the default cache root to identify our managed installations
+  cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE)
+
+  # Remove any paths that point to other versions in our cache directory
+  # but keep system installations (homebrew, manual installs, etc.)
+  paths_to_keep <- vapply(seq_along(path_elements), function(i) {
+    norm_path <- normalized_paths[i]
+    # Keep this path if:
+    # 1. It's the directory we're installing to, OR
+    # 2. It's not under our cache root (i.e., it's a system/homebrew install)
+    identical(norm_path, normalized_dir) ||
+      !startsWith(norm_path, paste0(cache_root, .Platform$file.sep))
+  }, logical(1))
+
+  filtered_paths <- path_elements[paths_to_keep]
+
+  # Always prepend the new installation directory to the front
+  # (even if it was already in the PATH, we want it first)
+  if (!identical(normalized_paths[1], normalized_dir)) {
+    # Remove the dir if it's already present (to avoid duplicates)
+    filtered_paths <- filtered_paths[normalized_paths[paths_to_keep] != normalized_dir]
+    new_path <- paste(c(normalized_dir, filtered_paths), collapse = path_sep)
     Sys.setenv(PATH = new_path)
     if (!quiet) {
       message(sprintf("Added '%s' to PATH for this session.", normalized_dir))
     }
+  } else if (!quiet) {
+    message(sprintf("'%s' is already first in PATH.", normalized_dir))
   }
 }
 
@@ -1708,7 +1730,7 @@ set_path_project <- function(dir, quiet = FALSE) {
 
   if (!quiet) {
     message("You chose to set the OSRM path for this project.")
-    message("This will add a line to the following file: ", r_profile_path)
+    message("This will update the following file: ", r_profile_path)
   }
 
   comment_tag <- "#added-by-r-pkg-osrm.backend"
@@ -1726,18 +1748,41 @@ set_path_project <- function(dir, quiet = FALSE) {
     writeLines(line_to_add, r_profile_path)
   } else {
     lines <- readLines(r_profile_path, warn = FALSE)
-    # Check if our tag is already there to avoid duplicates
-    if (any(grepl(comment_tag, lines, fixed = TRUE))) {
-      if (!quiet) {
-        message(
-          ".Rprofile already contains OSRM path configuration. No changes made."
-        )
+
+    # Remove any existing lines with our tag (old cached versions)
+    has_tag <- grepl(comment_tag, lines, fixed = TRUE)
+    if (any(has_tag)) {
+      # Check if the existing line is for the same directory
+      existing_dirs <- vapply(lines[has_tag], function(line) {
+        # Extract directory path from the line
+        match <- regmatches(line, regexec('paste\\("([^"]+)"', line))
+        if (length(match[[1]]) >= 2) {
+          normalizePath(match[[1]][2], mustWork = FALSE)
+        } else {
+          ""
+        }
+      }, character(1))
+
+      normalized_dir <- normalizePath(dir, mustWork = FALSE)
+      if (any(existing_dirs == normalized_dir)) {
+        if (!quiet) {
+          message(
+            ".Rprofile already contains this OSRM path configuration. No changes made."
+          )
+        }
+        return(invisible())
       }
-      return(invisible())
+
+      if (!quiet) {
+        message("Replacing old OSRM path configuration with new one.")
+      }
+      lines <- lines[!has_tag]
+    } else {
+      if (!quiet) {
+        message("Appending configuration to existing .Rprofile.")
+      }
     }
-    if (!quiet) {
-      message("Appending configuration to existing .Rprofile.")
-    }
+
     # Add a newline for separation if the file doesn't end with one
     if (length(lines) > 0 && nzchar(lines[length(lines)])) {
       lines <- c(lines, "")

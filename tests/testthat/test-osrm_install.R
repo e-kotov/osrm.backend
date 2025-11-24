@@ -599,5 +599,141 @@ test_that("osrm_is_install_dir detects Windows installation", {
 
   expect_true(osrm_is_install_dir(tmp_dir))
 })
+
+# Test PATH management when switching between versions ----
+test_that("set_path_session removes old cached versions and prioritizes new version", {
+  orig_path <- Sys.getenv("PATH")
+  on.exit(Sys.setenv(PATH = orig_path))
+
+  # Use the actual cache root to match production behavior
+  cache_root <- osrm_default_install_root()
+
+  # Create two version directories in the cache
+  v6_dir <- file.path(cache_root, "test_v6.0.0")
+  v5_dir <- file.path(cache_root, "test_v5.27.1")
+  dir.create(v6_dir, recursive = TRUE, showWarnings = FALSE)
+  dir.create(v5_dir, recursive = TRUE, showWarnings = FALSE)
+  on.exit({
+    unlink(v6_dir, recursive = TRUE)
+    unlink(v5_dir, recursive = TRUE)
+  }, add = TRUE)
+
+  # Create a system installation directory (outside cache)
+  system_dir <- tempfile()
+  dir.create(system_dir)
+  on.exit(unlink(system_dir, recursive = TRUE), add = TRUE)
+
+  # Add system installation to PATH first
+  Sys.setenv(PATH = paste(system_dir, orig_path, sep = .Platform$path.sep))
+
+  # Step 1: Add v6.0.0 to PATH
+  set_path_session(v6_dir, quiet = TRUE)
+  path_with_v6 <- Sys.getenv("PATH")
+  path_elements <- strsplit(path_with_v6, .Platform$path.sep)[[1]]
+  normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
+  v6_normalized <- normalizePath(v6_dir, mustWork = FALSE)
+
+  # v6.0.0 should be first in PATH
+  expect_identical(normalized_paths[1], v6_normalized)
+  # System installation should still be in PATH
+  expect_true(normalizePath(system_dir, mustWork = FALSE) %in% normalized_paths)
+
+  # Step 2: Add v5.27.1 to PATH (simulating a version switch)
+  set_path_session(v5_dir, quiet = TRUE)
+  path_with_v5 <- Sys.getenv("PATH")
+  path_elements <- strsplit(path_with_v5, .Platform$path.sep)[[1]]
+  normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
+  v5_normalized <- normalizePath(v5_dir, mustWork = FALSE)
+
+  # v5.27.1 should now be first in PATH
+  expect_identical(normalized_paths[1], v5_normalized)
+  # v6.0.0 should have been REMOVED (it's a cached version)
+  expect_false(v6_normalized %in% normalized_paths)
+  # System installation should still be in PATH
+  expect_true(normalizePath(system_dir, mustWork = FALSE) %in% normalized_paths)
+})
+
+test_that("set_path_session preserves system installations when adding cached version", {
+  orig_path <- Sys.getenv("PATH")
+  on.exit(Sys.setenv(PATH = orig_path))
+
+  # Use the actual cache root
+  cache_root <- osrm_default_install_root()
+
+  # Create cached version directory
+  v6_dir <- file.path(cache_root, "test_v6.0.0_preserve")
+  dir.create(v6_dir, recursive = TRUE, showWarnings = FALSE)
+  on.exit(unlink(v6_dir, recursive = TRUE), add = TRUE)
+
+  # Create multiple system installation directories
+  homebrew_dir <- "/usr/local/bin"  # Common homebrew location
+  custom_dir <- tempfile()
+  dir.create(custom_dir)
+  on.exit(unlink(custom_dir, recursive = TRUE), add = TRUE)
+
+  # Set up PATH with system installations
+  Sys.setenv(PATH = paste(
+    c(homebrew_dir, custom_dir, orig_path),
+    collapse = .Platform$path.sep
+  ))
+
+  # Add cached version to PATH
+  set_path_session(v6_dir, quiet = TRUE)
+  new_path <- Sys.getenv("PATH")
+  path_elements <- strsplit(new_path, .Platform$path.sep)[[1]]
+  normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
+
+  # Cached version should be first
+  expect_identical(
+    normalized_paths[1],
+    normalizePath(v6_dir, mustWork = FALSE)
+  )
+
+  # System installations should still be present
+  expect_true(homebrew_dir %in% path_elements)
+  expect_true(normalizePath(custom_dir, mustWork = FALSE) %in% normalized_paths)
+})
+
+test_that("set_path_project replaces old cached version with new one", {
+  tmp_dir <- tempfile()
+  dir.create(tmp_dir)
+  orig_wd <- getwd()
+  on.exit({
+    setwd(orig_wd)
+    unlink(tmp_dir, recursive = TRUE)
+  })
+
+  setwd(tmp_dir)
+
+  # Create mock cache directories
+  tmp_cache <- tempfile()
+  dir.create(tmp_cache, recursive = TRUE)
+  on.exit(unlink(tmp_cache, recursive = TRUE), add = TRUE)
+
+  v6_dir <- file.path(tmp_cache, "v6.0.0")
+  v5_dir <- file.path(tmp_cache, "v5.27.1")
+  dir.create(v6_dir)
+  dir.create(v5_dir)
+
+  # Add v6.0.0 to .Rprofile
+  set_path_project(v6_dir, quiet = TRUE)
+
+  rprofile <- file.path(tmp_dir, ".Rprofile")
+  lines <- readLines(rprofile)
+  expect_true(any(grepl(normalizePath(v6_dir, mustWork = FALSE), lines, fixed = TRUE)))
+
+  # Now add v5.27.1 - it should replace v6.0.0
+  set_path_project(v5_dir, quiet = TRUE)
+
+  lines <- readLines(rprofile)
+  # v5.27.1 should be in .Rprofile
+  expect_true(any(grepl(normalizePath(v5_dir, mustWork = FALSE), lines, fixed = TRUE)))
+  # v6.0.0 should NOT be in .Rprofile anymore
+  expect_false(any(grepl(normalizePath(v6_dir, mustWork = FALSE), lines, fixed = TRUE)))
+  # Should only have one osrm.backend line
+  count <- sum(grepl("#added-by-r-pkg-osrm.backend", lines, fixed = TRUE))
+  expect_identical(count, 1L)
+})
+
 # Integration tests with mocking would go here if we had a mocking framework
 # For now, the actual osrm_install function is tested in the setup-osrm.R

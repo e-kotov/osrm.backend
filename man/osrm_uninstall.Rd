@@ -4,7 +4,13 @@
 \alias{osrm_uninstall}
 \title{Uninstall OSRM Backend Binaries}
 \usage{
-osrm_uninstall(dest_dir = NULL, clear_path = TRUE, quiet = FALSE)
+osrm_uninstall(
+  dest_dir = NULL,
+  clear_path = TRUE,
+  quiet = FALSE,
+  all = FALSE,
+  force = FALSE
+)
 }
 \arguments{
 \item{dest_dir}{A string specifying the directory from which to remove OSRM binaries.
@@ -12,16 +18,23 @@ If \code{NULL} (the default), the function looks for an installation in the
 per-version subdirectories inside \code{tools::R_user_dir("osrm.backend", which = "cache")}
 and removes it. When multiple versions are installed, interactive sessions
 that are not \code{quiet} will be prompted (with a numbered menu and \code{0} to cancel)
-to choose a directory; otherwise, \code{dest_dir} must be supplied.}
+to choose a directory; otherwise, \code{dest_dir} must be supplied. Ignored if \code{all = TRUE}.}
 
 \item{clear_path}{A logical value. If \code{TRUE} (default), also removes the
 \code{PATH} configuration from the project's \code{.Rprofile} by calling \code{osrm_clear_path()}.}
 
 \item{quiet}{A logical value. If \code{TRUE}, suppresses informational messages
 and confirmation prompts. Defaults to \code{FALSE}.}
+
+\item{all}{A logical value. If \code{TRUE}, removes all OSRM installations found
+in the default cache directory. Will prompt for confirmation unless \code{force = TRUE}.
+Defaults to \code{FALSE}. When \code{TRUE}, the \code{dest_dir} parameter is ignored.}
+
+\item{force}{A logical value. If \code{TRUE}, skips all confirmation prompts,
+enabling non-interactive usage. Defaults to \code{FALSE}.}
 }
 \value{
-\code{TRUE} if the directory was successfully removed,
+\code{TRUE} if one or more directories were successfully removed,
 and \code{FALSE} otherwise.
 }
 \description{
@@ -35,5 +48,14 @@ osrm_uninstall()
 
 # Only uninstall binaries, leave .Rprofile untouched
 osrm_uninstall(clear_path = FALSE)
+
+# Remove all OSRM installations in user R cache (will prompt for confirmation)
+osrm_uninstall(all = TRUE)
+
+# Remove all OSRM installations in user R cache without any prompts
+osrm_uninstall(all = TRUE, force = TRUE)
+
+# Non-interactive uninstall of specific version
+osrm_uninstall(dest_dir = "path/to/installation", force = TRUE, quiet = TRUE)
 }
 }
