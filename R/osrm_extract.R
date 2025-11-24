@@ -37,8 +37,7 @@
 #'
 #' @return A list with two elements:
 #' \describe{
-#'   \item{osrm_path}{The expected path to the generated `.osrm` base,
-#'     i.e. the timestamp file path with `.timestamp` dropped.}
+#'   \item{osrm_path}{The path to the generated `.osrm.timestamp` file (includes the `.timestamp` extension).}
 #'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
@@ -185,15 +184,8 @@ osrm_extract <- function(
     )
   }
 
-  # expected .osrm base is timestamp file minus '.timestamp'
-  # osrm_path <- sub("\\.timestamp$", "", timestamp_file)
-
-  return(
-    invisible(
-      list(
-        osrm_path = timestamp_file,
-        logs = logs
-      )
-    )
+  list(
+    osrm_path = timestamp_file,
+    logs = logs
   )
 }

@@ -10,7 +10,7 @@ osrm_clear_path(quiet = FALSE)
 \item{quiet}{A logical value. If \code{TRUE}, suppresses messages. Defaults to \code{FALSE}.}
 }
 \value{
-Invisibly returns \code{TRUE} if the file was modified, \code{FALSE} otherwise.
+\code{TRUE} if the file was modified, \code{FALSE} otherwise.
 }
 \description{
 Scans the \code{.Rprofile} file in the current project's root directory and

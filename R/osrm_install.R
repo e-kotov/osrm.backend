@@ -58,7 +58,7 @@
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
 #'   warnings. Defaults to `FALSE`.
-#' @return The path to the installation directory, invisibly.
+#' @return The path to the installation directory.
 #' @export
 #' @examples
 #' \dontrun{
@@ -211,7 +211,7 @@ osrm_install <- function(
       emit_message("Use force = TRUE to reinstall.")
       # Handle path and return
       handle_path_setting(path_action, dest_dir, quiet)
-      return(invisible(dest_dir))
+      return(dest_dir)
     }
 
     if (profiles_missing) {
@@ -359,7 +359,7 @@ osrm_install <- function(
     emit_message("Installation successful! Binaries are in ", dest_dir)
   }
 
-  return(invisible(dest_dir))
+  return(dest_dir)
 }
 
 #' Check for the Latest Stable OSRM Version
@@ -460,7 +460,7 @@ osrm_check_available_versions <- function(prereleases = FALSE) {
 #' removes any lines that were added by `osrm_install()` to modify the `PATH`.
 #'
 #' @param quiet A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
-#' @return Invisibly returns `TRUE` if the file was modified, `FALSE` otherwise.
+#' @return `TRUE` if the file was modified, `FALSE` otherwise.
 #' @export
 #' @examples
 #' \dontrun{
@@ -474,7 +474,7 @@ osrm_clear_path <- function(quiet = FALSE) {
     if (!quiet) {
       message("No .Rprofile file found in the current project directory.")
     }
-    return(invisible(FALSE))
+    return(FALSE)
   }
 
   lines <- readLines(r_profile_path, warn = FALSE)
@@ -488,7 +488,7 @@ osrm_clear_path <- function(quiet = FALSE) {
         ".Rprofile does not contain any paths set by osrm.backend. No changes made."
       )
     }
-    return(invisible(FALSE))
+    return(FALSE)
   }
 
   if (!quiet) {
@@ -501,7 +501,7 @@ osrm_clear_path <- function(quiet = FALSE) {
     )
   }
 
-  return(invisible(TRUE))
+  return(TRUE)
 }
 
 

@@ -52,7 +52,7 @@ command before running; default \code{FALSE}.}
 \value{
 A list with elements:
 \describe{
-\item{osrm_path}{The normalized path to the input \code{.osrm} base (invisibly).}
+\item{osrm_path}{The normalized path to the partitioned \code{.osrm.partition} file.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }

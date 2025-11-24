@@ -34,7 +34,7 @@
 #'
 #' @return A list with elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the final `.osrm` base. This can be passed over to [osrm_start_server()].}
+#'   \item{osrm_path}{The normalized path to the final routing-ready graph file (`.osrm.hsgr` for CH or `.osrm.mldgr` for MLD). This can be passed over to [osrm_start_server()].}
 #'   \item{logs}{A list of `processx::run` results for each stage:
 #'     `extract`, `partition`/`contract`, and `customize` (if MLD).}
 #' }
@@ -143,8 +143,8 @@ osrm_prepare_graph <- function(
 
   final_path <- osrm_graph$osrm_path
 
-  invisible(list(
+  list(
     osrm_path = final_path,
     logs = logs_list
-  ))
+  )
 }

@@ -79,8 +79,7 @@ command before running; default \code{FALSE}.}
 \value{
 A list with two elements:
 \describe{
-\item{osrm_path}{The expected path to the generated \code{.osrm} base,
-i.e. the timestamp file path with \code{.timestamp} dropped.}
+\item{osrm_path}{The path to the generated \code{.osrm.timestamp} file (includes the \code{.timestamp} extension).}
 \item{logs}{The \code{processx::run} result object.}
 }
 }

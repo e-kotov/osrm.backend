@@ -27,7 +27,7 @@ osrm_stop(
 \item{quiet}{Logical; suppress messages (default \code{FALSE}).}
 }
 \value{
-Invisibly, a list with fields \code{id}, \code{pid}, \code{port}, \code{stopped} (logical).
+A list with fields \code{id}, \code{pid}, \code{port}, \code{stopped} (logical).
 }
 \description{
 Terminates an \code{osrm-routed} process launched by \code{osrm_start()} or

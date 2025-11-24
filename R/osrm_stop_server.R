@@ -73,7 +73,7 @@ osrm_servers <- function() {
 #' @param wait Integer milliseconds to wait for clean shutdown (default `1000`).
 #' @param quiet Logical; suppress messages (default `FALSE`).
 #'
-#' @return Invisibly, a list with fields `id`, `pid`, `port`, `stopped` (logical).
+#' @return A list with fields `id`, `pid`, `port`, `stopped` (logical).
 #' @export
 #' @seealso [osrm_start()], [osrm_servers()], [osrm_stop_all()]
 osrm_stop <- function(
@@ -109,12 +109,12 @@ osrm_stop <- function(
       if (!quiet) {
         message("Stopped OSRM server (pid ", targ_pid, ").")
       }
-      return(invisible(list(
+      return(list(
         id = if (length(hit)) hit[[1]] else NA_character_,
         pid = as.integer(targ_pid),
         port = NA_integer_,
         stopped = TRUE
-      )))
+      ))
     } else {
       # Could not read pid; best effort kill
       try(server$kill(), silent = TRUE)
@@ -122,12 +122,12 @@ osrm_stop <- function(
       if (!quiet) {
         message("Stopped OSRM server (unknown pid).")
       }
-      return(invisible(list(
+      return(list(
         id = NA_character_,
         pid = NA_integer_,
         port = NA_integer_,
         stopped = TRUE
-      )))
+      ))
     }
   }
 
@@ -137,12 +137,12 @@ osrm_stop <- function(
     if (!quiet) {
       message("No registered OSRM servers.")
     }
-    return(invisible(list(
+    return(list(
       id = NA_character_,
       pid = NA_integer_,
       port = NA_integer_,
       stopped = FALSE
-    )))
+    ))
   }
 
   pick_index <- function() {
@@ -191,7 +191,7 @@ osrm_stop <- function(
     if (!quiet) {
       message("No running OSRM servers to stop.")
     }
-    return(invisible(list(stopped = FALSE)))
+    return(list(stopped = FALSE))
   }
 
   entry <- reg[[idx]]
@@ -230,22 +230,22 @@ osrm_stop <- function(
     message(msg)
   }
 
-  invisible(list(
+  list(
     id = entry$id,
     pid = as.integer(entry$pid %||% NA_integer_),
     port = as.integer(entry$port %||% NA_integer_),
     stopped = isTRUE(stopped)
-  ))
+  )
 }
 
 #' Stop all running OSRM servers started via this package
 #'
-#' @return Invisibly, the number of servers attempted.
+#' @return The number of servers attempted.
 #' @export
 osrm_stop_all <- function() {
   reg <- .osrm_state$registry
   if (!length(reg)) {
-    return(invisible(0L))
+    return(0L)
   }
 
   ids <- names(reg)
@@ -254,5 +254,5 @@ osrm_stop_all <- function() {
     n <- n + 1L
     try(osrm_stop(id = id, quiet = TRUE), silent = TRUE)
   }
-  invisible(n)
+  n
 }

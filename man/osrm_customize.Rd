@@ -52,7 +52,7 @@ command before running; default \code{FALSE}.}
 \value{
 A list with elements:
 \describe{
-\item{osrm_path}{The normalized path to the input \code{.osrm} base (invisibly). This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+\item{osrm_path}{The normalized path to the customized \code{.osrm.mldgr} file. This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }

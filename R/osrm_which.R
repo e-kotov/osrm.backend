@@ -5,8 +5,8 @@
 #' `osrm-routed --version` to verify availability, then prints the directory
 #' containing the executable together with the backend version reported by
 #' `osrm-routed` so you know what will be used in the current session.
-#' @param quiet Logical; if `FALSE` (default), prints information about the located installation. If `TRUE`, suppresses printed output and only returns the information invisibly as a list.
-#' @return Invisibly returns a list with components `executable` (full path to
+#' @param quiet Logical; if `FALSE` (default), prints information about the located installation. If `TRUE`, suppresses printed output and only returns the information as a list.
+#' @return A list with components `executable` (full path to
 #'   `osrm-routed`), `directory` (its parent folder), `osrm_version` (character
 #'   vector of non-empty lines emitted by `osrm-routed --version`), and the raw
 #'   `processx::run` result in `logs`.
@@ -23,7 +23,7 @@ osrm_which <- function(quiet = FALSE) {
     stop(
       "Cannot find '",
       osrm_exec,
-      "' on PATH. Install OSRM or set options(osrm.routed.exec = '/path/to/osrm-routed').",
+      "' on PATH. Install OSRM manually or with osrm_install() or set options(osrm.routed.exec = '/path/to/osrm-routed') if you already have OSRM installed.",
       call. = FALSE
     )
   }
@@ -79,10 +79,10 @@ osrm_which <- function(quiet = FALSE) {
     )
   }
 
-  invisible(list(
+  return(invisible(list(
     executable = resolved,
     directory = install_dir,
     osrm_version = version_lines,
     logs = result
-  ))
+  )))
 }

@@ -21,7 +21,7 @@ to choose a directory; otherwise, \code{dest_dir} must be supplied.}
 and confirmation prompts. Defaults to \code{FALSE}.}
 }
 \value{
-Invisibly returns \code{TRUE} if the directory was successfully removed,
+\code{TRUE} if the directory was successfully removed,
 and \code{FALSE} otherwise.
 }
 \description{

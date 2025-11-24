@@ -80,7 +80,7 @@ command before running; default \code{FALSE}.}
 \value{
 A list with elements:
 \describe{
-\item{osrm_path}{The normalized path to the final \code{.osrm} base. This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+\item{osrm_path}{The normalized path to the final routing-ready graph file (\code{.osrm.hsgr} for CH or \code{.osrm.mldgr} for MLD). This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
 \item{logs}{A list of \code{processx::run} results for each stage:
 \code{extract}, \code{partition}/\code{contract}, and \code{customize} (if MLD).}
 }

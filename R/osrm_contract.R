@@ -16,7 +16,7 @@
 #'
 #' @return A list with elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the input `.osrm` base (invisibly). This can be passed over to [osrm_start_server()].}
+#'   \item{osrm_path}{The normalized path to the contracted `.osrm.hsgr` file. This can be passed over to [osrm_start_server()].}
 #'   \item{logs}{The `processx::run` result object.}
 #' }
 #'
@@ -120,8 +120,8 @@ osrm_contract <- function(
     )
   }
 
-  invisible(list(
-    osrm_path = normalizePath(input_osrm),
+  list(
+    osrm_path = normalizePath(hsgr_file),
     logs = logs
-  ))
+  )
 }

@@ -38,7 +38,7 @@ If \code{FALSE} (default), the function will stop if an existing installation is
 warnings. Defaults to \code{FALSE}.}
 }
 \value{
-The path to the installation directory, invisibly.
+The path to the installation directory.
 }
 \description{
 Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.

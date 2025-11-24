@@ -16,7 +16,7 @@
 #'
 #' @return A list with elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the input `.osrm` base (invisibly). This can be passed over to [osrm_start_server()].}
+#'   \item{osrm_path}{The normalized path to the customized `.osrm.mldgr` file. This can be passed over to [osrm_start_server()].}
 #'   \item{logs}{The `processx::run` result object.}
 #' }
 #'
@@ -114,8 +114,8 @@ osrm_customize <- function(
     )
   }
 
-  invisible(list(
+  list(
     osrm_path = normalizePath(mld_file),
     logs = logs
-  ))
+  )
 }

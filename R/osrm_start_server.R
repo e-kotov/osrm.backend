@@ -54,7 +54,7 @@
 #' @param verbose Logical; reserved for controlling future server verbosity, included
 #'   for interface consistency with [osrm_start()]. Defaults to `FALSE`.
 #'
-#' @return A `processx::process` object for the running server (also registered internally)
+#' @return A `processx::process` object for the running server (also registered internally).
 #' @export
 osrm_start_server <- function(
   osrm_path,
@@ -382,5 +382,5 @@ osrm_start_server <- function(
     silent = TRUE
   )
 
-  invisible(osrm_server)
+  osrm_server
 }

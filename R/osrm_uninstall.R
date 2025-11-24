@@ -13,7 +13,7 @@
 #'   `PATH` configuration from the project's `.Rprofile` by calling `osrm_clear_path()`.
 #' @param quiet A logical value. If `TRUE`, suppresses informational messages
 #'   and confirmation prompts. Defaults to `FALSE`.
-#' @return Invisibly returns `TRUE` if the directory was successfully removed,
+#' @return `TRUE` if the directory was successfully removed,
 #'   and `FALSE` otherwise.
 #' @export
 #' @examples
@@ -40,7 +40,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
       if (clear_path) {
         osrm_clear_path(quiet = quiet)
       }
-      return(invisible(FALSE))
+      return(FALSE)
     }
 
     if (length(version_installs) > 1) {
@@ -53,7 +53,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
           if (clear_path) {
             osrm_clear_path(quiet = quiet)
           }
-          return(invisible(FALSE))
+          return(FALSE)
         }
         dest_dir <- selection
         auto_selected <- TRUE
@@ -68,7 +68,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
         if (clear_path) {
           osrm_clear_path(quiet = quiet)
         }
-        return(invisible(FALSE))
+        return(FALSE)
       }
     }
 
@@ -90,7 +90,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
     if (clear_path) {
       osrm_clear_path(quiet = quiet)
     }
-    return(invisible(FALSE))
+    return(FALSE)
   }
 
   # --- 2. Ask for confirmation for file deletion ---
@@ -152,7 +152,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE) {
     osrm_clear_path(quiet = quiet)
   }
 
-  return(invisible(uninstalled_ok))
+  return(uninstalled_ok)
 }
 
 #' @noRd

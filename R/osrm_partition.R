@@ -16,7 +16,7 @@
 #'
 #' @return A list with elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the input `.osrm` base (invisibly).}
+#'   \item{osrm_path}{The normalized path to the partitioned `.osrm.partition` file.}
 #'   \item{logs}{The `processx::run` result object.}
 #' }
 #'
@@ -100,8 +100,8 @@ osrm_partition <- function(
     )
   }
 
-  invisible(list(
+  list(
     osrm_path = normalizePath(partition_file),
     logs = logs
-  ))
+  )
 }
