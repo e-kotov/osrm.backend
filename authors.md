@@ -10,11 +10,12 @@
 Source:
 [`DESCRIPTION`](https://github.com/e-kotov/osrm.backend/blob/main/DESCRIPTION)
 
-Kotov E (2025). *osrm.backend: Install and Control OSRM Backend*. R
-package version 0.0.0.9000, <https://github.com/e-kotov/osrm.backend>.
+Kotov E (2025). *osrm.backend: Bindings for 'Open Source Routing
+Machine'*. R package version 0.0.0.9000,
+<https://github.com/e-kotov/osrm.backend>.
 
     @Manual{,
-      title = {osrm.backend: Install and Control OSRM Backend},
+      title = {osrm.backend: Bindings for 'Open Source Routing Machine'},
       author = {Egor Kotov},
       year = {2025},
       note = {R package version 0.0.0.9000},

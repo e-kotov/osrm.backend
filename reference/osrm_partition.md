@@ -27,7 +27,9 @@ osrm_partition(
 
 - input_osrm:
 
-  A string. Base path to the `.osrm` files (without extension).
+  A string. Path to a `.osrm.timestamp` file, the base path to the
+  `.osrm` files (without extension), or a directory containing exactly
+  one `.osrm.timestamp` file.
 
 - threads:
 
@@ -86,11 +88,15 @@ osrm_partition(
 
 ## Value
 
-A list with elements:
+An object of class `osrm_job` with the following elements:
 
-- osrm_path:
+- osrm_job_artifact:
 
-  The normalized path to the input `.osrm` base (invisibly).
+  The path to the partitioned `.osrm.partition` file.
+
+- osrm_working_dir:
+
+  The directory containing all OSRM files.
 
 - logs:
 

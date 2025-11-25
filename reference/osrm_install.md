@@ -11,7 +11,7 @@ can be installed but are not guranteed to function correctly.
 
 ``` r
 osrm_install(
-  version = "v5.27.1",
+  version = "latest",
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
@@ -24,9 +24,9 @@ osrm_install(
 - version:
 
   A string specifying the OSRM version tag to install. Defaults to
-  `"v5.27.1"`. Use `"latest"` to automatically find the most recent
-  stable version by calling
-  [`osrm_check_latest_version()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_latest_version.md).
+  `"latest"`. Use `"latest"` to automatically find the most recent
+  stable version (internally calls
+  [`osrm_check_latest_version()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_latest_version.md)).
   Versions other than `v5.27.1` and `v6.0.0` will trigger a warning but
   are still attempted if binaries are available.
 
@@ -64,7 +64,7 @@ osrm_install(
 
 ## Value
 
-The path to the installation directory, invisibly.
+The path to the installation directory.
 
 ## Details
 

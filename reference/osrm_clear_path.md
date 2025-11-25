@@ -19,7 +19,7 @@ osrm_clear_path(quiet = FALSE)
 
 ## Value
 
-Invisibly returns `TRUE` if the file was modified, `FALSE` otherwise.
+`TRUE` if the file was modified, `FALSE` otherwise.
 
 ## Examples
 

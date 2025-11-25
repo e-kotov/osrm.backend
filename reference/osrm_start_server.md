@@ -135,7 +135,7 @@ osrm_start_server(
 ## Value
 
 A [`processx::process`](http://processx.r-lib.org/reference/process.md)
-object for the running server (also registered internally)
+object for the running server (also registered internally).
 
 ## Details
 

@@ -68,12 +68,12 @@ containing the executable together with the backend version reported by
 
 
 <dl><dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
-<dd><p>Logical; if <code>FALSE</code> (default), prints information about the located installation. If <code>TRUE</code>, suppresses printed output and only returns the information invisibly as a list.</p></dd>
+<dd><p>Logical; if <code>FALSE</code> (default), prints information about the located installation. If <code>TRUE</code>, suppresses printed output and only returns the information as a list.</p></dd>
 
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>Invisibly returns a list with components <code>executable</code> (full path to
+    <p>A list with components <code>executable</code> (full path to
 <code>osrm-routed</code>), <code>directory</code> (its parent folder), <code>osrm_version</code> (character
 vector of non-empty lines emitted by <code>osrm-routed --version</code>), and the raw
 <code><a href="http://processx.r-lib.org/reference/run.html" class="external-link">processx::run</a></code> result in <code>logs</code>.</p>

@@ -32,8 +32,9 @@ osrm_extract(
 
 - input_osm:
 
-  A string. Path to the input OSM file: `.osm`, `.osm.bz2`, or
-  `.osm.pbf`.
+  A string. Path to the input OSM file (`.osm`, `.osm.bz2`, or
+  `.osm.pbf`) or a directory containing exactly one OSM file with a
+  supported extension.
 
 - profile:
 
@@ -113,12 +114,15 @@ osrm_extract(
 
 ## Value
 
-A list with two elements:
+An object of class `osrm_job` with the following elements:
 
-- osrm_path:
+- osrm_job_artifact:
 
-  The expected path to the generated `.osrm` base, i.e. the timestamp
-  file path with `.timestamp` dropped.
+  The path to the generated `.osrm.timestamp` file.
+
+- osrm_working_dir:
+
+  The directory containing all OSRM files.
 
 - logs:
 
@@ -131,7 +135,7 @@ A list with two elements:
 if (FALSE) { # \dontrun{
 # install osrm and set up PATH for the session
 osrm_executable <- osrm_install(
- version = "v5.27.1",
+ version = "latest",
  path_action = "session"
 )
 # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
@@ -151,7 +155,7 @@ result <- osrm_extract(
   threads                    = 1L
 )
 # path to generated .osrm files (specifically, the .osrm.timestamp file)
-result$osrm_path
+result$osrm_job_artifact
 # clean up the temporary workspace
 unlink(workspace, recursive = TRUE)
 } # }

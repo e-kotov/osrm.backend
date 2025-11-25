@@ -19,13 +19,12 @@ osrm_which(quiet = FALSE)
 
   Logical; if `FALSE` (default), prints information about the located
   installation. If `TRUE`, suppresses printed output and only returns
-  the information invisibly as a list.
+  the information as a list.
 
 ## Value
 
-Invisibly returns a list with components `executable` (full path to
-`osrm-routed`), `directory` (its parent folder), `osrm_version`
-(character vector of non-empty lines emitted by
-`osrm-routed --version`), and the raw
+A list with components `executable` (full path to `osrm-routed`),
+`directory` (its parent folder), `osrm_version` (character vector of
+non-empty lines emitted by `osrm-routed --version`), and the raw
 [`processx::run`](http://processx.r-lib.org/reference/run.md) result in
 `logs`.

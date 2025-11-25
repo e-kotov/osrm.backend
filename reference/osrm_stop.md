@@ -50,7 +50,7 @@ osrm_stop(
 
 ## Value
 
-Invisibly, a list with fields `id`, `pid`, `port`, `stopped` (logical).
+A list with fields `id`, `pid`, `port`, `stopped` (logical).
 
 ## Details
 

@@ -31,22 +31,9 @@ The normalized filesystem path to the profile.
 ## Examples
 
 ``` r
-# \donttest{
+if (FALSE) { # \dontrun{
 # make sure osrm backend is installed and on PATH
 osrm_install()
-#> Detected platform: linux-x64
-#> Found release: v5.27.1 (v5.27.1)
-#> Found matching binary: node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz
-#> Downloading from https://github.com/Project-OSRM/osrm-backend/releases/download/v5.27.1/node_osrm-v5.27.1-node-v108-linux-x64-Release.tar.gz
-#> Extracting binaries...
-#> Installing binaries to /home/runner/.cache/R/osrm.backend/v5.27.1
-#> Downloading profiles from release tarball...
-#> Extracting profiles...
-#> Installed profiles to /home/runner/.cache/R/osrm.backend/v5.27.1/profiles
-#> Setting executable permissions...
-#> Added '/home/runner/.cache/R/osrm.backend/v5.27.1' to PATH for this session.
-#> Installation successful!
 osrm_find_profile("car.lua")
-#> [1] "/home/runner/.cache/R/osrm.backend/v5.27.1/profiles/car.lua"
-# }
+} # }
 ```

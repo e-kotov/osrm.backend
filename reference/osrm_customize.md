@@ -27,8 +27,9 @@ osrm_customize(
 
 - input_osrm:
 
-  A string. Base path to the partitioned `.osrm` files (without
-  extension).
+  A string. Path to a `.osrm.partition` file, the base path to the
+  partitioned `.osrm` files (without extension), or a directory
+  containing exactly one `.osrm.partition` file.
 
 - threads:
 
@@ -87,13 +88,15 @@ osrm_customize(
 
 ## Value
 
-A list with elements:
+An object of class `osrm_job` with the following elements:
 
-- osrm_path:
+- osrm_job_artifact:
 
-  The normalized path to the input `.osrm` base (invisibly). This can be
-  passed over to
-  [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md).
+  The path to the customized `.osrm.mldgr` file.
+
+- osrm_working_dir:
+
+  The directory containing all OSRM files.
 
 - logs:
 

@@ -37,8 +37,9 @@ osrm_prepare_graph(
 
 - input_osm:
 
-  A string. Path to the input OSM file: `.osm`, `.osm.bz2`, or
-  `.osm.pbf`.
+  A string. Path to the input OSM file (`.osm`, `.osm.bz2`, or
+  `.osm.pbf`) or a directory containing exactly one OSM file with a
+  supported extension.
 
 - profile:
 
@@ -133,13 +134,16 @@ osrm_prepare_graph(
 
 ## Value
 
-A list with elements:
+An object of class `osrm_job` with the following elements:
 
-- osrm_path:
+- osrm_job_artifact:
 
-  The normalized path to the final `.osrm` base. This can be passed over
-  to
-  [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md).
+  The path to the final routing-ready graph file (`.osrm.hsgr` for CH or
+  `.osrm.mldgr` for MLD).
+
+- osrm_working_dir:
+
+  The directory containing all OSRM files.
 
 - logs:
 

@@ -10,4 +10,4 @@ osrm_stop_all()
 
 ## Value
 
-Invisibly, the number of servers attempted.
+The number of servers attempted.
