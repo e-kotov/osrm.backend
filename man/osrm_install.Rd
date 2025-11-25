@@ -5,7 +5,7 @@
 \title{Install OSRM Backend Binaries}
 \usage{
 osrm_install(
-  version = "v5.27.1",
+  version = "latest",
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
@@ -14,8 +14,8 @@ osrm_install(
 }
 \arguments{
 \item{version}{A string specifying the OSRM version tag to install.
-Defaults to \code{"v5.27.1"}. Use \code{"latest"} to automatically find the most
-recent stable version by calling \code{osrm_check_latest_version()}. Versions
+Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
+recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
 other than \code{v5.27.1} and \code{v6.0.0} will trigger a warning but are still
 attempted if binaries are available.}
 
@@ -38,7 +38,7 @@ If \code{FALSE} (default), the function will stop if an existing installation is
 warnings. Defaults to \code{FALSE}.}
 }
 \value{
-The path to the installation directory, invisibly.
+The path to the installation directory.
 }
 \description{
 Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.

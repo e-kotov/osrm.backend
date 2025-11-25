@@ -7,7 +7,7 @@
 osrm_stop_all()
 }
 \value{
-Invisibly, the number of servers attempted.
+The number of servers attempted.
 }
 \description{
 Stop all running OSRM servers started via this package

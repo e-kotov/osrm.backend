@@ -107,18 +107,24 @@ osrm_start <- function(
 
   if (dir.exists(path)) {
     # Input is a directory
-    mld_files <- list.files(
-      path,
-      pattern = "\\.osrm\\.mldgr$",
-      full.names = TRUE
-    )
-    ch_files <- list.files(path, pattern = "\\.osrm\\.hsgr$", full.names = TRUE)
+    # Look for graph files matching the requested algorithm
+    if (algorithm == "mld") {
+      mld_files <- list.files(
+        path,
+        pattern = "\\.osrm\\.mldgr$",
+        full.names = TRUE
+      )
+      if (length(mld_files) > 0) {
+        final_graph_path <- mld_files[1]
+      }
+    } else if (algorithm == "ch") {
+      ch_files <- list.files(path, pattern = "\\.osrm\\.hsgr$", full.names = TRUE)
+      if (length(ch_files) > 0) {
+        final_graph_path <- ch_files[1]
+      }
+    }
 
-    if (length(mld_files) > 0) {
-      final_graph_path <- mld_files[1]
-    } else if (length(ch_files) > 0) {
-      final_graph_path <- ch_files[1]
-    } else {
+    if (is.null(final_graph_path)) {
       osm_files <- list.files(
         path,
         pattern = "\\.osm\\.pbf$",
@@ -147,21 +153,28 @@ osrm_start <- function(
       )
 
       prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-      final_graph_path <- prepared_graph$osrm_path
+      final_graph_path <- prepared_graph$osrm_job_artifact
       if (!quiet) message("Graph preparation complete.")
     }
   } else {
     # Input is a file
     if (grepl("\\.osm(\\.pbf|\\.bz2)?$", path, ignore.case = TRUE)) {
       base_name <- sub("\\.osm(\\.pbf|\\.bz2)?$", "", path, ignore.case = TRUE)
-      mld_graph <- paste0(base_name, ".osrm.mldgr")
-      ch_graph <- paste0(base_name, ".osrm.hsgr")
 
-      if (file.exists(mld_graph)) {
-        final_graph_path <- mld_graph
-      } else if (file.exists(ch_graph)) {
-        final_graph_path <- ch_graph
-      } else {
+      # Look for graph file matching the requested algorithm
+      if (algorithm == "mld") {
+        mld_graph <- paste0(base_name, ".osrm.mldgr")
+        if (file.exists(mld_graph)) {
+          final_graph_path <- mld_graph
+        }
+      } else if (algorithm == "ch") {
+        ch_graph <- paste0(base_name, ".osrm.hsgr")
+        if (file.exists(ch_graph)) {
+          final_graph_path <- ch_graph
+        }
+      }
+
+      if (is.null(final_graph_path)) {
         if (!quiet) {
           message(
             "OSRM graph not found. Preparing graph from '",
@@ -177,7 +190,7 @@ osrm_start <- function(
         )
 
         prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-        final_graph_path <- prepared_graph$osrm_path
+        final_graph_path <- prepared_graph$osrm_job_artifact
         if (!quiet) message("Graph preparation complete.")
       }
     } else if (grepl("\\.osrm\\.(mldgr|hsgr)$", path, ignore.case = TRUE)) {

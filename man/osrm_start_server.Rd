@@ -79,7 +79,7 @@ for interface consistency with \code{\link[=osrm_start]{osrm_start()}}. Defaults
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
 }
 \value{
-A \code{processx::process} object for the running server (also registered internally)
+A \code{processx::process} object for the running server (also registered internally).
 }
 \description{
 Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either

@@ -61,6 +61,7 @@ reference:
       - osrm_partition
       - osrm_customize
       - osrm_contract
+      - osrm_cleanup
       - osrm_find_profile
   - title: "Run and monitor servers"
     desc: >

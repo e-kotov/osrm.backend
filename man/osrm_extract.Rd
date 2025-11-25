@@ -24,8 +24,9 @@ osrm_extract(
 )
 }
 \arguments{
-\item{input_osm}{A string. Path to the input OSM file:
-\code{.osm}, \code{.osm.bz2}, or \code{.osm.pbf}.}
+\item{input_osm}{A string. Path to the input OSM file
+(\code{.osm}, \code{.osm.bz2}, or \code{.osm.pbf}) or a directory containing exactly one
+OSM file with a supported extension.}
 
 \item{profile}{A string. Path to the OSRM Lua profile
 (e.g. returned by \code{osrm_find_profile("car.lua")}).}
@@ -77,10 +78,10 @@ instead of live logs; default \code{TRUE}.}
 command before running; default \code{FALSE}.}
 }
 \value{
-A list with two elements:
+An object of class \code{osrm_job} with the following elements:
 \describe{
-\item{osrm_path}{The expected path to the generated \code{.osrm} base,
-i.e. the timestamp file path with \code{.timestamp} dropped.}
+\item{osrm_job_artifact}{The path to the generated \code{.osrm.timestamp} file.}
+\item{osrm_working_dir}{The directory containing all OSRM files.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }
@@ -94,7 +95,7 @@ using a specified Lua profile.  After running, a companion
 \dontrun{
 # install osrm and set up PATH for the session
 osrm_executable <- osrm_install(
- version = "v5.27.1",
+ version = "latest",
  path_action = "session"
 )
 # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
@@ -114,7 +115,7 @@ result <- osrm_extract(
   threads                    = 1L
 )
 # path to generated .osrm files (specifically, the .osrm.timestamp file)
-result$osrm_path
+result$osrm_job_artifact
 # clean up the temporary workspace
 unlink(workspace, recursive = TRUE)
 }

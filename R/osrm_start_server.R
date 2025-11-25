@@ -54,7 +54,7 @@
 #' @param verbose Logical; reserved for controlling future server verbosity, included
 #'   for interface consistency with [osrm_start()]. Defaults to `FALSE`.
 #'
-#' @return A `processx::process` object for the running server (also registered internally)
+#' @return A `processx::process` object for the running server (also registered internally).
 #' @export
 osrm_start_server <- function(
   osrm_path,
@@ -90,6 +90,9 @@ osrm_start_server <- function(
   }
   quiet <- isTRUE(quiet)
   verbose <- isTRUE(verbose)
+
+  # Add this at the very beginning of the function body
+  osrm_path <- get_osrm_path_from_input(osrm_path)
 
   # Validate inputs
   if (!is.character(osrm_path) || length(osrm_path) != 1) {
@@ -382,5 +385,5 @@ osrm_start_server <- function(
     silent = TRUE
   )
 
-  invisible(osrm_server)
+  osrm_server
 }

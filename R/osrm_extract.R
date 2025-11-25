@@ -5,8 +5,9 @@
 #' using a specified Lua profile.  After running, a companion
 #' `<base>.osrm.timestamp` file must exist to confirm success.
 #'
-#' @param input_osm A string. Path to the input OSM file:
-#'   `.osm`, `.osm.bz2`, or `.osm.pbf`.
+#' @param input_osm A string. Path to the input OSM file
+#'   (`.osm`, `.osm.bz2`, or `.osm.pbf`) or a directory containing exactly one
+#'   OSM file with a supported extension.
 #' @param profile A string. Path to the OSRM Lua profile
 #'   (e.g. returned by \code{osrm_find_profile("car.lua")}).
 #' @param threads An integer. Number of threads for
@@ -35,10 +36,10 @@
 #'   \code{--dump-nbg-graph}; default \code{FALSE}.
 #' @inheritParams osrm_prepare_graph
 #'
-#' @return A list with two elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The expected path to the generated `.osrm` base,
-#'     i.e. the timestamp file path with `.timestamp` dropped.}
+#'   \item{osrm_job_artifact}{The path to the generated `.osrm.timestamp` file.}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
 #'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
@@ -46,7 +47,7 @@
 #' \dontrun{
 #' # install osrm and set up PATH for the session
 #' osrm_executable <- osrm_install(
-#'  version = "v5.27.1",
+#'  version = "latest",
 #'  path_action = "session"
 #' )
 #' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
@@ -66,7 +67,7 @@
 #'   threads                    = 1L
 #' )
 #' # path to generated .osrm files (specifically, the .osrm.timestamp file)
-#' result$osrm_path
+#' result$osrm_job_artifact
 #' # clean up the temporary workspace
 #' unlink(workspace, recursive = TRUE)
 #' }
@@ -93,8 +94,26 @@ osrm_extract <- function(
     stop("'processx' package is required for osrm_extract", call. = FALSE)
   }
 
-  # normalize and verify input
-  input_osm <- normalizePath(input_osm, mustWork = TRUE)
+  # Extract previous logs if input is an osrm_job object
+  input_logs <- if (inherits(input_osm, "osrm_job")) {
+    if (is.list(input_osm$logs) && length(input_osm$logs) > 0) {
+      input_osm$logs
+    } else {
+      list()
+    }
+  } else {
+    list()
+  }
+
+  # Extract path from osrm_job object if needed
+  input_osm <- get_osrm_path_from_input(input_osm)
+
+  # Resolve input path (file or directory)
+  input_osm <- resolve_osrm_path(
+    input_osm,
+    pattern = "\\.(osm|osm\\.bz2|osm\\.pbf)$",
+    file_description = "OSM files (.osm, .osm.bz2, or .osm.pbf)"
+  )
 
   # strip recognized extensions to derive base path
   if (grepl("\\.osm\\.pbf$", input_osm, ignore.case = TRUE)) {
@@ -185,15 +204,12 @@ osrm_extract <- function(
     )
   }
 
-  # expected .osrm base is timestamp file minus '.timestamp'
-  # osrm_path <- sub("\\.timestamp$", "", timestamp_file)
+  # Accumulate logs from previous stages
+  accumulated_logs <- c(input_logs, list(extract = logs))
 
-  return(
-    invisible(
-      list(
-        osrm_path = timestamp_file,
-        logs = logs
-      )
-    )
+  as_osrm_job(
+    osrm_job_artifact = timestamp_file,
+    osrm_working_dir = dirname(timestamp_file),
+    logs = accumulated_logs
   )
 }

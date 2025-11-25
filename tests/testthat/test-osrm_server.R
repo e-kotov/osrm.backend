@@ -1,5 +1,7 @@
 test_that("osrm_start_server launches osrm-routed with correct arguments", {
   skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
@@ -63,6 +65,7 @@ test_that("osrm_start_server validates input file extension", {
 
 test_that("osrm_stop handles stopping by object, id, port, and pid", {
   skip_if_not_installed("processx")
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
 
   # Mock registry state
   mock_reg <- list(
@@ -99,6 +102,8 @@ test_that("osrm_stop handles stopping by object, id, port, and pid", {
 
 # Additional tests for osrm_servers() ----
 test_that("osrm_servers returns empty data frame when no servers", {
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
+
   mock_state <- new.env()
   mock_state$registry <- list()
 
@@ -118,6 +123,8 @@ test_that("osrm_servers returns empty data frame when no servers", {
 })
 
 test_that("osrm_servers returns server information correctly", {
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
+
   mock_proc <- list(
     is_alive = function() TRUE,
     get_pid = function() 1001L
@@ -163,6 +170,8 @@ test_that("osrm_servers returns server information correctly", {
 
 # Tests for osrm_stop_all() ----
 test_that("osrm_stop_all stops all servers", {
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
+
   mock_state <- new.env()
   mock_state$registry <- list(
     "server1" = list(id = "server1", pid = 1001L, port = 5001L, proc = NULL),
@@ -187,6 +196,8 @@ test_that("osrm_stop_all stops all servers", {
 })
 
 test_that("osrm_stop_all returns 0 when no servers", {
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
+
   mock_state <- new.env()
   mock_state$registry <- list()
 
@@ -202,6 +213,7 @@ test_that("osrm_stop_all returns 0 when no servers", {
 # Tests for server registry internal functions ----
 test_that("registry saves and loads correctly", {
   skip_if_not_installed("jsonlite")
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
 
   tmp_dir <- tempfile()
   dir.create(tmp_dir, recursive = TRUE)
@@ -257,6 +269,8 @@ test_that("osrm_start_server validates input file extension", {
 
 test_that("osrm_start_server accepts dataset_name parameter", {
   skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
@@ -298,6 +312,8 @@ test_that("osrm_start_server accepts dataset_name parameter", {
 
 test_that("osrm_start_server handles max size parameters", {
   skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(packageVersion("testthat") < "3.2.0", "Requires testthat >= 3.2.0 for object mocking")
 
   tmp_dir <- tempdir()
   osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")

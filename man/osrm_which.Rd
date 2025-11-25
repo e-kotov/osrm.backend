@@ -7,10 +7,10 @@
 osrm_which(quiet = FALSE)
 }
 \arguments{
-\item{quiet}{Logical; if \code{FALSE} (default), prints information about the located installation. If \code{TRUE}, suppresses printed output and only returns the information invisibly as a list.}
+\item{quiet}{Logical; if \code{FALSE} (default), prints information about the located installation. If \code{TRUE}, suppresses printed output and only returns the information as a list.}
 }
 \value{
-Invisibly returns a list with components \code{executable} (full path to
+A list with components \code{executable} (full path to
 \code{osrm-routed}), \code{directory} (its parent folder), \code{osrm_version} (character
 vector of non-empty lines emitted by \code{osrm-routed --version}), and the raw
 \code{processx::run} result in \code{logs}.

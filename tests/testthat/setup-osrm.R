@@ -18,16 +18,21 @@ has_osrm_profile <- function() {
 }
 
 if (!has_osrm_binary() || !has_osrm_profile()) {
-  install_attempt <- try(
-    osrm_install(version = "v5.27.1", path_action = "session", quiet = TRUE),
-    silent = TRUE
-  )
-
-  if (inherits(install_attempt, "try-error")) {
-    options(
-      osrm.backend.skip_osrm_tests = TRUE,
-      osrm.backend.install_error = as.character(install_attempt)
+  # If on CRAN, do NOT attempt install, just mark tests to skip
+  if (!isTRUE(as.logical(Sys.getenv("NOT_CRAN", "false")))) {
+    options(osrm.backend.skip_osrm_tests = TRUE)
+  } else {
+    install_attempt <- try(
+      osrm_install(version = "v5.27.1", path_action = "session", quiet = TRUE),
+      silent = TRUE
     )
+
+    if (inherits(install_attempt, "try-error")) {
+      options(
+        osrm.backend.skip_osrm_tests = TRUE,
+        osrm.backend.install_error = as.character(install_attempt)
+      )
+    }
   }
 }
 

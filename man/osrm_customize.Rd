@@ -20,7 +20,8 @@ osrm_customize(
 )
 }
 \arguments{
-\item{input_osrm}{A string. Base path to the partitioned \code{.osrm} files (without extension).}
+\item{input_osrm}{A string. Path to a \code{.osrm.partition} file, the base path to the partitioned \code{.osrm} files (without extension),
+or a directory containing exactly one \code{.osrm.partition} file.}
 
 \item{threads}{An integer. Number of threads to use; default \code{8} (osrm-customize's default).}
 
@@ -50,9 +51,10 @@ instead of live logs; default \code{TRUE}.}
 command before running; default \code{FALSE}.}
 }
 \value{
-A list with elements:
+An object of class \code{osrm_job} with the following elements:
 \describe{
-\item{osrm_path}{The normalized path to the input \code{.osrm} base (invisibly). This can be passed over to \code{\link[=osrm_start_server]{osrm_start_server()}}.}
+\item{osrm_job_artifact}{The path to the customized \code{.osrm.mldgr} file.}
+\item{osrm_working_dir}{The directory containing all OSRM files.}
 \item{logs}{The \code{processx::run} result object.}
 }
 }

@@ -40,8 +40,8 @@
 #' OS and CPU combination that exists on the GitHub releases.
 #'
 #' @param version A string specifying the OSRM version tag to install.
-#'   Defaults to `"v5.27.1"`. Use `"latest"` to automatically find the most
-#'   recent stable version by calling `osrm_check_latest_version()`. Versions
+#'   Defaults to `"latest"`. Use `"latest"` to automatically find the most
+#'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
 #'   other than `v5.27.1` and `v6.0.0` will trigger a warning but are still
 #'   attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be installed.
@@ -58,7 +58,7 @@
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
 #'   warnings. Defaults to `FALSE`.
-#' @return The path to the installation directory, invisibly.
+#' @return The path to the installation directory.
 #' @export
 #' @examples
 #' \dontrun{
@@ -72,7 +72,7 @@
 #' osrm_clear_path()
 #' }
 osrm_install <- function(
-  version = "v5.27.1",
+  version = "latest",
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
@@ -211,7 +211,7 @@ osrm_install <- function(
       emit_message("Use force = TRUE to reinstall.")
       # Handle path and return
       handle_path_setting(path_action, dest_dir, quiet)
-      return(invisible(dest_dir))
+      return(dest_dir)
     }
 
     if (profiles_missing) {
@@ -247,8 +247,7 @@ osrm_install <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_file)
     },
     error = function(e) {
@@ -307,9 +306,24 @@ osrm_install <- function(
   if (is.null(runtime_version) || !nzchar(runtime_version)) {
     runtime_version <- version
   }
-  maybe_install_windows_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
-  maybe_install_linux_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
-  maybe_install_macos_v6_runtime(runtime_version, platform, dest_dir, quiet = quiet)
+  maybe_install_windows_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
+  maybe_install_linux_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
+  maybe_install_macos_v6_runtime(
+    runtime_version,
+    platform,
+    dest_dir,
+    quiet = quiet
+  )
 
   # --- 9. Download and install Lua profiles ---
   install_profiles_for_release(release_info, dest_dir, quiet = quiet)
@@ -345,7 +359,7 @@ osrm_install <- function(
     emit_message("Installation successful! Binaries are in ", dest_dir)
   }
 
-  return(invisible(dest_dir))
+  return(dest_dir)
 }
 
 #' Check for the Latest Stable OSRM Version
@@ -446,7 +460,7 @@ osrm_check_available_versions <- function(prereleases = FALSE) {
 #' removes any lines that were added by `osrm_install()` to modify the `PATH`.
 #'
 #' @param quiet A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
-#' @return Invisibly returns `TRUE` if the file was modified, `FALSE` otherwise.
+#' @return `TRUE` if the file was modified, `FALSE` otherwise.
 #' @export
 #' @examples
 #' \dontrun{
@@ -460,7 +474,7 @@ osrm_clear_path <- function(quiet = FALSE) {
     if (!quiet) {
       message("No .Rprofile file found in the current project directory.")
     }
-    return(invisible(FALSE))
+    return(FALSE)
   }
 
   lines <- readLines(r_profile_path, warn = FALSE)
@@ -474,7 +488,7 @@ osrm_clear_path <- function(quiet = FALSE) {
         ".Rprofile does not contain any paths set by osrm.backend. No changes made."
       )
     }
-    return(invisible(FALSE))
+    return(FALSE)
   }
 
   if (!quiet) {
@@ -487,7 +501,7 @@ osrm_clear_path <- function(quiet = FALSE) {
     )
   }
 
-  return(invisible(TRUE))
+  return(TRUE)
 }
 
 
@@ -770,23 +784,24 @@ get_macos_release_info <- function(sys_info) {
 #' @noRd
 github_api_request_with_retries <- function(url, error_message, verb = "GET") {
   # Base request with error handling and retry policy
-  req <- httr2::request(url) |>
-    httr2::req_error(body = function(resp) {
-      httr2::resp_body_json(resp)$message
-    }) |>
-    # Retry on GitHub's rate-limiting status (403), as well as the
-    # standard 429 (Too Many Requests) and 503 (Service Unavailable).
-    httr2::req_retry(
-      max_tries = 4,
-      is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
-    )
+  req <- httr2::request(url)
+  req <- httr2::req_error(req, body = function(resp) {
+    httr2::resp_body_json(resp)$message
+  })
+  # Retry on GitHub's rate-limiting status (403), as well as the
+  # standard 429 (Too Many Requests) and 503 (Service Unavailable).
+  req <- httr2::req_retry(
+    req,
+    max_tries = 4,
+    is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
+  )
 
   # Check for a GitHub Personal Access Token to increase rate limits.
   # This is especially important for CI/CD environments.
   token <- Sys.getenv("GITHUB_PAT")
   if (nzchar(token)) {
     # Add authentication header if token is found
-    req <- req |> httr2::req_auth_bearer_token(token)
+    req <- httr2::req_auth_bearer_token(req, token)
   }
 
   resp <- tryCatch(
@@ -884,7 +899,11 @@ find_asset_url <- function(release_info, platform) {
 }
 
 #' @noRd
-install_profiles_for_release <- function(release_info, dest_dir, quiet = FALSE) {
+install_profiles_for_release <- function(
+  release_info,
+  dest_dir,
+  quiet = FALSE
+) {
   tarball_url <- release_info$tarball_url
 
   if (is.null(tarball_url) || !nzchar(tarball_url)) {
@@ -905,8 +924,7 @@ install_profiles_for_release <- function(release_info, dest_dir, quiet = FALSE) 
 
   tryCatch(
     {
-      req <- httr2::request(tarball_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(tarball_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tarball)
     },
     error = function(e) {
@@ -1229,8 +1247,7 @@ ensure_linux_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1364,8 +1381,7 @@ ensure_macos_tbb_runtime <- function(
 
   tryCatch(
     {
-      req <- httr2::request(asset_url) |>
-        httr2::req_retry(max_tries = 3)
+      req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
       httr2::req_perform(req, path = tmp_tar)
     },
     error = function(e) {
@@ -1559,8 +1575,7 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   tmp_zip <- tempfile(fileext = ".zip")
   on.exit(unlink(tmp_zip), add = TRUE)
 
-  req <- httr2::request(url) |>
-    httr2::req_retry(max_tries = 3)
+  req <- httr2::req_retry(httr2::request(url), max_tries = 3)
   tryCatch(
     httr2::req_perform(req, path = tmp_zip),
     error = function(e) {
@@ -1675,15 +1690,71 @@ set_path_session <- function(dir, quiet = FALSE) {
   current_path <- Sys.getenv("PATH")
 
   path_elements <- strsplit(current_path, path_sep)[[1]]
-  normalized_dir <- normalizePath(dir, mustWork = FALSE)
-  normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
 
-  if (!normalized_dir %in% normalized_paths) {
-    new_path <- paste(normalized_dir, current_path, sep = path_sep)
+  # On Windows, use forward slashes for consistent comparison
+  # This handles issues with mixed separators and 8.3 short names
+  if (.Platform$OS.type == "windows") {
+    normalized_dir <- normalizePath(dir, mustWork = FALSE, winslash = "/")
+    normalized_paths <- normalizePath(path_elements, mustWork = FALSE, winslash = "/")
+    cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE, winslash = "/")
+    # Use "/" for cache_root_prefix to match the normalized paths
+    cache_root_prefix <- paste0(cache_root, "/")
+  } else {
+    normalized_dir <- normalizePath(dir, mustWork = FALSE)
+    normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
+    cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE)
+    cache_root_prefix <- paste0(cache_root, .Platform$file.sep)
+  }
+
+  # Helper function for path comparison (case-insensitive on Windows)
+  paths_equal <- function(path1, path2) {
+    if (.Platform$OS.type == "windows") {
+      tolower(path1) == tolower(path2)
+    } else {
+      path1 == path2
+    }
+  }
+
+  # Remove any paths that point to other versions in our cache directory
+  # but keep system installations (homebrew, manual installs, etc.)
+  paths_to_keep <- vapply(seq_along(path_elements), function(i) {
+    norm_path <- normalized_paths[i]
+    # Keep this path if:
+    # 1. It's the directory we're installing to, OR
+    # 2. It's not under our cache root (i.e., it's a system/homebrew install)
+    if (paths_equal(norm_path, normalized_dir)) {
+      return(TRUE)
+    }
+    # On Windows, use case-insensitive comparison for path prefix check
+    if (.Platform$OS.type == "windows") {
+      !startsWith(tolower(norm_path), tolower(cache_root_prefix))
+    } else {
+      !startsWith(norm_path, cache_root_prefix)
+    }
+  }, logical(1))
+
+  filtered_paths <- path_elements[paths_to_keep]
+
+  # Always prepend the new installation directory to the front
+  # (even if it was already in the PATH, we want it first)
+  first_path_matches <- if (length(normalized_paths) > 0) {
+    paths_equal(normalized_paths[1], normalized_dir)
+  } else {
+    FALSE
+  }
+
+  if (!first_path_matches) {
+    # Remove the dir if it's already present (to avoid duplicates)
+    kept_normalized <- normalized_paths[paths_to_keep]
+    paths_not_matching <- !vapply(kept_normalized, paths_equal, logical(1), path2 = normalized_dir)
+    filtered_paths <- filtered_paths[paths_not_matching]
+    new_path <- paste(c(normalized_dir, filtered_paths), collapse = path_sep)
     Sys.setenv(PATH = new_path)
     if (!quiet) {
       message(sprintf("Added '%s' to PATH for this session.", normalized_dir))
     }
+  } else if (!quiet) {
+    message(sprintf("'%s' is already first in PATH.", normalized_dir))
   }
 }
 
@@ -1693,23 +1764,16 @@ set_path_project <- function(dir, quiet = FALSE) {
 
   if (!quiet) {
     message("You chose to set the OSRM path for this project.")
-    message("This will add a line to the following file: ", r_profile_path)
+    message("This will update the following file: ", r_profile_path)
   }
 
-  if (interactive() && !quiet) {
-    ans <- utils::askYesNo("Do you want to proceed?", default = TRUE)
-    if (!isTRUE(ans)) {
-      if (!quiet) {
-        message("Aborted. .Rprofile was not modified.")
-      }
-      return(invisible())
-    }
-  }
+  # Use forward slashes for cross-platform compatibility in the .Rprofile
+  path_for_r <- normalizePath(dir, mustWork = FALSE, winslash = "/")
 
   comment_tag <- "#added-by-r-pkg-osrm.backend"
   line_to_add <- sprintf(
     'Sys.setenv(PATH = paste("%s", Sys.getenv("PATH"), sep = "%s")) %s',
-    normalizePath(dir),
+    path_for_r,
     .Platform$path.sep,
     comment_tag
   )
@@ -1721,18 +1785,43 @@ set_path_project <- function(dir, quiet = FALSE) {
     writeLines(line_to_add, r_profile_path)
   } else {
     lines <- readLines(r_profile_path, warn = FALSE)
-    # Check if our tag is already there to avoid duplicates
-    if (any(grepl(comment_tag, lines, fixed = TRUE))) {
-      if (!quiet) {
-        message(
-          ".Rprofile already contains OSRM path configuration. No changes made."
-        )
+    has_tag <- grepl(comment_tag, lines, fixed = TRUE)
+
+    if (any(has_tag)) {
+      existing_dirs <- vapply(lines[has_tag], function(line) {
+        match <- regmatches(line, regexec('paste\\("([^"]+)"', line))
+        if (length(match[[1]]) >= 2) {
+          # Normalize with forward slashes for consistent comparison
+          normalizePath(match[[1]][2], mustWork = FALSE, winslash = "/")
+        } else {
+          ""
+        }
+      }, character(1))
+
+      # Case-insensitive comparison on Windows
+      is_same_path <- if (.Platform$OS.type == "windows") {
+        tolower(path_for_r) %in% tolower(existing_dirs)
+      } else {
+        path_for_r %in% existing_dirs
       }
-      return(invisible())
+
+      if (any(is_same_path)) {
+        if (!quiet) {
+          message(".Rprofile already contains this OSRM path configuration. No changes made.")
+        }
+        return(invisible())
+      }
+
+      if (!quiet) {
+        message("Replacing old OSRM path configuration with new one.")
+      }
+      lines <- lines[!has_tag]
+    } else {
+      if (!quiet) {
+        message("Appending configuration to existing .Rprofile.")
+      }
     }
-    if (!quiet) {
-      message("Appending configuration to existing .Rprofile.")
-    }
+
     # Add a newline for separation if the file doesn't end with one
     if (length(lines) > 0 && nzchar(lines[length(lines)])) {
       lines <- c(lines, "")

@@ -3,7 +3,8 @@
 #' Run the `osrm-customize` tool to customize a partitioned OSRM graph for the MLD pipeline.
 #' After running, a companion `<base>.osrm.mldgr` file must exist to confirm success.
 #'
-#' @param input_osrm A string. Base path to the partitioned `.osrm` files (without extension).
+#' @param input_osrm A string. Path to a `.osrm.partition` file, the base path to the partitioned `.osrm` files (without extension),
+#'   or a directory containing exactly one `.osrm.partition` file.
 #' @param threads An integer. Number of threads to use; default `8` (osrm-customize's default).
 #' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
 #'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
@@ -14,10 +15,11 @@
 #' @param time_zone_file A string or `NULL`. GeoJSON file with time zone boundaries; default `NULL`.
 #' @inheritParams osrm_prepare_graph
 #'
-#' @return A list with elements:
+#' @return An object of class \code{osrm_job} with the following elements:
 #' \describe{
-#'   \item{osrm_path}{The normalized path to the input `.osrm` base (invisibly). This can be passed over to [osrm_start_server()].}
-#'   \item{logs}{The `processx::run` result object.}
+#'   \item{osrm_job_artifact}{The path to the customized `.osrm.mldgr` file.}
+#'   \item{osrm_working_dir}{The directory containing all OSRM files.}
+#'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
 #' @export
@@ -38,12 +40,47 @@ osrm_customize <- function(
   if (!requireNamespace("processx", quietly = TRUE)) {
     stop("'processx' package is required for osrm_customize", call. = FALSE)
   }
+
+  # Extract previous logs if input is an osrm_job object
+  input_logs <- if (inherits(input_osrm, "osrm_job")) {
+    if (is.list(input_osrm$logs) && length(input_osrm$logs) > 0) {
+      input_osrm$logs
+    } else {
+      list()
+    }
+  } else {
+    list()
+  }
+
+  # Extract path from osrm_job object if needed
+  input_osrm <- get_osrm_path_from_input(input_osrm)
+
   if (!is.character(input_osrm) || length(input_osrm) != 1) {
     stop(
       "'input_osrm' must be a single string (path to .osrm base)",
       call. = FALSE
     )
   }
+
+  # Check if user is trying to use customize without partition
+  if (grepl("\\.timestamp$", input_osrm, ignore.case = TRUE)) {
+    stop(
+      "`osrm_customize` requires a partitioned graph from `osrm_partition`.\n",
+      "These are part of different pipelines:\n",
+      "  - CH pipeline: extract -> contract\n",
+      "  - MLD pipeline: extract -> partition -> customize\n",
+      "After `osrm_extract`, use `osrm_partition` before `osrm_customize`.",
+      call. = FALSE
+    )
+  }
+
+  # Resolve input path (file or directory)
+  input_osrm <- resolve_osrm_path(
+    input_osrm,
+    pattern = "\\.osrm\\.partition$",
+    file_description = ".osrm.partition files",
+    error_context = "Please check that you have run `osrm_partition` first."
+  )
 
   if (!grepl("\\.partition$", input_osrm, ignore.case = TRUE)) {
     stop(
@@ -54,17 +91,19 @@ osrm_customize <- function(
 
   if (!file.exists(input_osrm)) {
     stop(
-      stop(
-        "File does not exist: ",
-        input_osrm,
-        "\n",
-        "Please check that you have run `osrm_partition` first.",
-        call. = FALSE
-      )
+      "File does not exist: ",
+      input_osrm,
+      "\nPlease check that you have run `osrm_partition` first.",
+      call. = FALSE
     )
   }
 
   osrm_path <- gsub("\\.partition$", "", input_osrm)
+
+  # Check for algorithm conflicts (CH files in directory)
+  base_name <- sub("\\.osrm$", "", basename(osrm_path))
+  dir_path <- dirname(osrm_path)
+  check_algorithm_conflict(dir_path, base_name, "mld", "customize")
 
   verbosity <- match.arg(verbosity)
   arguments <- c(osrm_path, "-l", verbosity, "-t", as.character(threads))
@@ -114,8 +153,12 @@ osrm_customize <- function(
     )
   }
 
-  invisible(list(
-    osrm_path = normalizePath(mld_file),
-    logs = logs
-  ))
+  # Accumulate logs from previous stages
+  accumulated_logs <- c(input_logs, list(customize = logs))
+
+  as_osrm_job(
+    osrm_job_artifact = normalizePath(mld_file),
+    osrm_working_dir = dirname(normalizePath(mld_file)),
+    logs = accumulated_logs
+  )
 }
