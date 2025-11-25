@@ -319,14 +319,22 @@ test_that("set_path_session adds directory to PATH", {
   on.exit(Sys.setenv(PATH = orig_path))
 
   tmp_dir <- tempdir()
-  set_path_session(tmp_dir)
+  set_path_session(tmp_dir, quiet = TRUE)
 
   new_path <- Sys.getenv("PATH")
-  expect_true(grepl(
-    normalizePath(tmp_dir, mustWork = FALSE),
-    new_path,
-    fixed = TRUE
-  ))
+  path_elements <- strsplit(new_path, .Platform$path.sep)[[1]]
+  first_path <- path_elements[1]
+
+  # Normalize both paths for a robust comparison
+  expected_norm <- normalizePath(tmp_dir, mustWork = FALSE)
+  first_path_norm <- normalizePath(first_path, mustWork = FALSE)
+
+  # On Windows, paths are case-insensitive
+  if (.Platform$OS.type == "windows") {
+    expect_equal(tolower(first_path_norm), tolower(expected_norm))
+  } else {
+    expect_equal(first_path_norm, expected_norm)
+  }
 })
 
 test_that("set_path_session doesn't duplicate paths", {
@@ -457,11 +465,19 @@ test_that("handle_path_setting calls correct function", {
 
   # Test "session"
   handle_path_setting("session", tmp_dir, quiet = TRUE)
-  expect_true(grepl(
-    normalizePath(tmp_dir, mustWork = FALSE),
-    Sys.getenv("PATH"),
-    fixed = TRUE
-  ))
+  new_path <- Sys.getenv("PATH")
+  path_elements <- strsplit(new_path, .Platform$path.sep)[[1]]
+  first_path <- path_elements[1]
+
+  # Normalize for comparison
+  expected_norm <- normalizePath(tmp_dir, mustWork = FALSE)
+  first_path_norm <- normalizePath(first_path, mustWork = FALSE)
+
+  if (.Platform$OS.type == "windows") {
+    expect_equal(tolower(first_path_norm), tolower(expected_norm))
+  } else {
+    expect_equal(first_path_norm, expected_norm)
+  }
 
   # Test "none" - should not error
   expect_silent(handle_path_setting(

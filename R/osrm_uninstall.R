@@ -109,22 +109,24 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
     # Remove all installations
     any_removed <- FALSE
     for (install_dir in version_installs) {
-      install_dir_norm <- normalizePath(install_dir, winslash = "/", mustWork = FALSE)
+      # Use OS-native path for file system ops, forward-slash for display
+      install_dir_fs <- normalizePath(install_dir, mustWork = FALSE)
+      install_dir_display <- normalizePath(install_dir, winslash = "/", mustWork = FALSE)
 
-      if (!dir.exists(install_dir_norm)) {
+      if (!dir.exists(install_dir_fs)) {
         if (!quiet) {
-          message("Skipping (not found): ", install_dir_norm)
+          message("Skipping (not found): ", install_dir_display)
         }
         next
       }
 
       if (!quiet) {
-        message("Removing: ", install_dir_norm)
+        message("Removing: ", install_dir_display)
       }
 
       tryCatch(
         {
-          unlink(install_dir_norm, recursive = TRUE, force = TRUE)
+          unlink(install_dir_fs, recursive = TRUE, force = TRUE)
           if (!quiet) {
             message("  Successfully removed.")
           }
@@ -133,7 +135,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
         error = function(e) {
           if (!quiet) {
             warning(
-              "Failed to remove ", install_dir_norm, ": ",
+              "Failed to remove ", install_dir_display, ": ",
               e$message,
               call. = FALSE
             )
@@ -202,13 +204,14 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
     }
   }
 
-  dest_dir_norm <- normalizePath(dest_dir, winslash = "/", mustWork = FALSE)
+  dest_dir_fs <- normalizePath(dest_dir, mustWork = FALSE)
+  dest_dir_display <- normalizePath(dest_dir, winslash = "/", mustWork = FALSE)
 
   # --- 1. Check if the directory exists ---
-  dir_existed <- dir.exists(dest_dir_norm)
+  dir_existed <- dir.exists(dest_dir_fs)
   if (!dir_existed) {
     if (!quiet) {
-      message("OSRM installation not found at: ", dest_dir_norm)
+      message("OSRM installation not found at: ", dest_dir_display)
       message("Nothing to uninstall.")
     }
     if (clear_path) {
@@ -220,7 +223,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
   # --- 2. Ask for confirmation for file deletion ---
   if (auto_selected) {
     if (!quiet) {
-      message("Uninstalling OSRM from detected installation: ", dest_dir_norm)
+      message("Uninstalling OSRM from detected installation: ", dest_dir_display)
     }
   }
 
@@ -228,7 +231,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
   if (!force) {
     if (!quiet) {
       message("This will permanently remove the OSRM installation from:")
-      message(dest_dir_norm)
+      message(dest_dir_display)
     }
     if (interactive() && !quiet) {
       ans <- utils::askYesNo(
@@ -253,7 +256,7 @@ osrm_uninstall <- function(dest_dir = NULL, clear_path = TRUE, quiet = FALSE, al
     }
     tryCatch(
       {
-        unlink(dest_dir_norm, recursive = TRUE, force = TRUE)
+        unlink(dest_dir_fs, recursive = TRUE, force = TRUE)
         if (!quiet) {
           message("Successfully uninstalled OSRM backend binaries.")
         }

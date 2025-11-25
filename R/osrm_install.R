@@ -1767,10 +1767,13 @@ set_path_project <- function(dir, quiet = FALSE) {
     message("This will update the following file: ", r_profile_path)
   }
 
+  # Use forward slashes for cross-platform compatibility in the .Rprofile
+  path_for_r <- normalizePath(dir, mustWork = FALSE, winslash = "/")
+
   comment_tag <- "#added-by-r-pkg-osrm.backend"
   line_to_add <- sprintf(
     'Sys.setenv(PATH = paste("%s", Sys.getenv("PATH"), sep = "%s")) %s',
-    normalizePath(dir),
+    path_for_r,
     .Platform$path.sep,
     comment_tag
   )
@@ -1782,27 +1785,29 @@ set_path_project <- function(dir, quiet = FALSE) {
     writeLines(line_to_add, r_profile_path)
   } else {
     lines <- readLines(r_profile_path, warn = FALSE)
-
-    # Remove any existing lines with our tag (old cached versions)
     has_tag <- grepl(comment_tag, lines, fixed = TRUE)
+
     if (any(has_tag)) {
-      # Check if the existing line is for the same directory
       existing_dirs <- vapply(lines[has_tag], function(line) {
-        # Extract directory path from the line
         match <- regmatches(line, regexec('paste\\("([^"]+)"', line))
         if (length(match[[1]]) >= 2) {
-          normalizePath(match[[1]][2], mustWork = FALSE)
+          # Normalize with forward slashes for consistent comparison
+          normalizePath(match[[1]][2], mustWork = FALSE, winslash = "/")
         } else {
           ""
         }
       }, character(1))
 
-      normalized_dir <- normalizePath(dir, mustWork = FALSE)
-      if (any(existing_dirs == normalized_dir)) {
+      # Case-insensitive comparison on Windows
+      is_same_path <- if (.Platform$OS.type == "windows") {
+        tolower(path_for_r) %in% tolower(existing_dirs)
+      } else {
+        path_for_r %in% existing_dirs
+      }
+
+      if (any(is_same_path)) {
         if (!quiet) {
-          message(
-            ".Rprofile already contains this OSRM path configuration. No changes made."
-          )
+          message(".Rprofile already contains this OSRM path configuration. No changes made.")
         }
         return(invisible())
       }

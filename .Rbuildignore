@@ -18,3 +18,4 @@
 ^.claude$
 ^CITATION\.cff$
 ^codemeta\.json$
+^inst/schemaorg.json$
