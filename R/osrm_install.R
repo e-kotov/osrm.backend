@@ -1690,13 +1690,30 @@ set_path_session <- function(dir, quiet = FALSE) {
   current_path <- Sys.getenv("PATH")
 
   path_elements <- strsplit(current_path, path_sep)[[1]]
-  normalized_dir <- normalizePath(dir, mustWork = FALSE)
-  normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
 
-  # Get the default cache root to identify our managed installations
-  cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE)
-  # Ensure cache_root ends with separator for consistent prefix matching
-  cache_root_prefix <- paste0(cache_root, .Platform$file.sep)
+  # On Windows, use forward slashes for consistent comparison
+  # This handles issues with mixed separators and 8.3 short names
+  if (.Platform$OS.type == "windows") {
+    normalized_dir <- normalizePath(dir, mustWork = FALSE, winslash = "/")
+    normalized_paths <- normalizePath(path_elements, mustWork = FALSE, winslash = "/")
+    cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE, winslash = "/")
+    # Use "/" for cache_root_prefix to match the normalized paths
+    cache_root_prefix <- paste0(cache_root, "/")
+  } else {
+    normalized_dir <- normalizePath(dir, mustWork = FALSE)
+    normalized_paths <- normalizePath(path_elements, mustWork = FALSE)
+    cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE)
+    cache_root_prefix <- paste0(cache_root, .Platform$file.sep)
+  }
+
+  # Helper function for path comparison (case-insensitive on Windows)
+  paths_equal <- function(path1, path2) {
+    if (.Platform$OS.type == "windows") {
+      tolower(path1) == tolower(path2)
+    } else {
+      path1 == path2
+    }
+  }
 
   # Remove any paths that point to other versions in our cache directory
   # but keep system installations (homebrew, manual installs, etc.)
@@ -1705,7 +1722,7 @@ set_path_session <- function(dir, quiet = FALSE) {
     # Keep this path if:
     # 1. It's the directory we're installing to, OR
     # 2. It's not under our cache root (i.e., it's a system/homebrew install)
-    if (identical(norm_path, normalized_dir)) {
+    if (paths_equal(norm_path, normalized_dir)) {
       return(TRUE)
     }
     # On Windows, use case-insensitive comparison for path prefix check
@@ -1717,15 +1734,6 @@ set_path_session <- function(dir, quiet = FALSE) {
   }, logical(1))
 
   filtered_paths <- path_elements[paths_to_keep]
-
-  # Helper function for path comparison (case-insensitive on Windows)
-  paths_equal <- function(path1, path2) {
-    if (.Platform$OS.type == "windows") {
-      tolower(path1) == tolower(path2)
-    } else {
-      path1 == path2
-    }
-  }
 
   # Always prepend the new installation directory to the front
   # (even if it was already in the PATH, we want it first)
