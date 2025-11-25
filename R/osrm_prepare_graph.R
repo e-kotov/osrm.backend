@@ -103,13 +103,23 @@ osrm_prepare_graph <- function(
     check_algorithm_conflict(dir_path, base_name, algorithm, "prepare_graph")
   } else if (detection$state %in% c("ch", "mld", "mixed") && overwrite) {
     # Warn user about overwriting files from a different algorithm
-    current_algo <- if (detection$state == "ch") "CH" else if (detection$state == "mld") "MLD" else "mixed"
+    current_algo <- if (detection$state == "ch") {
+      "CH"
+    } else if (detection$state == "mld") {
+      "MLD"
+    } else {
+      "mixed"
+    }
     target_algo <- if (algorithm == "ch") "CH" else "MLD"
 
     if (!quiet && current_algo != target_algo) {
       message(
-        "Note: Directory contains existing ", current_algo, " algorithm files.\n",
-        "overwrite=TRUE will remove them and create new ", target_algo, " files."
+        "Note: Directory contains existing ",
+        current_algo,
+        " algorithm files.\n",
+        "overwrite=TRUE will remove them and create new ",
+        target_algo,
+        " files."
       )
     }
   }
@@ -137,35 +147,38 @@ osrm_prepare_graph <- function(
   # 2) Partition+Customize or Contract
   algorithm <- match.arg(algorithm)
   if (algorithm == "mld") {
-    # MLD pipeline: extract → partition → customize
-    # Each function accumulates logs from the previous step
-    osrm_graph <- extract_res |>
-      osrm_partition(
-        threads = threads,
-        verbosity = verbosity,
-        balance = balance,
-        boundary = boundary,
-        optimizing_cuts = optimizing_cuts,
-        small_component_size = small_component_size,
-        max_cell_sizes = max_cell_sizes,
-        quiet = quiet,
-        verbose = verbose,
-        spinner = spinner,
-        echo_cmd = echo_cmd
-      ) |>
-      osrm_customize(
-        threads = threads,
-        verbosity = verbosity,
-        segment_speed_file = NULL,
-        turn_penalty_file = NULL,
-        edge_weight_updates_over_factor = 0,
-        parse_conditionals_from_now = 0,
-        time_zone_file = NULL,
-        quiet = quiet,
-        verbose = verbose,
-        spinner = spinner,
-        echo_cmd = echo_cmd
-      )
+    # MLD pipeline: extract -> partition -> customize
+    # Use explicit intermediate assignment for readability and to avoid
+    # the native pipe operator so older R versions are supported.
+    partition_res <- osrm_partition(
+      extract_res,
+      threads = threads,
+      verbosity = verbosity,
+      balance = balance,
+      boundary = boundary,
+      optimizing_cuts = optimizing_cuts,
+      small_component_size = small_component_size,
+      max_cell_sizes = max_cell_sizes,
+      quiet = quiet,
+      verbose = verbose,
+      spinner = spinner,
+      echo_cmd = echo_cmd
+    )
+
+    osrm_graph <- osrm_customize(
+      partition_res,
+      threads = threads,
+      verbosity = verbosity,
+      segment_speed_file = NULL,
+      turn_penalty_file = NULL,
+      edge_weight_updates_over_factor = 0,
+      parse_conditionals_from_now = 0,
+      time_zone_file = NULL,
+      quiet = quiet,
+      verbose = verbose,
+      spinner = spinner,
+      echo_cmd = echo_cmd
+    )
   } else {
     # CH pipeline: extract → contract
     # Each function accumulates logs from the previous step
