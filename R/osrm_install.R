@@ -1718,11 +1718,28 @@ set_path_session <- function(dir, quiet = FALSE) {
 
   filtered_paths <- path_elements[paths_to_keep]
 
+  # Helper function for path comparison (case-insensitive on Windows)
+  paths_equal <- function(path1, path2) {
+    if (.Platform$OS.type == "windows") {
+      tolower(path1) == tolower(path2)
+    } else {
+      path1 == path2
+    }
+  }
+
   # Always prepend the new installation directory to the front
   # (even if it was already in the PATH, we want it first)
-  if (!identical(normalized_paths[1], normalized_dir)) {
+  first_path_matches <- if (length(normalized_paths) > 0) {
+    paths_equal(normalized_paths[1], normalized_dir)
+  } else {
+    FALSE
+  }
+
+  if (!first_path_matches) {
     # Remove the dir if it's already present (to avoid duplicates)
-    filtered_paths <- filtered_paths[normalized_paths[paths_to_keep] != normalized_dir]
+    kept_normalized <- normalized_paths[paths_to_keep]
+    paths_not_matching <- !vapply(kept_normalized, paths_equal, logical(1), path2 = normalized_dir)
+    filtered_paths <- filtered_paths[paths_not_matching]
     new_path <- paste(c(normalized_dir, filtered_paths), collapse = path_sep)
     Sys.setenv(PATH = new_path)
     if (!quiet) {
