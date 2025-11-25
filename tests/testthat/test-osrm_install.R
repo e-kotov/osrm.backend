@@ -736,16 +736,17 @@ test_that("set_path_project replaces old cached version with new one", {
 
   rprofile <- file.path(tmp_dir, ".Rprofile")
   lines <- readLines(rprofile)
-  expect_true(any(grepl(normalizePath(v6_dir, mustWork = FALSE), lines, fixed = TRUE)))
+  # Use forward slashes to match what set_path_project writes to .Rprofile
+  expect_true(any(grepl(normalizePath(v6_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
 
   # Now add v5.27.1 - it should replace v6.0.0
   set_path_project(v5_dir, quiet = TRUE)
 
   lines <- readLines(rprofile)
   # v5.27.1 should be in .Rprofile
-  expect_true(any(grepl(normalizePath(v5_dir, mustWork = FALSE), lines, fixed = TRUE)))
+  expect_true(any(grepl(normalizePath(v5_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
   # v6.0.0 should NOT be in .Rprofile anymore
-  expect_false(any(grepl(normalizePath(v6_dir, mustWork = FALSE), lines, fixed = TRUE)))
+  expect_false(any(grepl(normalizePath(v6_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
   # Should only have one osrm.backend line
   count <- sum(grepl("#added-by-r-pkg-osrm.backend", lines, fixed = TRUE))
   expect_identical(count, 1L)
