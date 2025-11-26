@@ -8,7 +8,7 @@ message: 'To cite package "osrm.backend" in publications use:'
 type: software
 license: MIT
 title: 'osrm.backend: Bindings for ''Open Source Routing Machine'''
-version: 0.0.0.9000
+version: 0.1.0
 abstract: Install and control 'Open Source Routing Machine' ('OSRM') backend executables
   to prepare routing data and run/stop a local 'OSRM' server. For computations with
   the running server use the 'osrm' R package (<https://cran.r-project.org/package=osrm>).
