@@ -8,10 +8,21 @@
 #' @return The normalized filesystem path to the profile.
 #'
 #' @examples
-#' \dontrun{
-#' # make sure osrm backend is installed and on PATH
-#' osrm_install()
-#' osrm_find_profile("car.lua")
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   install_dir <- osrm_install(
+#'     version = "latest",
+#'     path_action = "session",
+#'     quiet = TRUE
+#'   )
+#'   osrm_find_profile("car.lua")
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#' }
 #' }
 #'
 #' @export

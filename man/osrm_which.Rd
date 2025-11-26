@@ -23,8 +23,23 @@ containing the executable together with the backend version reported by
 \code{osrm-routed} so you know what will be used in the current session.
 }
 \examples{
-\dontrun{
-# check which OSRM installation will be used
-osrm_which()
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
+
+  # check which OSRM installation will be used
+  osrm_which()
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+}
 }
 }

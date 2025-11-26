@@ -24,19 +24,44 @@
 #'
 #' @export
 #' @examples
-#' \dontrun{
-#' # Clean up all OSRM files in a directory (keeps .osm.pbf)
-#' osrm_cleanup("/path/to/osrm/files")
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   install_dir <- osrm_install(
+#'     version = "latest",
+#'     path_action = "session",
+#'     quiet = TRUE
+#'   )
 #'
-#' # Clean up including the OSM file
-#' osrm_cleanup("/path/to/osrm/files", keep_osm = FALSE)
+#'   # Stage a temporary workspace with placeholder OSRM files
+#'   pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#'   osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#'   dir.create(osrm_dir, recursive = TRUE)
+#'   tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#'   file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#'   file.create(
+#'     file.path(osrm_dir, "cur.osrm.timestamp"),
+#'     file.path(osrm_dir, "cur.osrm.hsgr"),
+#'     file.path(osrm_dir, "cur.osrm.mldgr"),
+#'     file.path(osrm_dir, "cur.osrm.partition")
+#'   )
 #'
-#' # Preview what would be deleted
-#' osrm_cleanup("/path/to/osrm/files", dry_run = TRUE)
+#'   # Preview what would be deleted
+#'   osrm_cleanup(osrm_dir, dry_run = TRUE)
 #'
-#' # Clean up specific base name
-#' osrm_cleanup("/path/to/data.osm.pbf")
-#' osrm_cleanup("/path/to/data.osrm.hsgr")
+#'   # Clean up OSRM artifacts (keep the OSM file)
+#'   osrm_cleanup(osrm_dir)
+#'
+#'   # Remove everything including the OSM source
+#'   osrm_cleanup(osrm_dir, keep_osm = FALSE)
+#'
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#'   unlink(osrm_dir, recursive = TRUE)
+#' }
 #' }
 osrm_cleanup <- function(
   path,

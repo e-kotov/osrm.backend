@@ -83,14 +83,25 @@ before calling \code{osrm_install()}. Overrides allow requesting binaries for an
 OS and CPU combination that exists on the GitHub releases.
 }
 \examples{
-\dontrun{
-# Install the default stable version and set PATH for this session
-osrm_install()
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  old <- setwd(tempdir())
+  on.exit(setwd(old), add = TRUE)
 
-# Install for a project non-interactively (e.g., in a script)
-osrm_install(path_action = "project", quiet = TRUE)
+  # Install the default stable version and set PATH for this session
+  install_dir <- osrm_install(path_action = "session", quiet = TRUE)
 
-# Clean up the project's .Rprofile
-osrm_clear_path()
+  # Install for a project non-interactively (e.g., in a script)
+  osrm_install(path_action = "project", quiet = TRUE, force = TRUE)
+
+  # Clean up the project's .Rprofile and uninstall binaries
+  osrm_clear_path(quiet = TRUE)
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+}
 }
 }

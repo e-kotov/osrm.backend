@@ -18,8 +18,10 @@ Queries the GitHub API to get a list of all available version tags for the
 OSRM backend that have binaries for the current platform.
 }
 \examples{
-\dontrun{
-# Get all stable versions with binaries for this platform
-osrm_check_available_versions()
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  # Get all stable versions with binaries for this platform
+  osrm_check_available_versions()
+}
 }
 }

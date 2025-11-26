@@ -45,24 +45,38 @@ You can also stop a specific server by providing:
 }
 }
 \examples{
-\dontrun{
-# copy example OSM PBF into a temporary workspace to avoid polluting pkg data
-pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
-dir.create(osrm_dir, recursive = TRUE)
-tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
-file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
-graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
 
-srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
+  # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+  graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
 
-# Stop by passing the process object
-osrm_stop(srv)
+  srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
 
-# Or stop by port after the process is registered
-osrm_stop(port = 6000)
+  # Stop by passing the process object
+  osrm_stop(srv)
 
-unlink(osrm_dir, recursive = TRUE)
+  # Or stop by port after the process is registered
+  osrm_stop(port = 6000)
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
 }
 }
 \seealso{

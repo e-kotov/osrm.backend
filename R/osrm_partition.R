@@ -23,26 +23,40 @@
 #' }
 #'
 #' @examples
-#' \dontrun{
-#' # Prepare a small graph then partition it for the MLD pipeline
-#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
-#' dir.create(osrm_dir, recursive = TRUE)
-#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
-#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
-#' profile <- osrm_find_profile("car.lua")
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   install_dir <- osrm_install(
+#'     version = "latest",
+#'     path_action = "session",
+#'     quiet = TRUE
+#'   )
 #'
-#' extract_job <- osrm_extract(
-#'   input_osm = tmp_pbf,
-#'   profile = profile,
-#'   overwrite = TRUE,
-#'   threads = 1L
-#' )
+#'   # Prepare a small graph then partition it for the MLD pipeline
+#'   pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#'   osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#'   dir.create(osrm_dir, recursive = TRUE)
+#'   tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#'   file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#'   profile <- osrm_find_profile("car.lua")
 #'
-#' partition_job <- osrm_partition(extract_job, threads = 1L, verbose = TRUE)
-#' partition_job$osrm_job_artifact
+#'   extract_job <- osrm_extract(
+#'     input_osm = tmp_pbf,
+#'     profile = profile,
+#'     overwrite = TRUE,
+#'     threads = 1L
+#'   )
 #'
-#' unlink(osrm_dir, recursive = TRUE)
+#'   partition_job <- osrm_partition(extract_job, threads = 1L, verbose = TRUE)
+#'   partition_job$osrm_job_artifact
+#'
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#'   unlink(osrm_dir, recursive = TRUE)
+#' }
 #' }
 #'
 #' @export

@@ -12,9 +12,24 @@
 #'   `processx::run` result in `logs`.
 #' @export
 #' @examples
-#' \dontrun{
-#' # check which OSRM installation will be used
-#' osrm_which()
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   install_dir <- osrm_install(
+#'     version = "latest",
+#'     path_action = "session",
+#'     quiet = TRUE
+#'   )
+#'
+#'   # check which OSRM installation will be used
+#'   osrm_which()
+#'
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#' }
 #' }
 osrm_which <- function(quiet = FALSE) {
   osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")

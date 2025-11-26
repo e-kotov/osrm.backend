@@ -61,15 +61,26 @@
 #' @return The path to the installation directory.
 #' @export
 #' @examples
-#' \dontrun{
-#' # Install the default stable version and set PATH for this session
-#' osrm_install()
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   old <- setwd(tempdir())
+#'   on.exit(setwd(old), add = TRUE)
 #'
-#' # Install for a project non-interactively (e.g., in a script)
-#' osrm_install(path_action = "project", quiet = TRUE)
+#'   # Install the default stable version and set PATH for this session
+#'   install_dir <- osrm_install(path_action = "session", quiet = TRUE)
 #'
-#' # Clean up the project's .Rprofile
-#' osrm_clear_path()
+#'   # Install for a project non-interactively (e.g., in a script)
+#'   osrm_install(path_action = "project", quiet = TRUE, force = TRUE)
+#'
+#'   # Clean up the project's .Rprofile and uninstall binaries
+#'   osrm_clear_path(quiet = TRUE)
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#' }
 #' }
 osrm_install <- function(
   version = "latest",
@@ -370,9 +381,11 @@ osrm_install <- function(
 #' @return A string containing the latest version tag (e.g., `"v5.27.1"`).
 #' @export
 #' @examples
-#' \dontrun{
-#' # Get the latest stable version number of OSRM backend
-#' osrm_check_latest_version()
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   # Get the latest stable version number of OSRM backend
+#'   osrm_check_latest_version()
+#' }
 #' }
 osrm_check_latest_version <- function() {
   releases <- get_all_releases()
@@ -420,9 +433,11 @@ find_latest_pre_v6_release <- function(platform) {
 #' @return A character vector of available version tags.
 #' @export
 #' @examples
-#' \dontrun{
-#' # Get all stable versions with binaries for this platform
-#' osrm_check_available_versions()
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   # Get all stable versions with binaries for this platform
+#'   osrm_check_available_versions()
+#' }
 #' }
 osrm_check_available_versions <- function(prereleases = FALSE) {
   releases <- get_all_releases()
@@ -458,9 +473,21 @@ osrm_check_available_versions <- function(prereleases = FALSE) {
 #' @return `TRUE` if the file was modified, `FALSE` otherwise.
 #' @export
 #' @examples
-#' \dontrun{
-#' # Clean up the project's .Rprofile
-#' osrm_clear_path()
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   # Clean up a temporary project's .Rprofile
+#'   old <- setwd(tempdir())
+#'   on.exit(setwd(old), add = TRUE)
+#'   writeLines(
+#'     c(
+#'       "#added-by-r-pkg-osrm.backend",
+#'       'Sys.setenv(PATH = paste("dummy", Sys.getenv("PATH"), sep = .Platform$path.sep))'
+#'     ),
+#'     ".Rprofile"
+#'   )
+#'   osrm_clear_path(quiet = TRUE)
+#'   unlink(".Rprofile")
+#' }
 #' }
 osrm_clear_path <- function(quiet = FALSE) {
   r_profile_path <- file.path(getwd(), ".Rprofile")

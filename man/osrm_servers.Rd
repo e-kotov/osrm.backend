@@ -15,19 +15,33 @@ Returns a snapshot of servers registered by \code{\link[=osrm_start_server]{osrm
 You can stop one by passing its \code{id}, \code{port}, or \code{pid} to \code{\link[=osrm_stop]{osrm_stop()}}.
 }
 \examples{
-\dontrun{
-# copy example OSM PBF into a temporary workspace to avoid polluting pkg data
-pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
-dir.create(osrm_dir, recursive = TRUE)
-tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
-file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
-graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
 
-srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
-osrm_servers()
-osrm_stop(srv)
+  # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+  graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
 
-unlink(osrm_dir, recursive = TRUE)
+  srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
+  osrm_servers()
+  osrm_stop(srv)
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
 }
 }

@@ -6,6 +6,8 @@
 
 ## Test environment notes
 
+* Most examples are wrapped with `donttest{}`, as they require OSRM binaries.
+
 * Some tests use `testthat::with_mocked_bindings()` for object mocking, which
   requires testthat >= 3.2.0. These tests are automatically skipped on systems
   with older testthat versions (e.g., R oldrel on Windows). This ensures

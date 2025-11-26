@@ -17,8 +17,20 @@ Scans the \code{.Rprofile} file in the current project's root directory and
 removes any lines that were added by \code{osrm_install()} to modify the \code{PATH}.
 }
 \examples{
-\dontrun{
-# Clean up the project's .Rprofile
-osrm_clear_path()
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  # Clean up a temporary project's .Rprofile
+  old <- setwd(tempdir())
+  on.exit(setwd(old), add = TRUE)
+  writeLines(
+    c(
+      "#added-by-r-pkg-osrm.backend",
+      'Sys.setenv(PATH = paste("dummy", Sys.getenv("PATH"), sep = .Platform$path.sep))'
+    ),
+    ".Rprofile"
+  )
+  osrm_clear_path(quiet = TRUE)
+  unlink(".Rprofile")
+}
 }
 }

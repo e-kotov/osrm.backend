@@ -46,26 +46,40 @@
 #' @export
 #' @seealso [osrm_stop()], [osrm_start_server()] for manual server startup.
 #' @examples
-#' \dontrun{
-#' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
-#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
-#' dir.create(osrm_dir, recursive = TRUE)
-#' local_pbf <- file.path(osrm_dir, "cur.osm.pbf")
-#' file.copy(from = pbf_path, to = local_pbf, overwrite = TRUE)
+#' \donttest{
+#' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+#'   install_dir <- osrm_install(
+#'     version = "latest",
+#'     path_action = "session",
+#'     quiet = TRUE
+#'   )
 #'
-#' # Start the server with one command.
-#' # It will quietly install OSRM and prepare the graph if needed.
-#' osrm_process <- osrm_start(local_pbf)
+#'   # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+#'   pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#'   osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#'   dir.create(osrm_dir, recursive = TRUE)
+#'   local_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#'   file.copy(from = pbf_path, to = local_pbf, overwrite = TRUE)
 #'
-#' # Stop the server when done.
-#' osrm_stop()
+#'   # Start the server with one command.
+#'   # It will quietly install OSRM and prepare the graph if needed.
+#'   osrm_process <- osrm_start(local_pbf)
 #'
-#' # To see all backend logs during setup, use verbose = TRUE
-#' osrm_process_verbose <- osrm_start(local_pbf, verbose = TRUE)
-#' osrm_stop()
+#'   # Stop the server when done.
+#'   osrm_stop()
 #'
-#' unlink(osrm_dir, recursive = TRUE)
+#'   # To see all backend logs during setup, use verbose = TRUE
+#'   osrm_process_verbose <- osrm_start(local_pbf, verbose = TRUE)
+#'   osrm_stop()
+#'
+#'   osrm_uninstall(
+#'     dest_dir = install_dir,
+#'     clear_path = TRUE,
+#'     force = TRUE,
+#'     quiet = TRUE
+#'   )
+#'   unlink(osrm_dir, recursive = TRUE)
+#' }
 #' }
 osrm_start <- function(
   path,

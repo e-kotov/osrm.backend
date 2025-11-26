@@ -92,23 +92,37 @@ to produce the base \code{.osrm} graph, then prepares it for routing via
 either the MLD pipeline (\code{osrm-partition} + \code{osrm-customize}) or the CH pipeline (\code{osrm-contract}).
 }
 \examples{
-\dontrun{
-# Prepare a routing-ready graph with the default MLD pipeline
-pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
-dir.create(osrm_dir, recursive = TRUE)
-tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
-file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+\donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
 
-graph <- osrm_prepare_graph(
-  input_osm = tmp_pbf,
-  overwrite = TRUE,
-  threads = 1L,
-  algorithm = "mld"
-)
-graph$osrm_job_artifact
+  # Prepare a routing-ready graph with the default MLD pipeline
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
 
-unlink(osrm_dir, recursive = TRUE)
+  graph <- osrm_prepare_graph(
+    input_osm = tmp_pbf,
+    overwrite = TRUE,
+    threads = 1L,
+    algorithm = "mld"
+  )
+  graph$osrm_job_artifact
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
 }
 
 }
