@@ -22,6 +22,30 @@
 #'   \item{logs}{The \code{processx::run} result object.}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' # Partition then customize a graph for the MLD pipeline
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#' profile <- osrm_find_profile("car.lua")
+#'
+#' extract_job <- osrm_extract(
+#'   input_osm = tmp_pbf,
+#'   profile = profile,
+#'   overwrite = TRUE,
+#'   threads = 1L
+#' )
+#' partition_job <- osrm_partition(extract_job, threads = 1L)
+#'
+#' mld_graph <- osrm_customize(partition_job, threads = 1L, verbose = TRUE)
+#' mld_graph$osrm_job_artifact
+#'
+#' unlink(osrm_dir, recursive = TRUE)
+#' }
+#'
 #' @export
 osrm_customize <- function(
   input_osrm,

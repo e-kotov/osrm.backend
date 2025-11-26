@@ -7,6 +7,22 @@
 #'
 #' @return A data.frame with columns:
 #'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`.
+#' @examples
+#' \dontrun{
+#' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#' graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+#'
+#' srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
+#' osrm_servers()
+#' osrm_stop(srv)
+#'
+#' unlink(osrm_dir, recursive = TRUE)
+#' }
 #' @export
 osrm_servers <- function() {
   reg <- .osrm_state$registry
@@ -75,6 +91,26 @@ osrm_servers <- function() {
 #'
 #' @return A list with fields `id`, `pid`, `port`, `stopped` (logical).
 #' @export
+#' @examples
+#' \dontrun{
+#' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#' graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+#'
+#' srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
+#'
+#' # Stop by passing the process object
+#' osrm_stop(srv)
+#'
+#' # Or stop by port after the process is registered
+#' osrm_stop(port = 6000)
+#'
+#' unlink(osrm_dir, recursive = TRUE)
+#' }
 #' @seealso [osrm_start()], [osrm_servers()], [osrm_stop_all()]
 osrm_stop <- function(
   server = NULL,
@@ -242,6 +278,12 @@ osrm_stop <- function(
 #'
 #' @return The number of servers attempted.
 #' @export
+#' @examples
+#' \dontrun{
+#' # Stop any registered servers, regardless of how they were started
+#' stopped <- osrm_stop_all()
+#' stopped
+#' }
 osrm_stop_all <- function() {
   reg <- .osrm_state$registry
   if (!length(reg)) {

@@ -40,6 +40,26 @@
 #'     \code{extract}, \code{partition}/\code{contract}, and \code{customize} (if MLD).}
 #' }
 #'
+#' @examples
+#' \dontrun{
+#' # Prepare a routing-ready graph with the default MLD pipeline
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#'
+#' graph <- osrm_prepare_graph(
+#'   input_osm = tmp_pbf,
+#'   overwrite = TRUE,
+#'   threads = 1L,
+#'   algorithm = "mld"
+#' )
+#' graph$osrm_job_artifact
+#'
+#' unlink(osrm_dir, recursive = TRUE)
+#' }
+#'
 #' @export
 osrm_prepare_graph <- function(
   input_osm,

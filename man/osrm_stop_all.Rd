@@ -12,3 +12,10 @@ The number of servers attempted.
 \description{
 Stop all running OSRM servers started via this package
 }
+\examples{
+\dontrun{
+# Stop any registered servers, regardless of how they were started
+stopped <- osrm_stop_all()
+stopped
+}
+}

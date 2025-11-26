@@ -110,3 +110,31 @@ set the option to \code{NULL}:
 You can override the \code{osrm-routed} executable via
 \code{options(osrm.routed.exec = "/full/path/to/osrm-routed")}.
 }
+\examples{
+\dontrun{
+# Build a graph then launch an OSRM server on a custom port
+pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+dir.create(osrm_dir, recursive = TRUE)
+tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+
+graph <- osrm_prepare_graph(
+  input_osm = tmp_pbf,
+  overwrite = TRUE,
+  threads = 1L,
+  algorithm = "mld"
+)
+
+server <- osrm_start_server(
+  osrm_path = graph$osrm_job_artifact,
+  port = 6000,
+  threads = 1L
+)
+
+# Later, stop the server again
+osrm_stop(server)
+
+unlink(osrm_dir, recursive = TRUE)
+}
+}

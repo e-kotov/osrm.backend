@@ -47,13 +47,12 @@
 #' @seealso [osrm_stop()], [osrm_start_server()] for manual server startup.
 #' @examples
 #' \dontrun{
-#' # Get the path to the example OSM file included in the package
-#' pbf_file <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-#'
-#' # Create a temporary directory to work in
-#' temp_dir <- tempdir()
-#' file.copy(pbf_file, temp_dir)
-#' local_pbf <- file.path(temp_dir, "cur.osm.pbf")
+#' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' local_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = local_pbf, overwrite = TRUE)
 #'
 #' # Start the server with one command.
 #' # It will quietly install OSRM and prepare the graph if needed.
@@ -65,6 +64,8 @@
 #' # To see all backend logs during setup, use verbose = TRUE
 #' osrm_process_verbose <- osrm_start(local_pbf, verbose = TRUE)
 #' osrm_stop()
+#'
+#' unlink(osrm_dir, recursive = TRUE)
 #' }
 osrm_start <- function(
   path,

@@ -59,6 +59,30 @@ resolve_osrm_path <- function(input_path,
   input_path
 }
 
+#' Print summary for an `osrm_job` object
+#'
+#' Displays pipeline state, outputs, and next steps for an `osrm_job` returned
+#' by functions such as [osrm_extract()], [osrm_prepare_graph()], [osrm_partition()],
+#' or [osrm_contract()].
+#'
+#' @param x An `osrm_job` object.
+#' @param ... Passed to methods; currently ignored.
+#'
+#' @return Invisibly returns `x`.
+#' @examples
+#' \dontrun{
+#' # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+#' pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+#' osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+#' dir.create(osrm_dir, recursive = TRUE)
+#' tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+#' file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+#'
+#' job <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+#' print(job)
+#'
+#' unlink(osrm_dir, recursive = TRUE)
+#' }
 #' @export
 print.osrm_job <- function(x, ...) {
   cat("------------------------------------------------------\n")

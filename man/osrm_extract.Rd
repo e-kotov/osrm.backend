@@ -99,11 +99,11 @@ osrm_executable <- osrm_install(
  path_action = "session"
 )
 # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
-workspace <- tempdir()
-tmp_prefix <- file.path(workspace, paste0("osrm-example-", Sys.getpid()))
 pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
-tmp_pbf <- paste0(tmp_prefix, ".osm.pbf")
-file.copy(pbf_path, tmp_pbf, overwrite = TRUE)
+osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+dir.create(osrm_dir, recursive = TRUE)
+tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
 # Find the path to the profile first
 car_profile <- osrm_find_profile("car.lua")
 
@@ -117,6 +117,6 @@ result <- osrm_extract(
 # path to generated .osrm files (specifically, the .osrm.timestamp file)
 result$osrm_job_artifact
 # clean up the temporary workspace
-unlink(workspace, recursive = TRUE)
+unlink(osrm_dir, recursive = TRUE)
 }
 }
