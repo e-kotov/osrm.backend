@@ -17,6 +17,17 @@ authors:
   given-names: Egor
   email: kotov.egor@gmail.com
   orcid: https://orcid.org/0000-0001-6690-5345
+preferred-citation:
+  type: manual
+  title: Bindings for 'Open Source Routing Machine'
+  authors:
+  - family-names: Kotov
+    given-names: Egor
+    email: kotov.egor@gmail.com
+    orcid: https://orcid.org/0000-0001-6690-5345
+  year: '2025'
+  notes: R package version 0.1.0
+  url: https://github.com/e-kotov/osrm.backend
 repository-code: https://github.com/e-kotov/osrm.backend
 url: https://www.ekotov.pro/osrm.backend/
 contact:
@@ -30,6 +41,21 @@ keywords:
 - r
 - routing
 references:
+- type: article
+  title: 'osrm: Interface Between R and the OpenStreetMap-Based Routing Service OSRM'
+  authors:
+  - family-names: Giraud
+    given-names: Timothee
+  journal: Journal of Open Source Software
+  year: '2022'
+  month: '8'
+  publisher:
+    name: The Open Journal
+  volume: '7'
+  issue: '78'
+  doi: 10.21105/joss.04574
+  url: https://doi.org/10.21105/joss.04574
+  start: '4574'
 - type: software
   title: digest
   abstract: 'digest: Create Compact Hash Digests of R Objects'

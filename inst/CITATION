@@ -1,0 +1,43 @@
+bibentry(
+  header = "To cite the 'osrm.backend' package in publications, please use:",
+  key = "osrm.backend",
+  bibtype = "Manual",
+  title = "Bindings for 'Open Source Routing Machine'",
+  author = person(
+    "Egor",
+    "Kotov",
+    ,
+    "kotov.egor@gmail.com",
+    role = c("aut", "cre", "cph"),
+    comment = c(ORCID = "0000-0001-6690-5345")
+  ),
+  year = format(Sys.Date(), "%Y"),
+  note = paste("R package version", utils::packageVersion("osrm.backend")),
+  url = "https://github.com/e-kotov/osrm.backend"
+)
+
+
+bibentry(
+  header = "\nTo cite package 'osrm' in publications, please use:",
+  bibtype = "Article",
+  title = "{osrm: Interface Between R and the OpenStreetMap-Based Routing Service OSRM}",
+  author = person(
+    "Timothee",
+    "Giraud"
+  ),
+  journal = "Journal of Open Source Software",
+  year = "2022",
+  month = "aug",
+  publisher = "The Open Journal",
+  volume = "7",
+  number = "78",
+  pages = "4574",
+  doi = "10.21105/joss.04574",
+  url = "https://doi.org/10.21105/joss.04574",
+  textVersion = paste(
+    "Giraud, T. (2022). osrm: Interface Between R and the",
+    "OpenStreetMap-Based Routing Service OSRM.",
+    "Journal of Open Source Software, 7(78), 4574,",
+    "https://doi.org/10.21105/joss.04574"
+  )
+)
