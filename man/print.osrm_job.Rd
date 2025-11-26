@@ -48,3 +48,4 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
 }
 }
 }
+\keyword{internal}

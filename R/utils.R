@@ -97,7 +97,7 @@ resolve_osrm_path <- function(input_path,
 #'   unlink(osrm_dir, recursive = TRUE)
 #' }
 #' }
-#' @export
+#' @keywords internal
 print.osrm_job <- function(x, ...) {
   cat("------------------------------------------------------\n")
   cat("OSRM Job Completed\n")
