@@ -166,9 +166,9 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=ps"
     },
-    "SystemRequirements": "OSRM binaries (downloaded automatically or manually\n    installed)"
+    "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "836.946KB",
+  "fileSize": "2236.101KB",
   "readme": "https://github.com/e-kotov/osrm.backend/blob/main/README.md",
   "contIntegration": ["https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml", "https://github.com/e-kotov/osrm.backend/actions?query=workflow%3Apkgcheck", "https://app.codecov.io/gh/e-kotov/osrm.backend"],
   "developmentStatus": "https://lifecycle.r-lib.org/articles/stages.html#experimental",

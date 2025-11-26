@@ -29,7 +29,11 @@ test_that("CH pipeline: extract -> contract works correctly", {
   # Test the pipeline
   result <- with_mocked_bindings(
     {
-      extract_result <- osrm_extract(input_osm_path, quiet = TRUE)
+      extract_result <- osrm_extract(
+        input_osm_path,
+        profile = "car.lua",
+        quiet = TRUE
+      )
       osrm_contract(extract_result, quiet = TRUE)
     },
     run = mock_run,
@@ -73,7 +77,11 @@ test_that("MLD pipeline: extract -> partition -> customize works correctly", {
 
   result <- with_mocked_bindings(
     {
-      extract_result <- osrm_extract(input_osm_path, quiet = TRUE)
+      extract_result <- osrm_extract(
+        input_osm_path,
+        profile = "car.lua",
+        quiet = TRUE
+      )
       partition_result <- osrm_partition(extract_result, quiet = TRUE)
       osrm_customize(partition_result, quiet = TRUE)
     },
@@ -115,7 +123,11 @@ test_that("Mixed pipelines fail with helpful errors: extract -> partition -> con
   expect_error(
     with_mocked_bindings(
       {
-        extract_result <- osrm_extract(input_osm_path, quiet = TRUE)
+        extract_result <- osrm_extract(
+          input_osm_path,
+          profile = "car.lua",
+          quiet = TRUE
+        )
         partition_result <- osrm_partition(extract_result, quiet = TRUE)
         osrm_contract(partition_result, quiet = TRUE)
       },
@@ -179,7 +191,11 @@ test_that("Mixed pipelines fail with helpful errors: extract -> customize (witho
   expect_error(
     with_mocked_bindings(
       {
-        extract_result <- osrm_extract(input_osm_path, quiet = TRUE)
+        extract_result <- osrm_extract(
+          input_osm_path,
+          profile = "car.lua",
+          quiet = TRUE
+        )
         osrm_customize(extract_result, quiet = TRUE)
       },
       run = mock_run,
