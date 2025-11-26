@@ -15,7 +15,7 @@ version tag for the OSRM backend that has binaries available for the current pla
 }
 \examples{
 \dontrun{
-latest_v <- osrm_check_latest_version()
-print(latest_v)
+# Get the latest stable version number of OSRM backend
+osrm_check_latest_version()
 }
 }

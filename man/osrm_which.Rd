@@ -22,3 +22,9 @@ Resolves the \code{osrm-routed} executable available on the current \code{PATH}
 containing the executable together with the backend version reported by
 \code{osrm-routed} so you know what will be used in the current session.
 }
+\examples{
+\dontrun{
+# check which OSRM installation will be used
+osrm_which()
+}
+}

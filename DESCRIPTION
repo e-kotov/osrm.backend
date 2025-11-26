@@ -31,5 +31,4 @@ Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-SystemRequirements: OSRM binaries (downloaded automatically or manually
-    installed)
+SystemRequirements: OSRM backend binaries (>= v5.27.0) <https://github.com/Project-OSRM/osrm-backend>; package downloads binaries automatically if not found

@@ -371,8 +371,8 @@ osrm_install <- function(
 #' @export
 #' @examples
 #' \dontrun{
-#' latest_v <- osrm_check_latest_version()
-#' print(latest_v)
+#' # Get the latest stable version number of OSRM backend
+#' osrm_check_latest_version()
 #' }
 osrm_check_latest_version <- function() {
   releases <- get_all_releases()
@@ -422,12 +422,7 @@ find_latest_pre_v6_release <- function(platform) {
 #' @examples
 #' \dontrun{
 #' # Get all stable versions with binaries for this platform
-#' stable_versions <- osrm_check_available_versions()
-#' head(stable_versions)
-#'
-#' # Get all versions, including pre-releases, with binaries
-#' all_versions <- osrm_check_available_versions(prereleases = TRUE)
-#' head(all_versions)
+#' osrm_check_available_versions()
 #' }
 osrm_check_available_versions <- function(prereleases = FALSE) {
   releases <- get_all_releases()
@@ -1695,8 +1690,16 @@ set_path_session <- function(dir, quiet = FALSE) {
   # This handles issues with mixed separators and 8.3 short names
   if (.Platform$OS.type == "windows") {
     normalized_dir <- normalizePath(dir, mustWork = FALSE, winslash = "/")
-    normalized_paths <- normalizePath(path_elements, mustWork = FALSE, winslash = "/")
-    cache_root <- normalizePath(osrm_default_install_root(), mustWork = FALSE, winslash = "/")
+    normalized_paths <- normalizePath(
+      path_elements,
+      mustWork = FALSE,
+      winslash = "/"
+    )
+    cache_root <- normalizePath(
+      osrm_default_install_root(),
+      mustWork = FALSE,
+      winslash = "/"
+    )
     # Use "/" for cache_root_prefix to match the normalized paths
     cache_root_prefix <- paste0(cache_root, "/")
   } else {
@@ -1717,21 +1720,25 @@ set_path_session <- function(dir, quiet = FALSE) {
 
   # Remove any paths that point to other versions in our cache directory
   # but keep system installations (homebrew, manual installs, etc.)
-  paths_to_keep <- vapply(seq_along(path_elements), function(i) {
-    norm_path <- normalized_paths[i]
-    # Keep this path if:
-    # 1. It's the directory we're installing to, OR
-    # 2. It's not under our cache root (i.e., it's a system/homebrew install)
-    if (paths_equal(norm_path, normalized_dir)) {
-      return(TRUE)
-    }
-    # On Windows, use case-insensitive comparison for path prefix check
-    if (.Platform$OS.type == "windows") {
-      !startsWith(tolower(norm_path), tolower(cache_root_prefix))
-    } else {
-      !startsWith(norm_path, cache_root_prefix)
-    }
-  }, logical(1))
+  paths_to_keep <- vapply(
+    seq_along(path_elements),
+    function(i) {
+      norm_path <- normalized_paths[i]
+      # Keep this path if:
+      # 1. It's the directory we're installing to, OR
+      # 2. It's not under our cache root (i.e., it's a system/homebrew install)
+      if (paths_equal(norm_path, normalized_dir)) {
+        return(TRUE)
+      }
+      # On Windows, use case-insensitive comparison for path prefix check
+      if (.Platform$OS.type == "windows") {
+        !startsWith(tolower(norm_path), tolower(cache_root_prefix))
+      } else {
+        !startsWith(norm_path, cache_root_prefix)
+      }
+    },
+    logical(1)
+  )
 
   filtered_paths <- path_elements[paths_to_keep]
 
@@ -1746,7 +1753,12 @@ set_path_session <- function(dir, quiet = FALSE) {
   if (!first_path_matches) {
     # Remove the dir if it's already present (to avoid duplicates)
     kept_normalized <- normalized_paths[paths_to_keep]
-    paths_not_matching <- !vapply(kept_normalized, paths_equal, logical(1), path2 = normalized_dir)
+    paths_not_matching <- !vapply(
+      kept_normalized,
+      paths_equal,
+      logical(1),
+      path2 = normalized_dir
+    )
     filtered_paths <- filtered_paths[paths_not_matching]
     new_path <- paste(c(normalized_dir, filtered_paths), collapse = path_sep)
     Sys.setenv(PATH = new_path)
@@ -1788,15 +1800,19 @@ set_path_project <- function(dir, quiet = FALSE) {
     has_tag <- grepl(comment_tag, lines, fixed = TRUE)
 
     if (any(has_tag)) {
-      existing_dirs <- vapply(lines[has_tag], function(line) {
-        match <- regmatches(line, regexec('paste\\("([^"]+)"', line))
-        if (length(match[[1]]) >= 2) {
-          # Normalize with forward slashes for consistent comparison
-          normalizePath(match[[1]][2], mustWork = FALSE, winslash = "/")
-        } else {
-          ""
-        }
-      }, character(1))
+      existing_dirs <- vapply(
+        lines[has_tag],
+        function(line) {
+          match <- regmatches(line, regexec('paste\\("([^"]+)"', line))
+          if (length(match[[1]]) >= 2) {
+            # Normalize with forward slashes for consistent comparison
+            normalizePath(match[[1]][2], mustWork = FALSE, winslash = "/")
+          } else {
+            ""
+          }
+        },
+        character(1)
+      )
 
       # Case-insensitive comparison on Windows
       is_same_path <- if (.Platform$OS.type == "windows") {
@@ -1807,7 +1823,9 @@ set_path_project <- function(dir, quiet = FALSE) {
 
       if (any(is_same_path)) {
         if (!quiet) {
-          message(".Rprofile already contains this OSRM path configuration. No changes made.")
+          message(
+            ".Rprofile already contains this OSRM path configuration. No changes made."
+          )
         }
         return(invisible())
       }

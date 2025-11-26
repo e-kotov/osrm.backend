@@ -11,11 +11,12 @@
 #'   vector of non-empty lines emitted by `osrm-routed --version`), and the raw
 #'   `processx::run` result in `logs`.
 #' @export
+#' @examples
+#' \dontrun{
+#' # check which OSRM installation will be used
+#' osrm_which()
+#' }
 osrm_which <- function(quiet = FALSE) {
-  if (!requireNamespace("processx", quietly = TRUE)) {
-    stop("'processx' package is required for osrm_which", call. = FALSE)
-  }
-
   osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
   resolved <- Sys.which(osrm_exec)
 

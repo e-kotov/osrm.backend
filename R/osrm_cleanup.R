@@ -38,10 +38,12 @@
 #' osrm_cleanup("/path/to/data.osm.pbf")
 #' osrm_cleanup("/path/to/data.osrm.hsgr")
 #' }
-osrm_cleanup <- function(path,
-                         keep_osm = TRUE,
-                         dry_run = FALSE,
-                         quiet = FALSE) {
+osrm_cleanup <- function(
+  path,
+  keep_osm = TRUE,
+  dry_run = FALSE,
+  quiet = FALSE
+) {
   if (!is.character(path) || length(path) != 1) {
     stop("'path' must be a single string", call. = FALSE)
   }
@@ -84,12 +86,18 @@ osrm_cleanup <- function(path,
 
     # Extract base name from file
     if (grepl("\\.osm(\\.pbf|\\.bz2)?$", file_name, ignore.case = TRUE)) {
-      base_name <- sub("\\.osm(\\.pbf|\\.bz2)?$", "", file_name, ignore.case = TRUE)
+      base_name <- sub(
+        "\\.osm(\\.pbf|\\.bz2)?$",
+        "",
+        file_name,
+        ignore.case = TRUE
+      )
     } else if (grepl("\\.osrm\\.", file_name)) {
       base_name <- sub("\\.osrm\\..*$", "", file_name)
     } else {
       stop(
-        "Cannot determine base name from file: ", file_name,
+        "Cannot determine base name from file: ",
+        file_name,
         "\nExpected .osm.pbf, .osm, .osm.bz2, or .osrm.* file",
         call. = FALSE
       )
@@ -110,7 +118,11 @@ osrm_cleanup <- function(path,
       gsub("\\.", "\\\\.", base_name),
       "\\.osm(\\.pbf|\\.bz2)?$"
     )
-    osm_files <- all_files[grepl(osm_pattern, basename(all_files), ignore.case = TRUE)]
+    osm_files <- all_files[grepl(
+      osm_pattern,
+      basename(all_files),
+      ignore.case = TRUE
+    )]
     osrm_files_to_remove <- c(osrm_files_to_remove, osm_files)
   }
 
@@ -127,15 +139,15 @@ osrm_cleanup <- function(path,
   # Display what will be removed
   if (!quiet || dry_run) {
     if (dry_run) {
-      cat("DRY RUN: Would remove the following files:\n")
+      message("DRY RUN: Would remove the following files:")
     } else {
-      cat("Removing the following OSRM files:\n")
+      message("Removing the following OSRM files:")
     }
     for (f in osrm_files_to_remove) {
-      cat("  -", basename(f), "\n")
+      message("  - ", basename(f))
     }
-    cat("\nDirectory:", dir_path, "\n")
-    cat("Total files:", length(osrm_files_to_remove), "\n")
+    message("\nDirectory: ", dir_path)
+    message("Total files: ", length(osrm_files_to_remove))
   }
 
   # Actually remove files (unless dry run)
@@ -145,14 +157,16 @@ osrm_cleanup <- function(path,
 
     if (length(failed) > 0) {
       warning(
-        "Failed to remove ", length(failed), " file(s):\n  ",
+        "Failed to remove ",
+        length(failed),
+        " file(s):\n  ",
         paste(basename(failed), collapse = ", "),
         call. = FALSE
       )
     }
 
     if (!quiet) {
-      cat("\nSuccessfully removed", sum(removed), "file(s).\n")
+      message("\nSuccessfully removed ", sum(removed), " file(s).")
     }
 
     return(invisible(osrm_files_to_remove[removed]))

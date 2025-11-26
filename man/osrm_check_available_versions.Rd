@@ -20,11 +20,6 @@ OSRM backend that have binaries for the current platform.
 \examples{
 \dontrun{
 # Get all stable versions with binaries for this platform
-stable_versions <- osrm_check_available_versions()
-head(stable_versions)
-
-# Get all versions, including pre-releases, with binaries
-all_versions <- osrm_check_available_versions(prereleases = TRUE)
-head(all_versions)
+osrm_check_available_versions()
 }
 }

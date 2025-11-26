@@ -19,3 +19,4 @@
 ^CITATION\.cff$
 ^codemeta\.json$
 ^inst/schemaorg.json$
+^cran-cookbook$
