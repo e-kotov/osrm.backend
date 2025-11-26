@@ -151,3 +151,40 @@ An object of class `osrm_job` with the following elements:
   [`processx::run`](http://processx.r-lib.org/reference/run.md) results
   for each stage: `extract`, `partition`/`contract`, and `customize` (if
   MLD).
+
+## Examples
+
+``` r
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
+
+  # Prepare a routing-ready graph with the default MLD pipeline
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+
+  graph <- osrm_prepare_graph(
+    input_osm = tmp_pbf,
+    overwrite = TRUE,
+    threads = 1L,
+    algorithm = "mld"
+  )
+  graph$osrm_job_artifact
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
+# }
+```

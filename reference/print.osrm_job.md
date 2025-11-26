@@ -1,22 +1,33 @@
-# List OSRM servers started via this package
+# Print summary for an `osrm_job` object
 
-Returns a snapshot of servers registered by
-[`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md)
+Displays pipeline state, outputs, and next steps for an `osrm_job`
+returned by functions such as
+[`osrm_extract()`](https://www.ekotov.pro/osrm.backend/reference/osrm_extract.md),
+[`osrm_prepare_graph()`](https://www.ekotov.pro/osrm.backend/reference/osrm_prepare_graph.md),
+[`osrm_partition()`](https://www.ekotov.pro/osrm.backend/reference/osrm_partition.md),
 or
-[`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md).
-You can stop one by passing its `id`, `port`, or `pid` to
-[`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md).
+[`osrm_contract()`](https://www.ekotov.pro/osrm.backend/reference/osrm_contract.md).
 
 ## Usage
 
 ``` r
-osrm_servers()
+# S3 method for class 'osrm_job'
+print(x, ...)
 ```
+
+## Arguments
+
+- x:
+
+  An `osrm_job` object.
+
+- ...:
+
+  Passed to methods; currently ignored.
 
 ## Value
 
-A data.frame with columns: `id`, `pid`, `port`, `algorithm`,
-`started_at`, `alive`, `has_handle`.
+Invisibly returns `x`.
 
 ## Examples
 
@@ -35,11 +46,9 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   dir.create(osrm_dir, recursive = TRUE)
   tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
   file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
-  graph <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
 
-  srv <- osrm_start_server(graph$osrm_job_artifact, port = 6000, threads = 1L)
-  osrm_servers()
-  osrm_stop(srv)
+  job <- osrm_prepare_graph(tmp_pbf, overwrite = TRUE, threads = 1L)
+  print(job)
 
   osrm_uninstall(
     dest_dir = install_dir,

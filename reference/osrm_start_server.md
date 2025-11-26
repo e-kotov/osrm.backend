@@ -160,3 +160,48 @@ To redirect the server's output to one or more files, you can set the
 
 You can override the `osrm-routed` executable via
 `options(osrm.routed.exec = "/full/path/to/osrm-routed")`.
+
+## Examples
+
+``` r
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
+
+  # Build a graph then launch an OSRM server on a custom port
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  tmp_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = tmp_pbf, overwrite = TRUE)
+
+  graph <- osrm_prepare_graph(
+    input_osm = tmp_pbf,
+    overwrite = TRUE,
+    threads = 1L,
+    algorithm = "mld"
+  )
+
+  server <- osrm_start_server(
+    osrm_path = graph$osrm_job_artifact,
+    port = 6000,
+    threads = 1L
+  )
+
+  # Later, stop the server again
+  osrm_stop(server)
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
+# }
+```

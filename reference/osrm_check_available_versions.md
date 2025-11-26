@@ -23,8 +23,10 @@ A character vector of available version tags.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Get all stable versions with binaries for this platform
-osrm_check_available_versions()
-} # }
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  # Get all stable versions with binaries for this platform
+  osrm_check_available_versions()
+}
+# }
 ```

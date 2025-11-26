@@ -32,8 +32,23 @@ non-empty lines emitted by `osrm-routed --version`), and the raw
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# check which OSRM installation will be used
-osrm_which()
-} # }
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
+
+  # check which OSRM installation will be used
+  osrm_which()
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+}
+# }
 ```

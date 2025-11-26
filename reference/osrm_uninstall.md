@@ -59,20 +59,21 @@ otherwise.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Uninstall OSRM and clear .Rprofile (will ask for confirmation)
-osrm_uninstall()
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  # Install OSRM temporarily
+  install_dir <- osrm_install(path_action = "session", quiet = TRUE)
 
-# Only uninstall binaries, leave .Rprofile untouched
-osrm_uninstall(clear_path = FALSE)
+  # Uninstall that specific version and clear PATH changes
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
 
-# Remove all OSRM installations in user R cache (will prompt for confirmation)
-osrm_uninstall(all = TRUE)
-
-# Remove all OSRM installations in user R cache without any prompts
-osrm_uninstall(all = TRUE, force = TRUE)
-
-# Non-interactive uninstall of specific version
-osrm_uninstall(dest_dir = "path/to/installation", force = TRUE, quiet = TRUE)
-} # }
+  # If multiple installs exist, remove them all
+  osrm_uninstall(all = TRUE, force = TRUE, quiet = TRUE)
+}
+# }
 ```

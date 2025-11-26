@@ -17,8 +17,10 @@ A string containing the latest version tag (e.g., `"v5.27.1"`).
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Get the latest stable version number of OSRM backend
-osrm_check_latest_version()
-} # }
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  # Get the latest stable version number of OSRM backend
+  osrm_check_latest_version()
+}
+# }
 ```

@@ -99,24 +99,39 @@ for manual server startup.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
-# Get the path to the example OSM file included in the package
-pbf_file <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+# \donttest{
+if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
+  install_dir <- osrm_install(
+    version = "latest",
+    path_action = "session",
+    quiet = TRUE
+  )
 
-# Create a temporary directory to work in
-temp_dir <- tempdir()
-file.copy(pbf_file, temp_dir)
-local_pbf <- file.path(temp_dir, "cur.osm.pbf")
+  # copy example OSM PBF into a temporary workspace to avoid polluting pkg data
+  pbf_path <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
+  osrm_dir <- file.path(tempdir(), paste0("osrm-", Sys.getpid()))
+  dir.create(osrm_dir, recursive = TRUE)
+  local_pbf <- file.path(osrm_dir, "cur.osm.pbf")
+  file.copy(from = pbf_path, to = local_pbf, overwrite = TRUE)
 
-# Start the server with one command.
-# It will quietly install OSRM and prepare the graph if needed.
-osrm_process <- osrm_start(local_pbf)
+  # Start the server with one command.
+  # It will quietly install OSRM and prepare the graph if needed.
+  osrm_process <- osrm_start(local_pbf)
 
-# Stop the server when done.
-osrm_stop()
+  # Stop the server when done.
+  osrm_stop()
 
-# To see all backend logs during setup, use verbose = TRUE
-osrm_process_verbose <- osrm_start(local_pbf, verbose = TRUE)
-osrm_stop()
-} # }
+  # To see all backend logs during setup, use verbose = TRUE
+  osrm_process_verbose <- osrm_start(local_pbf, verbose = TRUE)
+  osrm_stop()
+
+  osrm_uninstall(
+    dest_dir = install_dir,
+    clear_path = TRUE,
+    force = TRUE,
+    quiet = TRUE
+  )
+  unlink(osrm_dir, recursive = TRUE)
+}
+# }
 ```
