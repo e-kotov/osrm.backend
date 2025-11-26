@@ -20,3 +20,4 @@
 ^codemeta\.json$
 ^inst/schemaorg.json$
 ^cran-cookbook$
+^CRAN-SUBMISSION$
