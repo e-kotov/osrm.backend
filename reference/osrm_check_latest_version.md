@@ -18,7 +18,7 @@ A string containing the latest version tag (e.g., `"v5.27.1"`).
 
 ``` r
 if (FALSE) { # \dontrun{
-latest_v <- osrm_check_latest_version()
-print(latest_v)
+# Get the latest stable version number of OSRM backend
+osrm_check_latest_version()
 } # }
 ```

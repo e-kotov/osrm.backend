@@ -28,3 +28,12 @@ A list with components `executable` (full path to `osrm-routed`),
 non-empty lines emitted by `osrm-routed --version`), and the raw
 [`processx::run`](http://processx.r-lib.org/reference/run.md) result in
 `logs`.
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+# check which OSRM installation will be used
+osrm_which()
+} # }
+```
