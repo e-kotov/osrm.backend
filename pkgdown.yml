@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   osrm-backend: osrm-backend.html
-last_built: 2025-11-26T15:10Z
+last_built: 2025-11-28T13:44Z
 urls:
   reference: https://www.ekotov.pro/osrm.backend/reference
   article: https://www.ekotov.pro/osrm.backend/articles

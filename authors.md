@@ -10,14 +10,13 @@
 Source:
 [`inst/CITATION`](https://github.com/e-kotov/osrm.backend/blob/main/inst/CITATION)
 
-Kotov E (2025). *Bindings for 'Open Source Routing Machine'*. R package
-version 0.1.0, <https://github.com/e-kotov/osrm.backend>.
+Kotov E (2025). *Bindings for 'Open Source Routing Machine'*.
+<https://github.com/e-kotov/osrm.backend>.
 
     @Manual{osrm.backend,
       title = {Bindings for 'Open Source Routing Machine'},
       author = {Egor Kotov},
       year = {2025},
-      note = {R package version 0.1.0},
       url = {https://github.com/e-kotov/osrm.backend},
     }
 
