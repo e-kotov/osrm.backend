@@ -26,7 +26,6 @@ preferred-citation:
     email: kotov.egor@gmail.com
     orcid: https://orcid.org/0000-0001-6690-5345
   year: '2025'
-  notes: R package version 0.1.0
   url: https://github.com/e-kotov/osrm.backend
 repository-code: https://github.com/e-kotov/osrm.backend
 url: https://www.ekotov.pro/osrm.backend/

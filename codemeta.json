@@ -168,7 +168,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "2261.247KB",
+  "fileSize": "2261.153KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
@@ -183,8 +183,7 @@
         }
       ],
       "name": "Bindings for 'Open Source Routing Machine'",
-      "url": "https://github.com/e-kotov/osrm.backend",
-      "description": "R package version 0.1.0"
+      "url": "https://github.com/e-kotov/osrm.backend"
     },
     {
       "@type": "ScholarlyArticle",
