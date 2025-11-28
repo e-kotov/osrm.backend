@@ -11,8 +11,7 @@ bibentry(
     role = c("aut", "cre", "cph"),
     comment = c(ORCID = "0000-0001-6690-5345")
   ),
-  year = format(Sys.Date(), "%Y"),
-  note = paste("R package version", utils::packageVersion("osrm.backend")),
+  year = "2025",
   url = "https://github.com/e-kotov/osrm.backend"
 )
 
