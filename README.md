@@ -10,12 +10,21 @@
 experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
 [![CRAN
 status](https://www.r-pkg.org/badges/version/osrm.backend)](https://CRAN.R-project.org/package=osrm.backend)
-[![osrm.backend status
+<a href="https://CRAN.R-project.org/package=osrm.backend"
+target="_blank"><img
+src="https://cranlogs.r-pkg.org/badges/grand-total/osrm.backend?color=blue"
+alt="CRAN/METACRAN Total downloads" /></a>
+<a href="https://CRAN.R-project.org/package=osrm.backend"
+target="_blank"><img
+src="https://cranlogs.r-pkg.org/badges/osrm.backend?color=blue"
+alt="CRAN/METACRAN Downloads per month" /></a> [![osrm.backend status
 badge](https://e-kotov.r-universe.dev/osrm.backend/badges/version)](https://e-kotov.r-universe.dev/osrm.backend)
 [![R-CMD-check](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml)
 [![pkgcheck](https://github.com/e-kotov/osrm.backend/workflows/pkgcheck/badge.svg)](https://github.com/e-kotov/osrm.backend/actions?query=workflow%3Apkgcheck)
 [![Codecov test
 coverage](https://codecov.io/gh/e-kotov/osrm.backend/graph/badge.svg)](https://app.codecov.io/gh/e-kotov/osrm.backend)
+
+[![DOI](https://zenodo.org/badge/DOI/10.32614/CRAN.package.osrm.backend.svg)](https://doi.org/10.32614/CRAN.package.osrm.backend)
 <!-- badges: end -->
 
 ![](https://www.ekotov.pro/osrm.backend/reference/figures/card.png)
