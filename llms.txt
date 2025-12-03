@@ -1,5 +1,7 @@
 # osrm.backend
 
+[![DOI](https://zenodo.org/badge/DOI/10.32614/CRAN.package.osrm.backend.svg)](https://doi.org/10.32614/CRAN.package.osrm.backend)
+
 ![](https://www.ekotov.pro/osrm.backend/reference/figures/card.png)
 
 The goal of `osrm.backend` is to be a companion to
