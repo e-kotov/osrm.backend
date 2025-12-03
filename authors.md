@@ -8,7 +8,7 @@
 ## Citation
 
 Source:
-[`inst/CITATION`](https://github.com/e-kotov/osrm.backend/blob/main/inst/CITATION)
+[`inst/CITATION`](https://github.com/e-kotov/osrm.backend/blob/v0.1.0/inst/CITATION)
 
 Kotov E (2025). *Bindings for 'Open Source Routing Machine'*.
 <https://github.com/e-kotov/osrm.backend>.
