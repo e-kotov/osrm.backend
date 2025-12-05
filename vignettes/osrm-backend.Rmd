@@ -8,7 +8,6 @@ vignette: >
 ---
 
 ```{r}
-#| label: setup
 knitr::opts_chunk$set(eval = FALSE)
 library(osrm.backend)
 library(osrm)
