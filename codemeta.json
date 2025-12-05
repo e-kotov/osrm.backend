@@ -4,17 +4,23 @@
   "identifier": "osrm.backend",
   "description": "Install and control 'Open Source Routing Machine' ('OSRM') backend executables to prepare routing data and run/stop a local 'OSRM' server. For computations with the running server use the 'osrm' R package (<https://cran.r-project.org/package=osrm>).",
   "name": "osrm.backend: Bindings for 'Open Source Routing Machine'",
-  "relatedLink": "https://www.ekotov.pro/osrm.backend/",
+  "relatedLink": ["https://www.ekotov.pro/osrm.backend/", "https://CRAN.R-project.org/package=osrm.backend"],
   "codeRepository": "https://github.com/e-kotov/osrm.backend",
   "issueTracker": "https://github.com/e-kotov/osrm.backend/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.1.0",
+  "version": "0.1.0.9000",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
     "url": "https://r-project.org"
   },
   "runtimePlatform": "R version 4.5.2 (2025-10-31)",
+  "provider": {
+    "@id": "https://cran.r-project.org",
+    "@type": "Organization",
+    "name": "Comprehensive R Archive Network (CRAN)",
+    "url": "https://cran.r-project.org"
+  },
   "author": [
     {
       "@type": "Person",
@@ -69,15 +75,15 @@
     },
     {
       "@type": "SoftwareApplication",
-      "identifier": "quarto",
-      "name": "quarto",
+      "identifier": "rmarkdown",
+      "name": "rmarkdown",
       "provider": {
         "@id": "https://cran.r-project.org",
         "@type": "Organization",
         "name": "Comprehensive R Archive Network (CRAN)",
         "url": "https://cran.r-project.org"
       },
-      "sameAs": "https://CRAN.R-project.org/package=quarto"
+      "sameAs": "https://CRAN.R-project.org/package=rmarkdown"
     },
     {
       "@type": "SoftwareApplication",
@@ -103,6 +109,18 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=testthat"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "tibble",
+      "name": "tibble",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=tibble"
     }
   ],
   "softwareRequirements": {
@@ -168,7 +186,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "2261.153KB",
+  "fileSize": "2260.686KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
@@ -183,7 +201,10 @@
         }
       ],
       "name": "Bindings for 'Open Source Routing Machine'",
-      "url": "https://github.com/e-kotov/osrm.backend"
+      "identifier": "10.32614/CRAN.package.osrm.backend",
+      "url": "https://github.com/e-kotov/osrm.backend",
+      "@id": "https://doi.org/10.32614/CRAN.package.osrm.backend",
+      "sameAs": "https://doi.org/10.32614/CRAN.package.osrm.backend"
     },
     {
       "@type": "ScholarlyArticle",

@@ -18,14 +18,15 @@ Imports:
     jsonlite,
     processx,
     ps
-Suggests: 
+Suggests:
     knitr,
     osrm,
-    quarto,
+    rmarkdown,
     sf,
-    testthat (>= 3.0.0)
-VignetteBuilder: 
-    quarto
+    testthat (>= 3.0.0),
+    tibble
+VignetteBuilder:
+    knitr
 Config/testthat/edition: 3
 Encoding: UTF-8
 Language: en

@@ -1,16 +1,10 @@
 ---
 title: "Quick Start: Install OSRM and calculate routes"
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{Quick Start: Install OSRM and calculate routes}
-  %\VignetteEngine{quarto::html}
+  %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
-execute:
-  eval: false
-format:
-  html:
-    toc: true
-    toc-depth: 2
-    code-overflow: wrap
 ---
 
 ```{r}
@@ -40,17 +34,15 @@ Start the server with `osrm_start()` function pointing to the temporary director
 osrm_start(osrm_temp_dir, verbose = TRUE)
 ```
 
-::: callout-tip
-You can check if server is running with `osrm_servers()`:
-```
-# A tibble: 1 × 7
-  id                                   pid  port algorithm started_at          alive has_handle
-  <chr>                              <int> <int> <chr>     <dttm>              <lgl> <lgl>     
-1 osrm-28034-5001-20251103122904.133 28034  5001 MLD       2025-11-03 00:00:00 TRUE  TRUE      
-```
-
-You can kill the server with `osrm_stop()` or `osrm_stop_all()` if you have started several servers.
-:::
+> **Tip:** You can check if server is running with `osrm_servers()`:
+> ```
+> # A tibble: 1 × 7
+>   id                                   pid  port algorithm started_at          alive has_handle
+>   <chr>                              <int> <int> <chr>     <dttm>              <lgl> <lgl>
+> 1 osrm-28034-5001-20251103122904.133 28034  5001 MLD       2025-11-03 00:00:00 TRUE  TRUE
+> ```
+>
+> You can kill the server with `osrm_stop()` or `osrm_stop_all()` if you have started several servers.
 
 # Load spatial data
 
