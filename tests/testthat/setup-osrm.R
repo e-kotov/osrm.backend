@@ -2,6 +2,11 @@
 # Windows-specific extraction issues resurface.
 Sys.setenv(OSRM_BACKEND_ALLOW_TAR_WARNINGS = "true")
 
+# Define a temporary path for the OSRM binary to avoid writing to cache directories
+# during CRAN checks (which disallows modifications to home directories)
+test_osrm_path <- file.path(tempdir(), "osrm_bin_test")
+dir.create(test_osrm_path, showWarnings = FALSE, recursive = TRUE)
+
 # Ensure OSRM backend binaries and profiles are available before tests run.
 # We'll attempt to install them once if they are missing. If installation fails,
 # we mark tests to be skipped via an option so individual tests can opt out.
@@ -23,7 +28,7 @@ if (!has_osrm_binary() || !has_osrm_profile()) {
     options(osrm.backend.skip_osrm_tests = TRUE)
   } else {
     install_attempt <- try(
-      osrm_install(version = "v5.27.1", path_action = "session", quiet = TRUE),
+      osrm_install(version = "v5.27.1", path = test_osrm_path, quiet = TRUE),
       silent = TRUE
     )
 
