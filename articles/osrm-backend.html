@@ -71,7 +71,8 @@
     
     
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-kotov/osrm.backend" class="external-link">osrm.backend</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="fu">knitr</span><span class="fu">::</span><span class="va"><a href="https://rdrr.io/pkg/knitr/man/opts_chunk.html" class="external-link">opts_chunk</a></span><span class="op">$</span><span class="fu">set</span><span class="op">(</span>eval <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/e-kotov/osrm.backend" class="external-link">osrm.backend</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/riatelab/osrm" class="external-link">osrm</a></span><span class="op">)</span></span></code></pre></div>
 <pre><code><span><span class="co">## Data: (c) OpenStreetMap contributors, ODbL 1.0 - http://www.openstreetmap.org/copyright</span></span></code></pre>
 <pre><code><span><span class="co">## Routing: OSRM - http://project-osrm.org/</span></span></code></pre>
@@ -87,7 +88,6 @@ it<a class="anchor" aria-label="anchor" href="#create-a-temporary-directory-and-
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">osrm_temp_dir</span>, showWarnings <span class="op">=</span> <span class="cn">FALSE</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">internal_pbf</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/system.file.html" class="external-link">system.file</a></span><span class="op">(</span><span class="st">"extdata/cur.osm.pbf"</span>, package <span class="op">=</span> <span class="st">"osrm.backend"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files.html" class="external-link">file.copy</a></span><span class="op">(</span>from <span class="op">=</span> <span class="va">internal_pbf</span>, to <span class="op">=</span> <span class="va">osrm_temp_dir</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## [1] TRUE</span></span></code></pre>
 </div>
 <div class="section level2">
 <h2 id="start-local-osrm-server">Start local OSRM server<a class="anchor" aria-label="anchor" href="#start-local-osrm-server"></a>
@@ -100,287 +100,8 @@ from the OSM PBF file if not already done and start the server. If any
 of the steps are unnecessary, it will skip them, so running this
 funciton will not lead to re-downloading of OSRM binaries or
 re-processing of the OSM PBF file if already done.</p>
-<div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/osrm_start.html">osrm_start</a></span><span class="op">(</span><span class="va">osrm_temp_dir</span>, verbose <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## OSRM backend not found. Installing latest version...</span></span></code></pre>
-<pre><code><span><span class="co">## Finding latest stable version with available binaries...</span></span></code></pre>
-<pre><code><span><span class="co">## Latest stable version is 'v6.0.0'</span></span></code></pre>
-<pre><code><span><span class="co">## Detected platform: linux-x64</span></span></code></pre>
-<pre><code><span><span class="co">## Found release: v6.0.0 (v6.0.0)</span></span></code></pre>
-<pre><code><span><span class="co">## Found matching binary: node_osrm-v6.0.0-8-linux-x64-Release.tar.gz</span></span></code></pre>
-<pre><code><span><span class="co">## Downloading from https://github.com/Project-OSRM/osrm-backend/releases/download/v6.0.0/node_osrm-v6.0.0-8-linux-x64-Release.tar.gz</span></span></code></pre>
-<pre><code><span><span class="co">## Extracting binaries...</span></span></code></pre>
-<pre><code><span><span class="co">## Installing binaries to /home/runner/.cache/R/osrm.backend/v6.0.0</span></span></code></pre>
-<pre><code><span><span class="co">## Fetching Linux TBB runtime components from OSRM release v5.27.1...</span></span></code></pre>
-<pre><code><span><span class="co">## Downloading profiles from release tarball...</span></span></code></pre>
-<pre><code><span><span class="co">## Extracting profiles...</span></span></code></pre>
-<pre><code><span><span class="co">## Installed profiles to /home/runner/.cache/R/osrm.backend/v6.0.0/profiles</span></span></code></pre>
-<pre><code><span><span class="co">## Setting executable permissions...</span></span></code></pre>
-<pre><code><span><span class="co">## Added '/home/runner/.cache/R/osrm.backend/v6.0.0' to PATH for this session.</span></span></code></pre>
-<pre><code><span><span class="co">## Installation successful!</span></span></code></pre>
-<pre><code><span><span class="co">## Installation complete.</span></span></code></pre>
-<pre><code><span><span class="co">## OSRM graph not found. Preparing graph from 'cur.osm.pbf', this may take a while...</span></span></code></pre>
-<pre><code><span><span class="co">## [2025-12-05T15:25:36.357827924] [info] Parsed 0 location-dependent features with 0 GeoJSON polygons</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.357908796] [info] Using script /home/runner/.cache/R/osrm.backend/v6.0.0/profiles/car.lua</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.357933682] [info] Input file: cur.osm.pbf</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.357940655] [info] Profile: car.lua</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.357943912] [info] Threads: 4</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.358109813] [info] Parsing in progress..</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.358299579] [info] input file generated by 0.48.3</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.358387764] [info] timestamp: n/a</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361245656] [info] Using profile api version 4</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361437656] [info] Found 3 turn restriction tags:</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361444749] [info]   motor_vehicle</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361448507] [info]   motorcar</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361451372] [info]   vehicle</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.361470017] [info] Parse relations ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.369647251] [info] Parse ways and nodes ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.375282493] [info] Using profile api version 4</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.378236902] [info] Using profile api version 4</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.381221454] [info] Using profile api version 4</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.432866018] [info] Parsing finished after 0.074725 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.432926371] [info] Raw input contains 40185 nodes, 6884 ways, and 158 relations, 197 restrictions</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.432953542] [info] Collecting way information on 197 restrictions...ok, after 9.2e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.433072746] [info] Collecting way information on 0 maneuver overrides...ok, after 4e-06s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.433103153] [info] Collecting information on 1031 obstacles...ok, after 0.000596s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.433956755] [info] Sorting used nodes        ... ok, after 0.000224s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434205050] [info] Erasing duplicate nodes   ... ok, after 2.4e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434247851] [info] Sorting all nodes         ... ok, after 4.3e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434312823] [info] Building node id map      ... ok, after 6.2e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434396930] [info] Confirming/Writing used nodes     ... ok, after 7.8e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434495926] [info] Processed 4712 nodes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434504563] [info] Sorting edges by start    ... ok, after 0.000192s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.434717091] [info] Setting start coords      ... ok, after 0.000281s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.435019619] [info] Sorting edges by target   ... ok, after 0.000173s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.435214434] [info] Computing edge weights    ... ok, after 0.000714s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.435958350] [info] Sorting edges by renumbered start ... ok, after 0.000228s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.436308316] [info] Writing used edges       ... ok, after 1.5e-05s -- Processed 5460 edges</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.436461584] [info] Collecting node information on 0 maneuver overrides...ok, after 0s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.436486651] [info] Collecting node information on 197 restrictions...ok, after 8.3e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.436591999] [info] writing street name index ... ok, after 0.000211s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.436994714] [info] extraction finished after 0.079059s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.437943664] [info] Generating edge-expanded graph representation</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.442819254] [info] .</span></span>
-<span><span class="co">##  10% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  20% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  30% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  40% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  50% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  60% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  70% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  80% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  90% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  100%</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.447872054] [info] Node compression ratio: 0.38264</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.447889446] [info] Edge compression ratio: 0.466532</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.449657303] [info]  graph compression removed 1342 annotations of 1655 in 0.000612 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.449755437] [info] Find segregated edges in node-based graph ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.451767371] [info] ok, after 0.002004s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.451780777] [info] Segregated edges count = 70</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.451785686] [info] Writing nodes for nodes-based and edges-based graphs ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.452083685] [info] Geometry successfully removed:</span></span>
-<span><span class="co">##   compressed edges: 5100</span></span>
-<span><span class="co">##   compressed geometries: 16724</span></span>
-<span><span class="co">##   longest chain length: 67</span></span>
-<span><span class="co">##   cmpr ratio: 0.304951</span></span>
-<span><span class="co">##   avg chain length: 3.27922</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.452095627] [info] Removing invalid turn restrictions...removed 0 invalid turn restrictions, after 6e-06s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.452124582] [info] Removing invalid maneuver overrides...removed 0 invalid maneuver overrides, after 0s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.452143457] [info] Constructing restriction graph on 149 restrictions...ok, after 1.6e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.453774427] [info] Generating edge expanded nodes ... </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.453787812] [info] .</span></span>
-<span><span class="co">##  10% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  20% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  30% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  40% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  50% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  60% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  70% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  80% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  90% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  100%</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.454205485] [info] Expanding via-way turn restrictions ... </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.454210956] [info] .</span></span>
-<span><span class="co">##  10% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  20% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  30% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  40% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  50% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  60% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  70% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  80% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  100%</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.454288762] [info] Generated 3346 nodes (7 of which are duplicates)  and 5460 segments in edge-expanded graph</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.454387607] [info] Generating edge-expanded edges </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.454414668] [info] .</span></span>
-<span><span class="co">##  10% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  20% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  30% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  40% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  50% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  60% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  70% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  80% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  90% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  100% </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.467498554] [info] Sorting and writing 0 maneuver overrides...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.467651961] [info] done.</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.467663363] [info] Renumbering turns</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.467721161] [info] Writing 0 conditional turn penalties...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468277565] [info] Generated 5460 edge based node segments</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468290670] [info] Node-based graph contains 3339 edges</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468298485] [info] Edge-expanded graph ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468305397] [info]   contains 5517 edges</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468314144] [info] Timing statistics for edge-expanded graph:</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468322009] [info] Renumbering edges: 5.9e-05s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468335674] [info] Generating nodes: 0.000613s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468344240] [info] Generating edges: 0.013926s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468460859] [info] Generating guidance turns </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.468479684] [info] .</span></span>
-<span><span class="co">##  10% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  20% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  30% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  40% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  50% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  60% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  70% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  80% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  90% </span></span>
-<span><span class="co">## .</span></span>
-<span><span class="co">##  100% </span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483288095] [info] done.</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483298384] [info] Created 24 entry classes and 463 Bearing Classes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483305458] [info] Handled: 127 of 207 lanes: 61.3527 %.</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483316338] [info] Assigned 6740 turn instruction types:</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483323472] [info]   new name: 114 (1.69%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483331366] [info]   continue: 341 (5.06%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483339141] [info]   turn: 2685 (39.84%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483346405] [info]   fork: 26 (0.39%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483351344] [info]   end of road: 747 (11.08%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483356353] [info]   (noturn): 648 (9.61%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483361062] [info]   (suppressed): 2165 (32.12%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483366111] [info]   (sliproad): 14 (0.21%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483371191] [info] Assigned 6740 turn instruction modifiers:</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483375309] [info]   uturn: 283 (4.20%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483379917] [info]   sharp right: 44 (0.65%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483384586] [info]   right: 1791 (26.57%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483389125] [info]   slight right: 195 (2.89%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483394084] [info]   straight: 2637 (39.12%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483398783] [info]   slight left: 189 (2.80%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483403612] [info]   left: 1556 (23.09%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483408381] [info]   sharp left: 45 (0.67%)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483415274] [info] Guidance turn annotations took 0.014971s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483420654] [info] Writing Intersection Classification Data</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483617563] [info] ok, after 0.000191s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483625629] [info] Writing Turns and Lane Data...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.483920502] [info] ok, after 0.000289s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484258766] [info] Saving edge-based node weights to file.</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484384101] [info] Done writing. (0.000118)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484391355] [info] Computing strictly connected components ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484878138] [info] Found 240 SCC (1 large, 239 small)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484890301] [info] SCC run took: 0.000161402s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484904638] [info] Building r-tree ...</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.484909197] [info] Constructing r-tree of 5460 segments build on-top of 4712 coordinates</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.485822250] [info] finished r-tree construction in 0.000904 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.485961371] [info] Writing edge-based-graph edges       ... </span></span>
-<span><span class="co">## [2025-12-05T15:25:36.486244201] [info] ok, after 0.000274s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.486252076] [info] Processed 5517 edges</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.486256795] [info] Expansion: 102457 nodes/sec and 72754 edges/sec</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.486261213] [info] To prepare the data for routing, run: ./osrm-partition "/tmp/RtmpBO4akY/osrm-data-8109/cur"</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.488368817] [info] RAM: peak bytes used: 144867328</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.502829075] [info] Computing recursive bisection</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.503076960] [info] Loaded compressed node based graph: 5088 edges, 4712 nodes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.503201113] [info]  running partition: 128 1.2 0.25 10 1000 # max_cell_size balance boundary cuts small_component_size</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.503435242] [info] Found 2918 SCC (1 large, 2917 small)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.503445040] [info] SCC run took: 0.000205145s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.511526962] [info] Full bisection done in 0.007748s</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.511605239] [info] Loaded node based graph to edge based graph mapping</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513483693] [info] Loaded edge based graph for mapping partition ids: 11022 edges, 3346 nodes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513760833] [info] Fixed 2 unconnected nodes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513765803] [info] Edge-based-graph annotation:</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513769239] [info]   level 1 #cells 22 bit size 5</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513776182] [info]   level 2 #cells 1 bit size 1</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513779689] [info]   level 3 #cells 1 bit size 1</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.513782854] [info]   level 4 #cells 1 bit size 1</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.515408564] [info] Renumbered data in 0.001621 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.515710230] [info] MultiLevelPartition constructed in 0.000284 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.515909003] [info] CellStorage constructed in 0.000191 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516553022] [info] MLD data writing took 0.000636 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516562790] [info] Cells statistics per level</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516589069] [info] Level 1 #cells 22 #boundary nodes 445, sources: avg. 12, destinations: avg. 16, entries: 5321 (42568 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516593006] [info] Level 2 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516596293] [info] Level 3 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516599589] [info] Level 4 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516659782] [info] Bisection took 0.013757 seconds.</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.516665232] [info] RAM: peak bytes used: 145698816</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.540767435] [info] Loaded edge based graph: 11022 edges, 3346 nodes</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.541077407] [info] Loading partition data took 0.002426 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545479996] [info] Cells customization took 0.004388 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545497028] [info] Cells statistics per level</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545523417] [info] Level 1 #cells 22 #boundary nodes 445, sources: avg. 12, destinations: avg. 16, entries: 5321 (42568 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545527315] [info] Level 2 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545530631] [info] Level 3 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545533747] [info] Level 4 #cells 1 #boundary nodes 0, sources: avg. 0, destinations: avg. 0, entries: 0 (0 bytes)</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545536943] [info] Unreachable nodes statistics per level</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545558994] [info] Unreachable nodes statistics per level</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545574233] [info] Unreachable nodes statistics per level</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.545587588] [info] Unreachable nodes statistics per level</span></span>
-<span><span class="co">## <span style="color: #BB0000;">[2025-12-05T15:25:36.545549286] [warn] Level 1 unreachable boundary nodes per cell: 0.0909091 sources, 0.181818 destinations</span></span></span>
-<span><span class="co"><span style="color: #BB0000;">## [2025-12-05T15:25:36.545568652] [warn] Level 1 unreachable boundary nodes per cell: 0.0909091 sources, 0.181818 destinations</span></span></span>
-<span><span class="co"><span style="color: #BB0000;">## [2025-12-05T15:25:36.545581497] [warn] Level 1 unreachable boundary nodes per cell: 0.0909091 sources, 0.181818 destinations</span></span></span>
-<span><span class="co"><span style="color: #BB0000;">## [2025-12-05T15:25:36.545594671] [warn] Level 1 unreachable boundary nodes per cell: 0.0909091 sources, 0.181818 destinations</span></span></span>
-<span><span class="co"><span style="color: #BB0000;">## </span>[2025-12-05T15:25:36.546061707] [info] MLD customization writing took 0.00046 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.546437462] [info] Graph writing took 0.000366 seconds</span></span>
-<span><span class="co">## [2025-12-05T15:25:36.546451308] [info] RAM: peak bytes used: 145784832</span></span></code></pre>
-<pre><code><span><span class="co">## Graph preparation complete.</span></span></code></pre>
-<pre><code><span><span class="co">## Starting OSRM server with graph 'cur.osrm.mldgr'...</span></span></code></pre>
-<pre><code><span><span class="co">## OSRM server started successfully (pid 8188, port 5001).</span></span></code></pre>
-<pre><code><span><span class="co">## PROCESS 'osrm-routed', running, pid 8188.</span></span></code></pre>
 <blockquote>
 <p><strong>Tip:</strong> You can check if server is running with
 <code><a href="../reference/osrm_servers.html">osrm_servers()</a></code>:</p>
@@ -397,7 +118,7 @@ re-processing of the OSM PBF file if already done.</p>
 </h2>
 <p>Load some spatial data from the OSM PBF file to sample points for
 routing and plot the street network:</p>
-<div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># read the pbf file with sf</span></span>
 <span><span class="va">osm_points</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">internal_pbf</span>, layer <span class="op">=</span> <span class="st">"points"</span><span class="op">)</span></span>
 <span><span class="va">osm_streets</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_read.html" class="external-link">read_sf</a></span><span class="op">(</span><span class="va">internal_pbf</span>, layer <span class="op">=</span> <span class="st">"multilinestrings"</span><span class="op">)</span></span>
@@ -415,17 +136,10 @@ URL. The default port that <code><a href="../reference/osrm_start.html">osrm_sta
 <code>http://localhost:5001/</code>. Then you can use any
 <a href="https://github.com/riatelab/osrm" class="external-link">osrm</a> function as usual, here we calculate a route between
 the two sampled points:</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/options.html" class="external-link">options</a></span><span class="op">(</span><span class="st">"osrm.server"</span> <span class="op">=</span> <span class="st">"http://localhost:5001/"</span><span class="op">)</span></span>
 <span><span class="va">route</span> <span class="op">&lt;-</span> <span class="fu">osrm</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/osrm/man/osrmRoute.html" class="external-link">osrmRoute</a></span><span class="op">(</span>loc <span class="op">=</span> <span class="va">sampled_points</span><span class="op">)</span></span>
 <span><span class="va">route</span></span></code></pre></div>
-<pre><code><span><span class="co">## Simple feature collection with 1 feature and 4 fields</span></span>
-<span><span class="co">## Geometry type: LINESTRING</span></span>
-<span><span class="co">## Dimension:     XY</span></span>
-<span><span class="co">## Bounding box:  xmin: -49.27156 ymin: -25.43082 xmax: -49.25396 ymax: -25.42358</span></span>
-<span><span class="co">## Geodetic CRS:  WGS 84</span></span>
-<span><span class="co">##     src dst duration distance                       geometry</span></span>
-<span><span class="co">## 1_2   1   2     5.55   2.6324 LINESTRING (-49.25534 -25.4...</span></span></code></pre>
 <pre><code>Simple feature collection with 1 feature and 4 fields
 Geometry type: LINESTRING
 Dimension:     XY
@@ -437,35 +151,20 @@ Geodetic CRS:  WGS 84
 <div class="section level2">
 <h2 id="plot-the-route-on-top-of-the-street-network">Plot the route on top of the street network<a class="anchor" aria-label="anchor" href="#plot-the-route-on-top-of-the-street-network"></a>
 </h2>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">osm_streets</span><span class="op">)</span>, lwd <span class="op">=</span> <span class="fl">0.5</span>, col <span class="op">=</span> <span class="st">"grey70"</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/graphics/plot.default.html" class="external-link">plot</a></span><span class="op">(</span><span class="fu"><a href="https://r-spatial.github.io/sf/reference/st_geometry.html" class="external-link">st_geometry</a></span><span class="op">(</span><span class="va">route</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"red"</span>, lwd <span class="op">=</span> <span class="fl">5</span>, add <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
-<p><img src="osrm-backend_files/figure-html/unnamed-chunk-2-1.png" class="r-plt" width="700"></p>
-<pre><code><span><span class="co">## agg_png </span></span>
-<span><span class="co">##       2</span></span></code></pre>
 <p><img src="../reference/figures/example-route.png"></p>
 </div>
 <div class="section level2">
 <h2 id="stop-local-osrm-server-and-cleanup">Stop local OSRM server and cleanup<a class="anchor" aria-label="anchor" href="#stop-local-osrm-server-and-cleanup"></a>
 </h2>
 <p>You can now stop the server:</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="../reference/osrm_stop.html">osrm_stop</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<pre><code><span><span class="co">## Stopped OSRM server id=osrm-8188-5001-20251205152536.559 (pid 8188, port 5001).</span></span></code></pre>
-<pre><code><span><span class="co">## $id</span></span>
-<span><span class="co">## [1] "osrm-8188-5001-20251205152536.559"</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $pid</span></span>
-<span><span class="co">## [1] 8188</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $port</span></span>
-<span><span class="co">## [1] 5001</span></span>
-<span><span class="co">## </span></span>
-<span><span class="co">## $stopped</span></span>
-<span><span class="co">## [1] TRUE</span></span></code></pre>
 <pre><code>Stopped OSRM server id=osrm-29557-5001-20251103124028.405 (pid 29557, port 5001).</code></pre>
 <p>And remove the temporary directory:</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/unlink.html" class="external-link">unlink</a></span><span class="op">(</span><span class="va">osrm_temp_dir</span>, recursive <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span></span></code></pre></div>
 </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
