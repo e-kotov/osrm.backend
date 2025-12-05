@@ -8,7 +8,7 @@ message: 'To cite package "osrm.backend" in publications use:'
 type: software
 license: MIT
 title: 'osrm.backend: Bindings for ''Open Source Routing Machine'''
-version: 0.1.0.9000
+version: 0.1.1
 doi: 10.32614/CRAN.package.osrm.backend
 identifiers:
 - type: doi
