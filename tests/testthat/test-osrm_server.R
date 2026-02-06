@@ -448,14 +448,15 @@ test_that("osrm_start_server uses temp file by default for logging", {
     {
       server <- osrm_start_server(
         osrm_path = osrm_path,
-        verbose = TRUE,
         quiet = TRUE
       )
       on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
-      # Should route to console (empty string)
-      expect_equal(captured_env$captured$stdout, "")
-      expect_equal(captured_env$captured$stderr, "")
+      # Should use a temp file with .log extension
+      expect_type(captured_env$captured$stdout, "character")
+      expect_type(captured_env$captured$stderr, "character")
+      expect_false(identical(captured_env$captured$stdout, ""))
+      expect_match(captured_env$captured$stdout, "\\.log$")
     },
     process = MockProcess,
     .package = "processx"
@@ -483,15 +484,14 @@ test_that("osrm_start_server routes to console when verbose = TRUE", {
     {
       server <- osrm_start_server(
         osrm_path = osrm_path,
+        verbose = TRUE,
         quiet = TRUE
       )
       on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
-      # Should use a temp file with .log extension
-      expect_type(captured_env$captured$stdout, "character")
-      expect_type(captured_env$captured$stderr, "character")
-      expect_false(identical(captured_env$captured$stdout, ""))
-      expect_match(captured_env$captured$stdout, "\\.log$")
+      # Should route to console (empty string)
+      expect_equal(captured_env$captured$stdout, "")
+      expect_equal(captured_env$captured$stderr, "")
     },
     process = MockProcess,
     .package = "processx"
