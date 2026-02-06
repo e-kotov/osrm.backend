@@ -361,6 +361,8 @@ osrm_start_server <- function(
     # Note: This CAN cause deadlocks in tight loops if R is busy!
     stdout_dest <- ""
     stderr_dest <- ""
+    # No log file is used in verbose mode; use sentinel for clarity.
+    log_file_path <- NA_character_
   } else if (!is.null(log_opt) && is.character(log_opt)) {
     # User override via options - only character path supported
     log_path <- prepare_log_path(log_opt)
