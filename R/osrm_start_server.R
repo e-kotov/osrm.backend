@@ -295,7 +295,11 @@ osrm_start_server <- function(
   # Helper to validate path and create directory if needed
   prepare_log_path <- function(path) {
     if (
-      is.null(path) || !is.character(path) || length(path) != 1 || !nzchar(path)
+      is.null(path) ||
+        !is.character(path) ||
+        length(path) != 1 ||
+        !nzchar(path) ||
+        is.na(path)
     ) {
       return(NULL)
     }
@@ -322,6 +326,11 @@ osrm_start_server <- function(
       if (!quiet) {
         message("Redirecting server stdout and stderr to: ", log_path)
       }
+    } else {
+      # Invalid character path - fall back to temp file
+      log_file_path <- tempfile(pattern = "osrm_", fileext = ".log")
+      stdout_dest <- log_file_path
+      stderr_dest <- log_file_path
     }
   } else if (is.list(log_opt)) {
     # List option is deprecated - silently fall back to temp file

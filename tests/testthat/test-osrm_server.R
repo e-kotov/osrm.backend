@@ -746,3 +746,229 @@ test_that("verbose = TRUE takes precedence over osrm.server.log_file option", {
     .package = "processx"
   )
 })
+
+# Tests for invalid osrm.server.log_file values ----
+test_that("osrm_start_server falls back to temp file for empty string log option", {
+  skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(
+    packageVersion("testthat") < "3.2.0",
+    "Requires testthat >= 3.2.0 for object mocking"
+  )
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ..., stdout, stderr) {
+      captured <<- list(
+        command = command,
+        args = args,
+        stdout = stdout,
+        stderr = stderr
+      )
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      # Set empty string option - should fall back to temp file
+      old_opt <- options(osrm.server.log_file = "")
+      on.exit(options(old_opt), add = TRUE)
+
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        quiet = TRUE
+      )
+
+      # Should fall back to temp file
+      expect_type(captured$stdout, "character")
+      expect_type(captured$stderr, "character")
+      expect_false(identical(captured$stdout, ""))
+      expect_match(captured$stdout, "\\.log$")
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
+
+test_that("osrm_start_server falls back to temp file for NA log option", {
+  skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(
+    packageVersion("testthat") < "3.2.0",
+    "Requires testthat >= 3.2.0 for object mocking"
+  )
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ..., stdout, stderr) {
+      captured <<- list(
+        command = command,
+        args = args,
+        stdout = stdout,
+        stderr = stderr
+      )
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      # Set NA option - should fall back to temp file
+      old_opt <- options(osrm.server.log_file = NA_character_)
+      on.exit(options(old_opt), add = TRUE)
+
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        quiet = TRUE
+      )
+
+      # Should fall back to temp file
+      expect_type(captured$stdout, "character")
+      expect_type(captured$stderr, "character")
+      expect_match(captured$stdout, "\\.log$")
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
+
+test_that("osrm_start_server falls back to temp file for multiple paths log option", {
+  skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(
+    packageVersion("testthat") < "3.2.0",
+    "Requires testthat >= 3.2.0 for object mocking"
+  )
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ..., stdout, stderr) {
+      captured <<- list(
+        command = command,
+        args = args,
+        stdout = stdout,
+        stderr = stderr
+      )
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      # Set multiple paths - should fall back to temp file
+      old_opt <- options(osrm.server.log_file = c("/tmp/log1.log", "/tmp/log2.log"))
+      on.exit(options(old_opt), add = TRUE)
+
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        quiet = TRUE
+      )
+
+      # Should fall back to temp file
+      expect_type(captured$stdout, "character")
+      expect_type(captured$stderr, "character")
+      expect_match(captured$stdout, "\\.log$")
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
+
+test_that("osrm_start_server falls back to temp file for numeric log option", {
+  skip_if_not_installed("processx")
+  skip_on_cran()
+  skip_if(
+    packageVersion("testthat") < "3.2.0",
+    "Requires testthat >= 3.2.0 for object mocking"
+  )
+
+  tmp_dir <- tempdir()
+  osrm_path <- file.path(tmp_dir, "test.osrm.mldgr")
+  file.create(osrm_path)
+  on.exit(unlink(osrm_path), add = TRUE)
+
+  captured <- list()
+
+  MockProcess <- list(
+    new = function(command, args, ..., stdout, stderr) {
+      captured <<- list(
+        command = command,
+        args = args,
+        stdout = stdout,
+        stderr = stderr
+      )
+      structure(
+        list(
+          is_alive = function() TRUE,
+          get_pid = function() 12345,
+          kill = function() TRUE,
+          wait = function(...) TRUE
+        ),
+        class = c("process", "list")
+      )
+    }
+  )
+
+  with_mocked_bindings(
+    {
+      # Set numeric option - should fall back to temp file
+      old_opt <- options(osrm.server.log_file = 12345)
+      on.exit(options(old_opt), add = TRUE)
+
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        quiet = TRUE
+      )
+
+      # Should fall back to temp file
+      expect_type(captured$stdout, "character")
+      expect_type(captured$stderr, "character")
+      expect_match(captured$stdout, "\\.log$")
+    },
+    process = MockProcess,
+    .package = "processx"
+  )
+})
