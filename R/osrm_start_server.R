@@ -315,37 +315,45 @@ osrm_start_server <- function(
 
   # Helper to read only the last n lines from a file (memory-efficient)
   read_last_n_lines <- function(file_path, n = 100) {
-    # Get file size
-    file_size <- file.size(file_path)
-    if (is.na(file_size) || file_size == 0) {
-      return(character())
-    }
+    tryCatch(
+      {
+        # Get file size
+        file_size <- file.size(file_path)
+        if (is.na(file_size) || file_size == 0) {
+          return(character())
+        }
 
-    # Estimate bytes to read: assume average 100 bytes per line
-    bytes_per_line <- 100
-    bytes_to_read <- min(file_size, n * bytes_per_line * 2)
+        # Estimate bytes to read: assume average 100 bytes per line
+        bytes_per_line <- 100
+        bytes_to_read <- min(file_size, n * bytes_per_line * 2)
 
-    # Open file and seek to position
-    con <- file(file_path, "rb")
-    on.exit(close(con), add = TRUE)
+        # Open file and seek to position
+        con <- file(file_path, "rb")
+        on.exit(close(con), add = TRUE)
 
-    # Seek to estimated position (or beginning if file is small)
-    seek(con, max(0, file_size - bytes_to_read))
+        # Seek to estimated position (or beginning if file is small)
+        seek(con, max(0, file_size - bytes_to_read))
 
-    # Read remaining content
-    raw_content <- readBin(con, "raw", n = bytes_to_read)
-    content <- rawToChar(raw_content)
+        # Read remaining content
+        raw_content <- readBin(con, "raw", n = bytes_to_read)
+        content <- rawToChar(raw_content)
 
-    # Split into lines and return last n
-    lines <- strsplit(content, "\r?\n")[[1]]
+        # Split into lines and return last n
+        lines <- strsplit(content, "\r?\n")[[1]]
 
-    # Remove potential partial first line (incomplete due to seeking)
-    if (file_size > bytes_to_read && length(lines) > 1) {
-      lines <- lines[-1]
-    }
+        # Remove potential partial first line (incomplete due to seeking)
+        if (file_size > bytes_to_read && length(lines) > 1) {
+          lines <- lines[-1]
+        }
 
-    # Return last n lines (or all if fewer)
-    tail(lines, n)
+        # Return last n lines (or all if fewer)
+        tail(lines, n)
+      },
+      error = function(e) {
+        # Return empty on any error (permissions, encoding, file deleted, etc.)
+        character()
+      }
+    )
   }
 
   if (isTRUE(verbose)) {
