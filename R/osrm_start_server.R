@@ -21,6 +21,9 @@
 #'   \item **Custom Log File:** Set the `osrm.server.log_file` option to redirect
 #'     output to a specific file:
 #'     `options(osrm.server.log_file = "path/to/osrm.log")`
+#'
+#'     Note: List specifications (e.g., `list(stdout = "...", stderr = "...")`)
+#'     are deprecated and will fall back to the default temporary file behavior.
 #' }
 #'
 #' You can override the `osrm-routed` executable via

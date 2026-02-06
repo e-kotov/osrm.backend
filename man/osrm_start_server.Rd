@@ -103,6 +103,11 @@ R console. Note: This can cause deadlocks in tight loops if R is busy.
 \item \strong{Custom Log File:} Set the \code{osrm.server.log_file} option to redirect
 output to a specific file:
 \code{options(osrm.server.log_file = "path/to/osrm.log")}
+
+\if{html}{\out{<div class="sourceCode">}}\preformatted{Note: List specifications (e.g., `list(stdout = "...", stderr = "...")`)
+are deprecated and will fall back to the default temporary file behavior.
+}\if{html}{\out{</div>}}
+
 }
 
 You can override the \code{osrm-routed} executable via
