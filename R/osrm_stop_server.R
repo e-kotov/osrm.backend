@@ -49,6 +49,7 @@ osrm_servers <- function() {
       started_at = as.POSIXct(character()),
       alive = logical(),
       has_handle = logical(),
+      log = character(),
       stringsAsFactors = FALSE
     )
     return(out)
@@ -75,6 +76,7 @@ osrm_servers <- function() {
     started_at = as.POSIXct(vapply(reg, `[[`, "", "started_at")),
     alive = alive_vec,
     has_handle = handle_vec,
+    log = vapply(reg, function(e) as.character(e$log %||% ""), ""),
     stringsAsFactors = FALSE
   )
   out

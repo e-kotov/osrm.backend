@@ -12,8 +12,7 @@
 #' To customize logging behavior, you can use the following approaches:
 #' \itemize{
 #'   \item **Default (Temp File):** Logs are written to a temporary file. This prevents
-#'     deadlocks while keeping logs available for debugging; you can delete the file
-#'     manually if desired.
+#'     deadlocks while keeping logs available for debugging.
 #'
 #'   \item **Verbose Mode:** Set `verbose = TRUE` to display logs directly in the
 #'     R console. Note: This can cause deadlocks in tight loops if R is busy.
@@ -454,6 +453,11 @@ osrm_start_server <- function(
     ),
     silent = TRUE
   )
+
+  # Attach log path as attribute for user access
+  if (!is.null(log_file_path)) {
+    attr(osrm_server, "log_path") <- log_file_path
+  }
 
   osrm_server
 }

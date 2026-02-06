@@ -94,8 +94,7 @@ reliable operation while preserving logs for debugging startup failures.
 To customize logging behavior, you can use the following approaches:
 \itemize{
 \item \strong{Default (Temp File):} Logs are written to a temporary file. This prevents
-deadlocks while keeping logs available for debugging; you can delete the file
-manually if desired.
+deadlocks while keeping logs available for debugging.
 
 \item \strong{Verbose Mode:} Set \code{verbose = TRUE} to display logs directly in the
 R console. Note: This can cause deadlocks in tight loops if R is busy.

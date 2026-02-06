@@ -134,7 +134,16 @@ test_that("osrm_servers returns empty data frame when no servers", {
       expect_equal(nrow(result), 0)
       expect_named(
         result,
-        c("id", "pid", "port", "algorithm", "started_at", "alive", "has_handle")
+        c(
+          "id",
+          "pid",
+          "port",
+          "algorithm",
+          "started_at",
+          "alive",
+          "has_handle",
+          "log"
+        )
       )
     },
     .osrm_state = mock_state
@@ -899,7 +908,9 @@ test_that("osrm_start_server falls back to temp file for multiple paths log opti
   with_mocked_bindings(
     {
       # Set multiple paths - should fall back to temp file
-      old_opt <- options(osrm.server.log_file = c("/tmp/log1.log", "/tmp/log2.log"))
+      old_opt <- options(
+        osrm.server.log_file = c("/tmp/log1.log", "/tmp/log2.log")
+      )
       on.exit(options(old_opt), add = TRUE)
 
       server <- osrm_start_server(
