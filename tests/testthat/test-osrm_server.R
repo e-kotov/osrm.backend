@@ -1,7 +1,8 @@
 # ROBUST SKIP: Check if OSRM is actually available before running these tests.
 # This prevents crashes locally AND ensures CRAN compliance.
 # We check both the Option (set by setup) and the PATH.
-has_osrm_option <- !is.null(getOption("osrm.routed.exec"))
+osrm_exec_opt <- getOption("osrm.routed.exec", "")
+has_osrm_option <- nzchar(osrm_exec_opt) && nzchar(Sys.which(osrm_exec_opt))
 has_osrm_path <- nzchar(Sys.which("osrm-routed"))
 
 if (!has_osrm_option && !has_osrm_path) {
