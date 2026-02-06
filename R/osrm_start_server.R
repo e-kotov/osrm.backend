@@ -421,8 +421,17 @@ osrm_start_server <- function(
 
   # --- HEALTH CHECK & ERROR REPORTING ---
 
-  # Allow a tiny grace period for the C++ binary to fail (e.g. port binding)
-  Sys.sleep(0.1)
+  # Poll for startup failures with multiple checks over a grace period.
+  # Most failures (bad port, corrupted graph) happen within milliseconds,
+  # but we check multiple times to be robust across different system loads.
+  max_checks <- 10
+  for (i in seq_len(max_checks)) {
+    Sys.sleep(0.1)
+    # Early exit if process already failed
+    if (!isTRUE(try(osrm_server$is_alive(), silent = TRUE))) {
+      break
+    }
+  }
 
   alive_now <- FALSE
   err_msg <- NULL
