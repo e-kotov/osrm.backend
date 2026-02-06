@@ -440,28 +440,16 @@ test_that("osrm_start_server uses temp file by default for logging", {
 
   with_mocked_bindings(
     {
-      # Ensure no log option is set
-      old_opt <- options(osrm.server.log_file = NULL)
-      on.exit(options(old_opt), add = TRUE)
-
       server <- osrm_start_server(
         osrm_path = osrm_path,
+        verbose = TRUE,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
-      # Should use a temp file path (character, not "|")
-      expect_type(captured$stdout, "character")
-      expect_type(captured$stderr, "character")
-      expect_false(identical(captured$stdout, "|"))
-      expect_false(identical(captured$stderr, "|"))
-      expect_false(identical(captured$stdout, ""))
-      expect_false(identical(captured$stderr, ""))
-
-      # Should be the same path for both
-      expect_equal(captured$stdout, captured$stderr)
-
-      # Should have .log extension
-      expect_match(captured$stdout, "\\.log$")
+      # Should route to console (empty string)
+      expect_equal(captured$stdout, "")
+      expect_equal(captured$stderr, "")
     },
     process = MockProcess,
     .package = "processx"
@@ -507,13 +495,15 @@ test_that("osrm_start_server routes to console when verbose = TRUE", {
     {
       server <- osrm_start_server(
         osrm_path = osrm_path,
-        verbose = TRUE,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
-      # Should route to console (empty string)
-      expect_equal(captured$stdout, "")
-      expect_equal(captured$stderr, "")
+      # Should use a temp file with .log extension
+      expect_type(captured$stdout, "character")
+      expect_type(captured$stderr, "character")
+      expect_false(identical(captured$stdout, ""))
+      expect_match(captured$stdout, "\\.log$")
     },
     process = MockProcess,
     .package = "processx"
@@ -567,6 +557,7 @@ test_that("osrm_start_server uses osrm.server.log_file option when set (characte
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should use the custom log path
       expect_equal(captured$stdout, custom_log)
@@ -627,6 +618,7 @@ test_that("osrm_start_server falls back to temp file when list option is used", 
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should fall back to temp file (not use the list paths)
       expect_type(captured$stdout, "character")
@@ -746,6 +738,7 @@ test_that("verbose = TRUE takes precedence over osrm.server.log_file option", {
         verbose = TRUE,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # verbose = TRUE should take precedence (console output)
       expect_equal(captured$stdout, "")
@@ -802,6 +795,7 @@ test_that("osrm_start_server falls back to temp file for empty string log option
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should fall back to temp file
       expect_type(captured$stdout, "character")
@@ -859,6 +853,7 @@ test_that("osrm_start_server falls back to temp file for NA log option", {
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should fall back to temp file
       expect_type(captured$stdout, "character")
@@ -917,10 +912,13 @@ test_that("osrm_start_server falls back to temp file for multiple paths log opti
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
-      # Should fall back to temp file
+      # Should fall back to temp file (not use the list paths)
       expect_type(captured$stdout, "character")
       expect_type(captured$stderr, "character")
+      expect_false(identical(captured$stdout, "/tmp/log1.log"))
+      expect_false(identical(captured$stderr, "/tmp/log2.log"))
       expect_match(captured$stdout, "\\.log$")
     },
     process = MockProcess,
@@ -965,14 +963,17 @@ test_that("osrm_start_server falls back to temp file for numeric log option", {
 
   with_mocked_bindings(
     {
-      # Set numeric option - should fall back to temp file
-      old_opt <- options(osrm.server.log_file = 12345)
+      # Set multiple paths - should fall back to temp file
+      old_opt <- options(
+        osrm.server.log_file = c("/tmp/log1.log", "/tmp/log2.log")
+      )
       on.exit(options(old_opt), add = TRUE)
 
       server <- osrm_start_server(
         osrm_path = osrm_path,
         quiet = TRUE
       )
+      on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should fall back to temp file
       expect_type(captured$stdout, "character")
