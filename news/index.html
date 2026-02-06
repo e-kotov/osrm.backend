@@ -44,13 +44,18 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="osrmbackend-development-version">osrm.backend (development version)<a class="anchor" aria-label="anchor" href="#osrmbackend-development-version"></a></h2>
+<div class="section level3">
+<h3 id="breaking-changes-development-version">Breaking Changes<a class="anchor" aria-label="anchor" href="#breaking-changes-development-version"></a></h3>
+<ul><li><p>The <code>osrm.server.log_file</code> option no longer accepts a list for separate stdout/stderr files. This feature has been removed due to potential deadlock issues. Use a single character path instead: <code>options(osrm.server.log_file = "path/to/logfile.log")</code>. If a list is provided, it will silently fall back to the default temporary file behavior.</p></li>
+<li><p>Default logging behavior changed: <code><a href="../reference/osrm_start_server.html">osrm_start_server()</a></code> now writes logs to a temporary file by default instead of using pipes. This prevents deadlocks in R’s single-threaded environment while preserving logs for debugging. Use <code>verbose = TRUE</code> to see output in the console.</p></li>
+</ul></div>
 </div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.1" id="osrmbackend-011">osrm.backend 0.1.1<a class="anchor" aria-label="anchor" href="#osrmbackend-011"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.1" id="osrmbackend-011">osrm.backend 0.1.1<a class="anchor" aria-label="anchor" href="#osrmbackend-011"></a></h2><p class="text-muted">CRAN release: 2025-12-07</p>
 <ul><li>Fixes in test suite to address CRAN warnings.</li>
 </ul></div>
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.1.0" id="osrmbackend-010">osrm.backend 0.1.0<a class="anchor" aria-label="anchor" href="#osrmbackend-010"></a></h2>
+<h2 class="pkg-version" data-toc-text="0.1.0" id="osrmbackend-010">osrm.backend 0.1.0<a class="anchor" aria-label="anchor" href="#osrmbackend-010"></a></h2><p class="text-muted">CRAN release: 2025-12-03</p>
 <ul><li>Initial CRAN submission.</li>
 </ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

@@ -168,8 +168,9 @@
 
 
 <dt id="arg-verbose">verbose<a class="anchor" aria-label="anchor" href="#arg-verbose"></a></dt>
-<dd><p>Logical; reserved for controlling future server verbosity, included
-for interface consistency with <code><a href="osrm_start.html">osrm_start()</a></code>. Defaults to <code>FALSE</code>.</p></dd>
+<dd><p>Logical; when <code>TRUE</code>, routes server stdout and stderr to the R
+console for live debugging. Note: This can cause deadlocks in tight loops
+if R is busy. Defaults to <code>FALSE</code>, which writes logs to a temporary file.</p></dd>
 
 
 <dt id="arg-echo-cmd">echo_cmd<a class="anchor" aria-label="anchor" href="#arg-echo-cmd"></a></dt>
@@ -182,20 +183,18 @@ for interface consistency with <code><a href="osrm_start.html">osrm_start()</a><
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
-    <p>The server's standard output and error streams can be controlled via R options
-for non-interactive use or persistent logging. By default, they are captured
-as pipes, which allows for reading output directly within the R session
-(e.g., via <code>osrm_server$read_output_lines()</code>).</p>
-<p>To redirect the server's output to one or more files, you can set the
-<code>osrm.server.log_file</code> R option before calling this function:</p><ul><li><p><strong>Combined Log:</strong> To send both <code>stdout</code> and <code>stderr</code> to a single file,
-provide a file path:
-<code>options(osrm.server.log_file = "path/to/osrm.log")</code></p></li>
-<li><p><strong>Separate Logs:</strong> To send <code>stdout</code> and <code>stderr</code> to separate files,
-provide a named list:
-<code>options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))</code></p></li>
-<li><p><strong>Default Behavior:</strong> To restore the default behavior of using pipes,
-set the option to <code>NULL</code>:
-<code>options(osrm.server.log_file = NULL)</code></p></li>
+    <p>The server's standard output and error streams are handled via temporary files
+by default to prevent deadlocks in R's single-threaded environment. This ensures
+reliable operation while preserving logs for debugging startup failures.</p>
+<p>To customize logging behavior, you can use the following approaches:</p><ul><li><p><strong>Default (Temp File):</strong> Logs are written to a temporary file. This prevents
+deadlocks while keeping logs available for debugging.</p></li>
+<li><p><strong>Verbose Mode:</strong> Set <code>verbose = TRUE</code> to display logs directly in the
+R console. Note: This can cause deadlocks in tight loops if R is busy.</p></li>
+<li><p><strong>Custom Log File:</strong> Set the <code>osrm.server.log_file</code> option to redirect
+output to a specific file:
+<code>options(osrm.server.log_file = "path/to/osrm.log")</code></p>
+<p></p><div class="sourceCode"><pre><code><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a>Note<span class="sc">:</span> List <span class="fu">specifications</span> (e.g., <span class="st">`</span><span class="at">list(stdout = "...", stderr = "...")</span><span class="st">`</span>)</span>
+<span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a>are deprecated and will fall back to the default temporary file behavior.</span></code></pre><p></p></div></li>
 </ul><p>You can override the <code>osrm-routed</code> executable via
 <code>options(osrm.routed.exec = "/full/path/to/osrm-routed")</code>.</p>
     </div>

@@ -16,7 +16,7 @@ osrm_servers()
 ## Value
 
 A data.frame with columns: `id`, `pid`, `port`, `algorithm`,
-`started_at`, `alive`, `has_handle`.
+`started_at`, `alive`, `has_handle`, `log`.
 
 ## Examples
 

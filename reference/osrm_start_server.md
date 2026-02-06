@@ -123,10 +123,9 @@ osrm_start_server(
 
 - verbose:
 
-  Logical; reserved for controlling future server verbosity, included
-  for interface consistency with
-  [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md).
-  Defaults to `FALSE`.
+  Logical; when `TRUE`, routes server stdout and stderr to the R console
+  for live debugging. Note: This can cause deadlocks in tight loops if R
+  is busy. Defaults to `FALSE`, which writes logs to a temporary file.
 
 - echo_cmd:
 
@@ -139,24 +138,25 @@ object for the running server (also registered internally).
 
 ## Details
 
-The server's standard output and error streams can be controlled via R
-options for non-interactive use or persistent logging. By default, they
-are captured as pipes, which allows for reading output directly within
-the R session (e.g., via `osrm_server$read_output_lines()`).
+The server's standard output and error streams are handled via temporary
+files by default to prevent deadlocks in R's single-threaded
+environment. This ensures reliable operation while preserving logs for
+debugging startup failures.
 
-To redirect the server's output to one or more files, you can set the
-`osrm.server.log_file` R option before calling this function:
+To customize logging behavior, you can use the following approaches:
 
-- **Combined Log:** To send both `stdout` and `stderr` to a single file,
-  provide a file path:
+- **Default (Temp File):** Logs are written to a temporary file. This
+  prevents deadlocks while keeping logs available for debugging.
+
+- **Verbose Mode:** Set `verbose = TRUE` to display logs directly in the
+  R console. Note: This can cause deadlocks in tight loops if R is busy.
+
+- **Custom Log File:** Set the `osrm.server.log_file` option to redirect
+  output to a specific file:
   `options(osrm.server.log_file = "path/to/osrm.log")`
 
-- **Separate Logs:** To send `stdout` and `stderr` to separate files,
-  provide a named list:
-  `options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))`
-
-- **Default Behavior:** To restore the default behavior of using pipes,
-  set the option to `NULL`: `options(osrm.server.log_file = NULL)`
+      Note: List specifications (e.g., `list(stdout = "...", stderr = "...")`)
+      are deprecated and will fall back to the default temporary file behavior.
 
 You can override the `osrm-routed` executable via
 `options(osrm.routed.exec = "/full/path/to/osrm-routed")`.
