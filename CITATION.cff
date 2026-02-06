@@ -8,7 +8,7 @@ message: 'To cite package "osrm.backend" in publications use:'
 type: software
 license: MIT
 title: 'osrm.backend: Bindings for ''Open Source Routing Machine'''
-version: 0.1.1
+version: 0.2.0
 doi: 10.32614/CRAN.package.osrm.backend
 identifiers:
 - type: doi
@@ -65,14 +65,14 @@ references:
   title: digest
   abstract: 'digest: Create Compact Hash Digests of R Objects'
   notes: Imports
-  url: https://dirk.eddelbuettel.com/code/digest.html
+  url: https://eddelbuettel.github.io/digest/
   repository: https://CRAN.R-project.org/package=digest
   authors:
   - family-names: Eddelbuettel
     given-names: Dirk
     email: edd@debian.org
     orcid: https://orcid.org/0000-0001-6419-907X
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.digest
 - type: software
   title: httr2
@@ -84,7 +84,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.httr2
 - type: software
   title: jsonlite
@@ -97,7 +97,7 @@ references:
     given-names: Jeroen
     email: jeroenooms@gmail.com
     orcid: https://orcid.org/0000-0002-4035-0289
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.jsonlite
 - type: software
   title: processx
@@ -112,7 +112,7 @@ references:
     orcid: https://orcid.org/0000-0001-7098-9676
   - family-names: Chang
     given-names: Winston
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.processx
 - type: software
   title: ps
@@ -130,7 +130,7 @@ references:
   - family-names: Csárdi
     given-names: Gábor
     email: csardi.gabor@gmail.com
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.ps
 - type: software
   title: knitr
@@ -143,7 +143,7 @@ references:
     given-names: Yihui
     email: xie@yihui.name
     orcid: https://orcid.org/0000-0003-0645-5666
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.knitr
 - type: software
   title: osrm
@@ -157,7 +157,7 @@ references:
     given-names: Timothée
     email: timothee.giraud@cnrs.fr
     orcid: https://orcid.org/0000-0002-1932-3323
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.osrm
 - type: software
   title: rmarkdown
@@ -201,7 +201,7 @@ references:
     given-names: Richard
     email: rich@posit.co
     orcid: https://orcid.org/0000-0003-3925-190X
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.rmarkdown
 - type: software
   title: sf
@@ -214,7 +214,7 @@ references:
     given-names: Edzer
     email: edzer.pebesma@uni-muenster.de
     orcid: https://orcid.org/0000-0001-8049-7069
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.sf
 - type: software
   title: testthat
@@ -226,7 +226,7 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@posit.co
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.testthat
   version: '>= 3.0.0'
 - type: software
@@ -243,6 +243,6 @@ references:
   - family-names: Wickham
     given-names: Hadley
     email: hadley@rstudio.com
-  year: '2025'
+  year: '2026'
   doi: 10.32614/CRAN.package.tibble
 

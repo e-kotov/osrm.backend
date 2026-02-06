@@ -347,7 +347,7 @@ osrm_start_server <- function(
         }
 
         # Return last n lines (or all if fewer)
-        tail(lines, n)
+        utils::tail(lines, n)
       },
       error = function(e) {
         # Return empty on any error (permissions, encoding, file deleted, etc.)

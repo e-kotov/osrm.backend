@@ -8,7 +8,7 @@
   "codeRepository": "https://github.com/e-kotov/osrm.backend",
   "issueTracker": "https://github.com/e-kotov/osrm.backend/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -186,7 +186,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "2260.685KB",
+  "fileSize": "2282.981KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
