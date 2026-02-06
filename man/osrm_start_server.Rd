@@ -73,8 +73,9 @@ osrm_start_server(
 
 \item{quiet}{Logical; when \code{TRUE}, suppresses package messages.}
 
-\item{verbose}{Logical; reserved for controlling future server verbosity, included
-for interface consistency with \code{\link[=osrm_start]{osrm_start()}}. Defaults to \code{FALSE}.}
+\item{verbose}{Logical; when \code{TRUE}, routes server stdout and stderr to the R
+console for live debugging. Note: This can cause deadlocks in tight loops
+if R is busy. Defaults to \code{FALSE}, which writes logs to a temporary file.}
 
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
 }
@@ -86,25 +87,26 @@ Launches an \code{osrm-routed} process pointing at a localized OSRM graph (eithe
 \code{.osrm.mldgr} for MLD or \code{.osrm.hsgr} for CH/CoreCH).
 }
 \details{
-The server's standard output and error streams can be controlled via R options
-for non-interactive use or persistent logging. By default, they are captured
-as pipes, which allows for reading output directly within the R session
-(e.g., via \code{osrm_server$read_output_lines()}).
+The server's standard output and error streams are handled via temporary files
+by default to prevent deadlocks in R's single-threaded environment. This ensures
+reliable operation while preserving logs for debugging startup failures.
 
-To redirect the server's output to one or more files, you can set the
-\code{osrm.server.log_file} R option before calling this function:
+To customize logging behavior, you can use the following approaches:
 \itemize{
-\item \strong{Combined Log:} To send both \code{stdout} and \code{stderr} to a single file,
-provide a file path:
+\item \strong{Default (Temp File):} Logs are written to a temporary file. This prevents
+deadlocks while keeping logs available for debugging.
+
+\item \strong{Verbose Mode:} Set \code{verbose = TRUE} to display logs directly in the
+R console. Note: This can cause deadlocks in tight loops if R is busy.
+
+\item \strong{Custom Log File:} Set the \code{osrm.server.log_file} option to redirect
+output to a specific file:
 \code{options(osrm.server.log_file = "path/to/osrm.log")}
 
-\item \strong{Separate Logs:} To send \code{stdout} and \code{stderr} to separate files,
-provide a named list:
-\code{options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))}
+\if{html}{\out{<div class="sourceCode">}}\preformatted{Note: List specifications (e.g., `list(stdout = "...", stderr = "...")`)
+are deprecated and will fall back to the default temporary file behavior.
+}\if{html}{\out{</div>}}
 
-\item \strong{Default Behavior:} To restore the default behavior of using pipes,
-set the option to \code{NULL}:
-\code{options(osrm.server.log_file = NULL)}
 }
 
 You can override the \code{osrm-routed} executable via

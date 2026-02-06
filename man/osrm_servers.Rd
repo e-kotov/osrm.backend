@@ -8,7 +8,7 @@ osrm_servers()
 }
 \value{
 A data.frame with columns:
-\code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}.
+\code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}, \code{log}.
 }
 \description{
 Returns a snapshot of servers registered by \code{\link[=osrm_start_server]{osrm_start_server()}} or \code{\link[=osrm_start]{osrm_start()}}.

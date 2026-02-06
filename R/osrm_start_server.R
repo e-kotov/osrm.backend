@@ -5,25 +5,24 @@
 #' `.osrm.mldgr` for MLD or `.osrm.hsgr` for CH/CoreCH).
 #'
 #' @details
-#' The server's standard output and error streams can be controlled via R options
-#' for non-interactive use or persistent logging. By default, they are captured
-#' as pipes, which allows for reading output directly within the R session
-#' (e.g., via `osrm_server$read_output_lines()`).
+#' The server's standard output and error streams are handled via temporary files
+#' by default to prevent deadlocks in R's single-threaded environment. This ensures
+#' reliable operation while preserving logs for debugging startup failures.
 #'
-#' To redirect the server's output to one or more files, you can set the
-#' `osrm.server.log_file` R option before calling this function:
+#' To customize logging behavior, you can use the following approaches:
 #' \itemize{
-#'   \item **Combined Log:** To send both `stdout` and `stderr` to a single file,
-#'     provide a file path:
+#'   \item **Default (Temp File):** Logs are written to a temporary file. This prevents
+#'     deadlocks while keeping logs available for debugging.
+#'
+#'   \item **Verbose Mode:** Set `verbose = TRUE` to display logs directly in the
+#'     R console. Note: This can cause deadlocks in tight loops if R is busy.
+#'
+#'   \item **Custom Log File:** Set the `osrm.server.log_file` option to redirect
+#'     output to a specific file:
 #'     `options(osrm.server.log_file = "path/to/osrm.log")`
 #'
-#'   \item **Separate Logs:** To send `stdout` and `stderr` to separate files,
-#'     provide a named list:
-#'     `options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))`
-#'
-#'   \item **Default Behavior:** To restore the default behavior of using pipes,
-#'     set the option to `NULL`:
-#'     `options(osrm.server.log_file = NULL)`
+#'     Note: List specifications (e.g., `list(stdout = "...", stderr = "...")`)
+#'     are deprecated and will fall back to the default temporary file behavior.
 #' }
 #'
 #' You can override the `osrm-routed` executable via
@@ -51,8 +50,9 @@
 #' @param max_matching_radius Integer; use `-1` for unlimited (default: `-1`)
 #' @param echo_cmd Logical; echo command line to console before launch (default: `FALSE`)
 #' @param quiet Logical; when `TRUE`, suppresses package messages.
-#' @param verbose Logical; reserved for controlling future server verbosity, included
-#'   for interface consistency with [osrm_start()]. Defaults to `FALSE`.
+#' @param verbose Logical; when `TRUE`, routes server stdout and stderr to the R
+#'   console for live debugging. Note: This can cause deadlocks in tight loops
+#'   if R is busy. Defaults to `FALSE`, which writes logs to a temporary file.
 #'
 #' @return A `processx::process` object for the running server (also registered internally).
 #' @examples
@@ -285,15 +285,23 @@ osrm_start_server <- function(
   # Finally, add the graph prefix
   arguments <- c(arguments, prefix)
 
-  # --- Check R options for log file redirection ---
-  stdout_dest <- "|"
-  stderr_dest <- "|"
+  # --- LOGGING CONFIGURATION ---
+  # We prefer a temp file to prevent pipe deadlocks while keeping debug info.
+
   log_opt <- getOption("osrm.server.log_file")
 
-  # Helper to prepare a path: normalize it and ensure its directory exists
+  stdout_dest <- NULL
+  stderr_dest <- NULL
+  log_file_path <- NULL
+
+  # Helper to validate path and create directory if needed
   prepare_log_path <- function(path) {
     if (
-      is.null(path) || !is.character(path) || length(path) != 1 || !nzchar(path)
+      is.null(path) ||
+        !is.character(path) ||
+        length(path) != 1 ||
+        !nzchar(path) ||
+        is.na(path)
     ) {
       return(NULL)
     }
@@ -305,34 +313,84 @@ osrm_start_server <- function(
     abs_path
   }
 
-  if (!is.null(log_opt)) {
-    if (is.character(log_opt)) {
-      # Option 1: A single path for both stdout and stderr
-      log_path <- prepare_log_path(log_opt)
-      if (!is.null(log_path)) {
-        stdout_dest <- log_path
-        stderr_dest <- log_path
-        if (!quiet) {
-          message("Redirecting server stdout and stderr to: ", log_path)
+  # Helper to read only the last n lines from a file (memory-efficient)
+  read_last_n_lines <- function(file_path, n = 100) {
+    tryCatch(
+      {
+        # Get file size
+        file_size <- file.size(file_path)
+        if (is.na(file_size) || file_size == 0) {
+          return(character())
         }
-      }
-    } else if (is.list(log_opt)) {
-      # Option 2: Separate stdout and stderr
-      stdout_path <- prepare_log_path(log_opt$stdout)
-      if (!is.null(stdout_path)) {
-        stdout_dest <- stdout_path
-        if (!quiet) {
-          message("Redirecting server stdout to: ", stdout_path)
+
+        # Estimate bytes to read: assume average 100 bytes per line
+        bytes_per_line <- 100
+        bytes_to_read <- min(file_size, n * bytes_per_line * 2)
+
+        # Open file and seek to position
+        con <- file(file_path, "rb")
+        on.exit(close(con), add = TRUE)
+
+        # Seek to estimated position (or beginning if file is small)
+        seek(con, max(0, file_size - bytes_to_read))
+
+        # Read remaining content
+        raw_content <- readBin(con, "raw", n = bytes_to_read)
+        content <- rawToChar(raw_content)
+
+        # Split into lines and return last n
+        lines <- strsplit(content, "\r?\n")[[1]]
+
+        # Remove potential partial first line (incomplete due to seeking)
+        if (file_size > bytes_to_read && length(lines) > 1) {
+          lines <- lines[-1]
         }
+
+        # Return last n lines (or all if fewer)
+        tail(lines, n)
+      },
+      error = function(e) {
+        # Return empty on any error (permissions, encoding, file deleted, etc.)
+        character()
       }
-      stderr_path <- prepare_log_path(log_opt$stderr)
-      if (!is.null(stderr_path)) {
-        stderr_dest <- stderr_path
-        if (!quiet) {
-          message("Redirecting server stderr to: ", stderr_path)
-        }
+    )
+  }
+
+  if (isTRUE(verbose)) {
+    # Direct to console (developer mode)
+    # Note: This CAN cause deadlocks in tight loops if R is busy!
+    stdout_dest <- ""
+    stderr_dest <- ""
+    # No log file is used in verbose mode; use sentinel for clarity.
+    log_file_path <- NA_character_
+  } else if (!is.null(log_opt) && is.character(log_opt)) {
+    # User override via options - only character path supported
+    log_path <- prepare_log_path(log_opt)
+    if (!is.null(log_path)) {
+      log_file_path <- log_path
+      stdout_dest <- log_path
+      stderr_dest <- log_path
+      if (!quiet) {
+        message("Redirecting server stdout and stderr to: ", log_path)
       }
+    } else {
+      # Invalid character path - fall back to temp file
+      log_file_path <- tempfile(pattern = "osrm_", fileext = ".log")
+      stdout_dest <- log_file_path
+      stderr_dest <- log_file_path
     }
+  } else if (is.list(log_opt)) {
+    # List option is deprecated - silently fall back to temp file
+    # (was causing deadlocks with incomplete configuration)
+    log_file_path <- tempfile(pattern = "osrm_", fileext = ".log")
+    stdout_dest <- log_file_path
+    stderr_dest <- log_file_path
+  } else {
+    # DEFAULT: Write to a temp file.
+    # This prevents deadlocks and allows post-mortem debugging.
+    log_file_path <- tempfile(pattern = "osrm_", fileext = ".log")
+    stdout_dest <- log_file_path
+    stderr_dest <- log_file_path
   }
 
   # Resolve osrm-routed executable (optionally override via option)
@@ -361,45 +419,76 @@ osrm_start_server <- function(
     stderr = stderr_dest
   )
 
-  # If the process died immediately, provide a helpful error (only safe to read pipes)
+  # --- HEALTH CHECK & ERROR REPORTING ---
+
+  # Poll for startup failures with multiple checks over a grace period.
+  # Most failures (bad port, corrupted graph) happen within milliseconds,
+  # but we check multiple times to be robust across different system loads.
+  max_checks <- 10
+  for (i in seq_len(max_checks)) {
+    Sys.sleep(0.1)
+    # Early exit if process already failed
+    if (!isTRUE(try(osrm_server$is_alive(), silent = TRUE))) {
+      break
+    }
+  }
+
   alive_now <- FALSE
   err_msg <- NULL
+
   try(
     {
       alive_now <- osrm_server$is_alive()
       if (!alive_now) {
         status <- try(osrm_server$get_exit_status(), silent = TRUE)
         status <- if (inherits(status, "try-error")) NA_integer_ else status
-        # Only try to read from pipes if they are pipes
-        out_lines <- if (identical(stdout_dest, "|")) {
-          tryCatch(osrm_server$read_output_lines(), error = function(e) {
-            character()
-          })
-        } else {
-          character()
+
+        # Retrieve logs to explain WHY it failed
+        log_content <- character()
+
+        if (!is.null(log_file_path) && file.exists(log_file_path)) {
+          # Read only the last ~100 lines to avoid loading large files
+          log_content <- read_last_n_lines(log_file_path, n = 100)
+        } else if (identical(stdout_dest, "|")) {
+          # Fallback for pipes (unlikely with new default)
+          log_content <- c(
+            tryCatch(osrm_server$read_output_lines(), error = function(e) {
+              character()
+            }),
+            tryCatch(osrm_server$read_error_lines(), error = function(e) {
+              character()
+            })
+          )
         }
-        err_lines <- if (identical(stderr_dest, "|")) {
-          tryCatch(osrm_server$read_error_lines(), error = function(e) {
-            character()
-          })
-        } else {
-          character()
-        }
+
+        # Format the error message
         err_msg <- paste0(
           "osrm-routed failed to start (exit status: ",
           status,
-          ").\n",
-          if (length(out_lines)) {
-            paste0("[stdout]\n", paste(out_lines, collapse = "\n"), "\n")
-          } else {
-            ""
-          },
-          if (length(err_lines)) {
-            paste0("[stderr]\n", paste(err_lines, collapse = "\n"), "\n")
-          } else {
-            ""
-          }
+          ").\n"
         )
+
+        if (length(log_content) > 0) {
+          # Show the last 10 lines of the error log
+          err_msg <- paste0(
+            err_msg,
+            "Last 10 log lines:\n",
+            paste(utils::tail(log_content, 10), collapse = "\n")
+          )
+        } else {
+          if (isTRUE(verbose) && is.null(log_file_path)) {
+            err_msg <- paste0(
+              err_msg,
+              "Logs were sent to the R console and cannot be recovered. ",
+              "Set a log file path to persist logs for debugging."
+            )
+          } else {
+            err_msg <- paste0(
+              err_msg,
+              "No logs captured (check if 'verbose' or log file options are set)."
+            )
+          }
+        }
       }
     },
     silent = TRUE
@@ -421,10 +510,16 @@ osrm_start_server <- function(
       osrm_server,
       port = port,
       prefix = prefix,
-      algorithm = algorithm
+      algorithm = algorithm,
+      log = log_file_path
     ),
     silent = TRUE
   )
+
+  # Attach log path as attribute for user access
+  if (!is.null(log_file_path)) {
+    attr(osrm_server, "log_path") <- log_file_path
+  }
 
   osrm_server
 }

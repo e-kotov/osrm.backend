@@ -6,7 +6,7 @@
 #' You can stop one by passing its `id`, `port`, or `pid` to [osrm_stop()].
 #'
 #' @return A data.frame with columns:
-#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`.
+#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`.
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -49,6 +49,7 @@ osrm_servers <- function() {
       started_at = as.POSIXct(character()),
       alive = logical(),
       has_handle = logical(),
+      log = character(),
       stringsAsFactors = FALSE
     )
     return(out)
@@ -75,6 +76,7 @@ osrm_servers <- function() {
     started_at = as.POSIXct(vapply(reg, `[[`, "", "started_at")),
     alive = alive_vec,
     has_handle = handle_vec,
+    log = vapply(reg, function(e) as.character(e$log %||% ""), ""),
     stringsAsFactors = FALSE
   )
   out
