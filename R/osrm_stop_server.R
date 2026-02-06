@@ -6,7 +6,7 @@
 #' You can stop one by passing its `id`, `port`, or `pid` to [osrm_stop()].
 #'
 #' @return A data.frame with columns:
-#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`.
+#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`.
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
