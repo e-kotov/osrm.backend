@@ -73,8 +73,9 @@ osrm_start_server(
 
 \item{quiet}{Logical; when \code{TRUE}, suppresses package messages.}
 
-\item{verbose}{Logical; reserved for controlling future server verbosity, included
-for interface consistency with \code{\link[=osrm_start]{osrm_start()}}. Defaults to \code{FALSE}.}
+\item{verbose}{Logical; when \code{TRUE}, routes server stdout and stderr to the R
+console for live debugging. Note: This can cause deadlocks in tight loops
+if R is busy. Defaults to \code{FALSE}, which writes logs to a temporary file.}
 
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
 }
@@ -92,9 +93,9 @@ reliable operation while preserving logs for debugging startup failures.
 
 To customize logging behavior, you can use the following approaches:
 \itemize{
-\item \strong{Default (Temp File):} Logs are written to a temporary file that is
-automatically cleaned up when the R session ends. This prevents deadlocks
-while keeping logs available for debugging.
+\item \strong{Default (Temp File):} Logs are written to a temporary file. This prevents
+deadlocks while keeping logs available for debugging; you can delete the file
+manually if desired.
 
 \item \strong{Verbose Mode:} Set \code{verbose = TRUE} to display logs directly in the
 R console. Note: This can cause deadlocks in tight loops if R is busy.
@@ -102,9 +103,6 @@ R console. Note: This can cause deadlocks in tight loops if R is busy.
 \item \strong{Custom Log File:} Set the \code{osrm.server.log_file} option to redirect
 output to a specific file:
 \code{options(osrm.server.log_file = "path/to/osrm.log")}
-
-\item \strong{Separate Logs:} Provide a named list for separate stdout/stderr:
-\code{options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))}
 }
 
 You can override the \code{osrm-routed} executable via

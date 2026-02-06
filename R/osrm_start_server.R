@@ -11,9 +11,9 @@
 #'
 #' To customize logging behavior, you can use the following approaches:
 #' \itemize{
-#'   \item **Default (Temp File):** Logs are written to a temporary file that is
-#'     automatically cleaned up when the R session ends. This prevents deadlocks
-#'     while keeping logs available for debugging.
+#'   \item **Default (Temp File):** Logs are written to a temporary file. This prevents
+#'     deadlocks while keeping logs available for debugging; you can delete the file
+#'     manually if desired.
 #'
 #'   \item **Verbose Mode:** Set `verbose = TRUE` to display logs directly in the
 #'     R console. Note: This can cause deadlocks in tight loops if R is busy.
@@ -21,9 +21,6 @@
 #'   \item **Custom Log File:** Set the `osrm.server.log_file` option to redirect
 #'     output to a specific file:
 #'     `options(osrm.server.log_file = "path/to/osrm.log")`
-#'
-#'   \item **Separate Logs:** Provide a named list for separate stdout/stderr:
-#'     `options(osrm.server.log_file = list(stdout = "out.log", stderr = "err.log"))`
 #' }
 #'
 #' You can override the `osrm-routed` executable via
@@ -51,8 +48,9 @@
 #' @param max_matching_radius Integer; use `-1` for unlimited (default: `-1`)
 #' @param echo_cmd Logical; echo command line to console before launch (default: `FALSE`)
 #' @param quiet Logical; when `TRUE`, suppresses package messages.
-#' @param verbose Logical; reserved for controlling future server verbosity, included
-#'   for interface consistency with [osrm_start()]. Defaults to `FALSE`.
+#' @param verbose Logical; when `TRUE`, routes server stdout and stderr to the R
+#'   console for live debugging. Note: This can cause deadlocks in tight loops
+#'   if R is busy. Defaults to `FALSE`, which writes logs to a temporary file.
 #'
 #' @return A `processx::process` object for the running server (also registered internally).
 #' @examples
@@ -294,33 +292,43 @@ osrm_start_server <- function(
   stderr_dest <- NULL
   log_file_path <- NULL
 
+  # Helper to validate path and create directory if needed
+  prepare_log_path <- function(path) {
+    if (
+      is.null(path) || !is.character(path) || length(path) != 1 || !nzchar(path)
+    ) {
+      return(NULL)
+    }
+    abs_path <- normalizePath(path, mustWork = FALSE)
+    log_dir <- dirname(abs_path)
+    if (!dir.exists(log_dir)) {
+      dir.create(log_dir, recursive = TRUE, showWarnings = FALSE)
+    }
+    abs_path
+  }
+
   if (isTRUE(verbose)) {
     # Direct to console (developer mode)
     # Note: This CAN cause deadlocks in tight loops if R is busy!
     stdout_dest <- ""
     stderr_dest <- ""
-  } else if (!is.null(log_opt)) {
-    # User override via options
-    if (is.character(log_opt)) {
-      log_file_path <- normalizePath(log_opt, mustWork = FALSE)
-      stdout_dest <- log_file_path
-      stderr_dest <- log_file_path
+  } else if (!is.null(log_opt) && is.character(log_opt)) {
+    # User override via options - only character path supported
+    log_path <- prepare_log_path(log_opt)
+    if (!is.null(log_path)) {
+      log_file_path <- log_path
+      stdout_dest <- log_path
+      stderr_dest <- log_path
       if (!quiet) {
-        message("Redirecting server stdout and stderr to: ", log_file_path)
-      }
-    } else if (is.list(log_opt)) {
-      stdout_dest <- log_opt$stdout
-      stderr_dest <- log_opt$stderr
-      log_file_path <- log_opt$stderr # Prefer stderr for error checking
-      if (!quiet) {
-        if (!is.null(stdout_dest)) {
-          message("Redirecting server stdout to: ", stdout_dest)
-        }
-        if (!is.null(stderr_dest)) {
-          message("Redirecting server stderr to: ", stderr_dest)
-        }
+        message("Redirecting server stdout and stderr to: ", log_path)
       }
     }
+  } else if (is.list(log_opt)) {
+    # List option is deprecated - silently fall back to temp file
+    # (was causing deadlocks with incomplete configuration)
+    log_file_path <- tempfile(pattern = "osrm_", fileext = ".log")
+    stdout_dest <- log_file_path
+    stderr_dest <- log_file_path
   } else {
     # DEFAULT: Write to a temp file.
     # This prevents deadlocks and allows post-mortem debugging.
