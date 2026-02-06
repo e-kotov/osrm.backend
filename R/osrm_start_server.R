@@ -457,10 +457,18 @@ osrm_start_server <- function(
             paste(utils::tail(log_content, 10), collapse = "\n")
           )
         } else {
-          err_msg <- paste0(
-            err_msg,
-            "No logs captured (check if 'verbose' or log file options are set)."
-          )
+          if (isTRUE(verbose) && is.null(log_file_path)) {
+            err_msg <- paste0(
+              err_msg,
+              "Logs were sent to the R console and cannot be recovered. ",
+              "Set a log file path to persist logs for debugging."
+            )
+          } else {
+            err_msg <- paste0(
+              err_msg,
+              "No logs captured (check if 'verbose' or log file options are set)."
+            )
+          }
         }
       }
     },
