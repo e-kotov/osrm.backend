@@ -36,8 +36,10 @@ with a warning. If no servers are running, an error is raised.}
 \item{center}{Numeric vector of length 2 (\code{c(lng, lat)}), or named list
 (\code{list(lng = ..., lat = ...)}), or \code{NULL} (default). Initial map center.
 If \code{NULL} and \code{input_osrm} is a \code{.osm.pbf} file, attempts to auto-center
-on the PBF extent. Uses \verb{osmium fileinfo} (fast, all file sizes) if
-available, otherwise falls back to GDAL or sampling features (< 50 MB).}
+on the PBF extent. Priority is given to a fast pure R header parser and
+\verb{osmium fileinfo} (fast); otherwise estimates the extent by sampling a
+small number of features via \code{sf::st_read()} (for example, reading with
+a \verb{LIMIT 10} query).}
 
 \item{zoom}{Numeric. Initial zoom level. If \code{NULL} (default) and center is
 auto-detected from PBF, defaults to 9. Otherwise uses map default.}

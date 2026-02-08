@@ -29,8 +29,10 @@
 #' @param center Numeric vector of length 2 (`c(lng, lat)`), or named list
 #'   (`list(lng = ..., lat = ...)`), or `NULL` (default). Initial map center.
 #'   If `NULL` and `input_osrm` is a `.osm.pbf` file, attempts to auto-center
-#'   on the PBF extent. Uses `osmium fileinfo` (fast, all file sizes) if
-#'   available, otherwise falls back to GDAL or sampling features (< 50 MB).
+#'   on the PBF extent. Priority is given to a fast pure R header parser and
+#'   `osmium fileinfo` (fast); otherwise estimates the extent by sampling a
+#'   small number of features via `sf::st_read()` (for example, reading with
+#'   a `LIMIT 10` query).
 #' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is
 #'   auto-detected from PBF, defaults to 9. Otherwise uses map default.
 #' @param autozoom Logical. Whether to enable auto-zoom by default. Defaults to `TRUE`.
