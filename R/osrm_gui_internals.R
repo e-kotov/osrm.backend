@@ -8,7 +8,7 @@ gui_check_dependencies <- function() {
   missing_pkgs <- required_pkgs[
     !vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)
   ]
-  
+
   if (length(missing_pkgs) > 0) {
     stop(
       "The following packages are required for the GUI but are not installed: ",
@@ -30,7 +30,7 @@ gui_setup_server <- function(input_osrm, port) {
   kill_on_exit <- FALSE
   host <- "http://127.0.0.1"
   active_port <- port
-  
+
   if (inherits(input_osrm, "process")) {
     if (!input_osrm$is_alive()) {
       stop("The provided OSRM server process is not running.", call. = FALSE)
@@ -45,7 +45,6 @@ gui_setup_server <- function(input_osrm, port) {
     }
     active_port <- as.integer(port)
     message("Using provided OSRM server process on port ", active_port)
-    
   } else if (is.character(input_osrm)) {
     message("Starting temporary OSRM server for ", basename(input_osrm), "...")
     server_port <- if (identical(port, "auto")) 5001L else as.integer(port)
@@ -59,11 +58,10 @@ gui_setup_server <- function(input_osrm, port) {
     }
     active_port <- server_port
     kill_on_exit <- TRUE
-    
   } else if (identical(port, "auto")) {
     servers <- osrm_servers()
     alive_servers <- servers[servers$alive, ]
-    
+
     if (nrow(alive_servers) == 0) {
       stop(
         "No running OSRM servers detected. ",
@@ -76,7 +74,7 @@ gui_setup_server <- function(input_osrm, port) {
     } else {
       most_recent <- alive_servers[which.max(alive_servers$started_at), ]
       active_port <- most_recent$port
-      
+
       warning(
         "Multiple OSRM servers running (ports: ",
         paste(alive_servers$port, collapse = ", "),
@@ -98,14 +96,14 @@ gui_setup_server <- function(input_osrm, port) {
       active_port
     )
   }
-  
+
   cleanup_fn <- function() {
     if (kill_on_exit && !is.null(server_process) && server_process$is_alive()) {
       message("Stopping temporary OSRM server...")
       server_process$kill()
     }
   }
-  
+
   list(
     active_port = active_port,
     host = host,
@@ -119,10 +117,13 @@ gui_setup_server <- function(input_osrm, port) {
 gui_resolve_map_view <- function(center, zoom, input_osrm) {
   auto_center <- NULL
   auto_zoom <- NULL
-  
+
   if (is.null(center)) {
     pbf_path <- NULL
-    if (is.character(input_osrm) && grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)) {
+    if (
+      is.character(input_osrm) &&
+        grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)
+    ) {
       pbf_path <- input_osrm
     } else if (is.null(input_osrm) || inherits(input_osrm, "process")) {
       srv_info <- osrm_servers()
@@ -132,7 +133,7 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
         if (nzchar(selected$input_osm)) pbf_path <- selected$input_osm
       }
     }
-    
+
     if (!is.null(pbf_path) && file.exists(pbf_path)) {
       pbf_info <- .get_pbf_extent(pbf_path)
       if (!is.null(pbf_info)) {
@@ -145,11 +146,11 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
       }
     }
   }
-  
+
   # Normalize
   final_center <- center %||% auto_center
   final_zoom <- zoom %||% auto_zoom
-  
+
   if (!is.null(final_center)) {
     if (is.list(final_center)) {
       final_center <- c(
@@ -165,7 +166,7 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
       )
     }
   }
-  
+
   list(center = final_center, zoom = final_zoom)
 }
 
@@ -278,7 +279,7 @@ gui_ui_resources <- function() {
         }
       }
     "
-  
+
   js <- "
     $(document).on('click', '#hamburger_btn', function() {
       $('.sidebar-panel').toggleClass('show-sidebar');
@@ -484,14 +485,16 @@ gui_ui_resources <- function() {
 #' @noRd
 gui_ui_layout <- function() {
   res <- gui_ui_resources()
-  
+
   shiny::fluidPage(
     # Header
     shiny::div(
       style = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0; flex-wrap: wrap; gap: 10px;",
       shiny::div(
         style = "display: flex; align-items: center;",
-        shiny::HTML('<div id="hamburger_btn" class="hamburger-btn">&#9776;</div>'),
+        shiny::HTML(
+          '<div id="hamburger_btn" class="hamburger-btn">&#9776;</div>'
+        ),
         shiny::h3(
           shiny::HTML("<b>osrm.backend</b> GUI"),
           style = "margin: 0;"
@@ -513,11 +516,11 @@ gui_ui_layout <- function() {
       shiny::tags$style(shiny::HTML(res$css)),
       shiny::tags$script(shiny::HTML(res$js))
     ),
-    
+
     shiny::div(
       class = "sidebar-overlay"
     ),
-    
+
     shiny::div(
       class = "sidebar-layout",
       shiny::div(
@@ -529,7 +532,7 @@ gui_ui_layout <- function() {
           "Analysis Mode:",
           choices = c("Route" = "route", "Isochrone" = "iso", "Trip" = "trip")
         ),
-        
+
         shiny::conditionalPanel(
           condition = "input.mode == 'iso'",
           shiny::textInput(
@@ -556,7 +559,7 @@ gui_ui_layout <- function() {
             ticks = TRUE
           )
         ),
-        
+
         shiny::hr(),
         shiny::h4("Locations"),
         shiny::helpText(
@@ -582,7 +585,7 @@ gui_ui_layout <- function() {
           "Reset / Clear",
           style = "width: 100%; margin-bottom: 10px;"
         ),
-        
+
         shiny::textInput(
           "start_coords_input",
           "Start (Lat, Lon)",
@@ -594,7 +597,7 @@ gui_ui_layout <- function() {
           placeholder = "-30.05, -51.18"
         )
       ),
-      
+
       shiny::div(
         class = "main-panel",
         style = "width: 75%;",
@@ -636,10 +639,10 @@ gui_ui_layout <- function() {
 
 #' Fetch Detailed Route Steps
 #' @noRd
-api_fetch_route_detailed <- function(src, dst) {
+api_fetch_route_detailed <- function(src, dst, debug = FALSE) {
   server_url <- getOption("osrm.server")
   profile <- getOption("osrm.profile")
-  
+
   # Use geometries=geojson to get coordinate arrays directly
   url <- sprintf(
     "%sroute/v1/%s/%f,%f;%f,%f?steps=true&overview=false&geometries=geojson",
@@ -650,7 +653,11 @@ api_fetch_route_detailed <- function(src, dst) {
     dst$lng,
     dst$lat
   )
-  
+
+  if (debug) {
+    message("DEBUG [Detailed Route]: Fetching URL: ", url)
+  }
+
   tryCatch(
     {
       req <- httr2::request(url)
@@ -658,5 +665,114 @@ api_fetch_route_detailed <- function(src, dst) {
       httr2::resp_body_json(resp)
     },
     error = function(e) NULL
+  )
+}
+
+#' Fetch Trip via Direct HTTP Request
+#' @description Direct HTTP request to OSRM trip endpoint, bypassing osrm::osrmTrip.
+#' This is a workaround for issues where osrmTrip fails inside Shiny reactive contexts.
+#' @param pts_df data.frame with lon and lat columns
+#' @param debug Logical, print debug messages
+#' @return List with trip (sf LINESTRING) and summary, or NULL on error
+#' @noRd
+api_fetch_trip <- function(pts_df, debug = FALSE) {
+  server_url <- getOption("osrm.server")
+  profile <- getOption("osrm.profile")
+
+  # Build coordinate string: "lon1,lat1;lon2,lat2;..."
+  coords_str <- paste(
+    sprintf("%.6f,%.6f", pts_df$lon, pts_df$lat),
+    collapse = ";"
+  )
+
+  url <- sprintf(
+    "%strip/v1/%s/%s?steps=false&geometries=geojson&overview=full&generate_hints=false",
+    server_url,
+    profile,
+    coords_str
+  )
+
+  if (debug) {
+    message("DEBUG [Trip API]: Fetching URL: ", url)
+  }
+
+  tryCatch(
+    {
+      req <- httr2::request(url)
+      resp <- httr2::req_perform(req)
+      res <- httr2::resp_body_json(resp)
+
+      if (is.null(res$trips) || length(res$trips) == 0) {
+        if (debug) {
+          message("DEBUG [Trip API]: No trips in response")
+        }
+        return(NULL)
+      }
+
+      # Parse the first trip
+      trip_data <- res$trips[[1]]
+
+      # Extract overall geometry (full route as one line)
+      coords <- trip_data$geometry$coordinates
+      coord_matrix <- do.call(
+        rbind,
+        lapply(coords, function(c) c(c[[1]], c[[2]]))
+      )
+
+      # Build sf LINESTRING for the full trip
+      trip_line <- sf::st_linestring(coord_matrix)
+      trip_sfc <- sf::st_sfc(trip_line, crs = 4326)
+
+      # Build segments from legs if available
+      legs <- trip_data$legs
+      n_legs <- length(legs)
+
+      if (n_legs > 0) {
+        # Create a data.frame with leg info
+        seg_data <- data.frame(
+          start = seq_len(n_legs),
+          end = c(seq(2, n_legs), 1), # circular: last leg returns to start
+          duration = unname(vapply(
+            legs,
+            function(l) l$duration / 60,
+            numeric(1)
+          )),
+          distance = unname(vapply(
+            legs,
+            function(l) l$distance / 1000,
+            numeric(1)
+          ))
+        )
+
+        # For simplicity, use the full geometry for the trip sf object
+        # A more complete implementation would split the geometry per leg
+        trip_sf <- sf::st_sf(
+          seg_data,
+          geometry = sf::st_sfc(rep(list(trip_line), n_legs), crs = 4326)
+        )
+      } else {
+        # Fallback: single row
+        trip_sf <- sf::st_sf(
+          start = 1,
+          end = 2,
+          duration = trip_data$duration / 60,
+          distance = trip_data$distance / 1000,
+          geometry = trip_sfc
+        )
+      }
+
+      summary <- list(
+        duration = trip_data$duration / 60,
+        distance = trip_data$distance / 1000
+      )
+
+      list(trip = trip_sf, summary = summary)
+    },
+    error = function(e) {
+      if (debug) {
+        message("DEBUG [Trip API]: Error: ", e$message)
+      }
+      NULL
+    }
   )
 }

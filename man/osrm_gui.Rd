@@ -11,7 +11,8 @@ osrm_gui(
   center = NULL,
   zoom = NULL,
   autozoom = TRUE,
-  update_while_drag = FALSE
+  update_while_drag = FALSE,
+  debug = FALSE
 )
 }
 \arguments{
@@ -44,6 +45,8 @@ auto-detected from PBF, defaults to 9. Otherwise uses map default.}
 \item{autozoom}{Logical. Whether to enable auto-zoom by default. Defaults to \code{TRUE}.}
 
 \item{update_while_drag}{Logical. Whether to enable live tracking mode by default (updates route while dragging). Defaults to \code{FALSE}.}
+
+\item{debug}{Logical. Whether to enable debug mode (prints OSRM requests to console). Defaults to \code{FALSE}.}
 }
 \value{
 No return value; launches a Shiny Gadget.
@@ -82,6 +85,9 @@ if (interactive()) {
   # 6. Use an existing process (must specify port):
   # srv <- osrm_start("graph.osrm.mldgr", port = 6000)
   # osrm_gui(srv, port = 6000)
+
+  # 7. Enable debug mode:
+  # osrm_gui(debug = TRUE)
 }
 }
 }
