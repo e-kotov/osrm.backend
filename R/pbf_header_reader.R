@@ -298,22 +298,30 @@ read_pbf_header_bbox <- function(pbf_file) {
     }, error = function(e) NULL)
   }
 
-  # Method 3: sf sampling (reads first 10 point features)
+  # Method 3: sf sampling (try points first, then lines for road-only PBFs)
   if (requireNamespace("sf", quietly = TRUE)) {
-    tryCatch({
-      pts <- sf::st_read(
-        pbf_file,
-        query = "SELECT * FROM points LIMIT 10",
-        quiet = TRUE
-      )
-      if (nrow(pts) > 0) {
-        bbox <- sf::st_bbox(pts)
-        return(list(
-          center = c(mean(c(bbox$xmin, bbox$xmax)), mean(c(bbox$ymin, bbox$ymax))),
-          bbox = as.numeric(bbox[c("xmin", "ymin", "xmax", "ymax")])
-        ))
-      }
-    }, error = function(e) NULL)
+    old_idx <- Sys.getenv("OSM_USE_CUSTOM_INDEXING", unset = NA)
+    Sys.setenv(OSM_USE_CUSTOM_INDEXING = "NO")
+    on.exit({
+      if (is.na(old_idx)) Sys.unsetenv("OSM_USE_CUSTOM_INDEXING")
+      else Sys.setenv(OSM_USE_CUSTOM_INDEXING = old_idx)
+    }, add = TRUE)
+    for (layer in c("points", "lines")) {
+      tryCatch({
+        feats <- sf::st_read(
+          pbf_file,
+          query = sprintf("SELECT * FROM %s LIMIT 10", layer),
+          quiet = TRUE
+        )
+        if (nrow(feats) > 0) {
+          bbox <- sf::st_bbox(feats)
+          return(list(
+            center = c(mean(c(bbox$xmin, bbox$xmax)), mean(c(bbox$ymin, bbox$ymax))),
+            bbox = as.numeric(bbox[c("xmin", "ymin", "xmax", "ymax")])
+          ))
+        }
+      }, error = function(e) NULL)
+    }
   }
 
   NULL
