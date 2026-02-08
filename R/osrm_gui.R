@@ -34,6 +34,7 @@
 #' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is
 #'   auto-detected from PBF, defaults to 9. Otherwise uses map default.
 #' @param autozoom Logical. Whether to enable auto-zoom by default. Defaults to `TRUE`.
+#' @param tracking Logical. Whether to enable live tracking mode by default (updates route while dragging). Defaults to `FALSE`.
 #' @return No return value; launches a Shiny Gadget.
 #' @export
 #' @examples
@@ -65,7 +66,8 @@ osrm_gui <- function(
   style = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
   center = NULL,
   zoom = NULL,
-  autozoom = TRUE
+  autozoom = TRUE,
+  tracking = FALSE
 ) {
   # 1. Check Dependencies
   required_pkgs <- c("shiny", "mapgl", "osrm", "sf", "DT")
@@ -244,6 +246,7 @@ osrm_gui <- function(
       shiny::div(
         style = "display: flex; gap: 10px; align-items: center;",
         shiny::uiOutput("autozoom_button_ui", inline = TRUE),
+        shiny::uiOutput("tracking_button_ui", inline = TRUE),
         shiny::actionButton(
           "quit_app",
           "Quit",
@@ -400,6 +403,18 @@ osrm_gui <- function(
                 });
               };
             };
+            
+            const createDragCallback = (id) => {
+              return (marker) => {
+                const coords = marker.getLngLat();
+                Shiny.setInputValue('marker_moving', {
+                  id: id,
+                  lng: coords.lng,
+                  lat: coords.lat,
+                  nonce: Math.random()
+                });
+              };
+            };
 
             if (markerId === 'start') {
               if (!startMarker) {
@@ -407,6 +422,7 @@ osrm_gui <- function(
                   .setLngLat(lngLat)
                   .addTo(map);
                 startMarker.on('dragend', () => createDragEndCallback('start')(startMarker));
+                startMarker.on('drag', () => createDragCallback('start')(startMarker));
               } else {
                 startMarker.setLngLat(lngLat);
               }
@@ -416,6 +432,7 @@ osrm_gui <- function(
                   .setLngLat(lngLat)
                   .addTo(map);
                 endMarker.on('dragend', () => createDragEndCallback('end')(endMarker));
+                endMarker.on('drag', () => createDragCallback('end')(endMarker));
               } else {
                 endMarker.setLngLat(lngLat);
               }
@@ -553,236 +570,585 @@ osrm_gui <- function(
         mapgl::add_scale_control()
     })
 
-    # State
-    locations <- shiny::reactiveValues(start = NULL, end = NULL)
-    init <- shiny::reactiveValues(route = FALSE, iso = FALSE, highlight = FALSE)
-    autozoom_enabled <- shiny::reactiveVal(autozoom)
-    # Store latest route summary for the sidebar
-    route_summary <- shiny::reactiveVal(NULL)
-    # Store current route steps for highlighting
-    current_steps <- shiny::reactiveVal(NULL)
+        # State
 
-    # --- UI Helpers ---
-    output$autozoom_button_ui <- shiny::renderUI({
-      state <- autozoom_enabled()
-      label <- if (state) "Autozoom: ON" else "Autozoom: OFF"
-      color <- if (state) "#5cb85c" else "#777"
-      shiny::actionButton(
-        "toggle_autozoom",
-        label,
-        style = sprintf(
-          "background-color: %s; color: white; border-width: 0px;",
-          color
-        )
-      )
-    })
+        locations <- shiny::reactiveValues(start = NULL, end = NULL)
 
-    output$route_stats <- shiny::renderUI({
-      stats <- route_summary()
-      if (is.null(stats)) {
-        return(NULL)
-      }
+            init <- shiny::reactiveValues(route = FALSE, iso = FALSE, highlight = FALSE)
 
-      shiny::div(
-        class = "route-stats-overlay",
-        shiny::div(
-          shiny::tags$b("Duration: "),
-          shiny::span(
-            paste(round(stats$duration, 1), "min"),
-            class = "stat-val",
-            style = "color: #007bff;"
+            autozoom_enabled <- shiny::reactiveVal(autozoom)
+
+            tracking_enabled <- shiny::reactiveVal(tracking)
+
+            # Store latest route summary for the sidebar
+
+        route_summary <- shiny::reactiveVal(NULL)
+
+        # Store current route steps for highlighting
+
+        current_steps <- shiny::reactiveVal(NULL)
+
+        # Store intermediate coords for tracking
+
+        tracking_coords <- shiny::reactiveValues(start = NULL, end = NULL)
+
+    
+
+        # --- UI Helpers ---
+
+        output$autozoom_button_ui <- shiny::renderUI({
+
+          state <- autozoom_enabled()
+
+          label <- if (state) "Autozoom: ON" else "Autozoom: OFF"
+
+          color <- if (state) "#5cb85c" else "#777"
+
+          shiny::actionButton(
+
+            "toggle_autozoom",
+
+            label,
+
+            style = sprintf(
+
+              "background-color: %s; color: white; border-width: 0px;",
+
+              color
+
+            )
+
           )
-        ),
-        shiny::div(
-          shiny::tags$b("Distance: "),
-          shiny::span(
-            paste(round(stats$distance, 2), "km"),
-            class = "stat-val",
-            style = "color: #28a745;"
+
+        })
+
+        
+
+        output$tracking_button_ui <- shiny::renderUI({
+
+          state <- tracking_enabled()
+
+          label <- if (state) "Tracking: ON" else "Tracking: OFF"
+
+          color <- if (state) "#5cb85c" else "#777"
+
+          shiny::actionButton(
+
+            "toggle_tracking",
+
+            label,
+
+            style = sprintf(
+
+              "background-color: %s; color: white; border-width: 0px;",
+
+              color
+
+            )
+
           )
-        )
-      )
-    })
 
-    shiny::observeEvent(input$toggle_autozoom, {
-      autozoom_enabled(!autozoom_enabled())
-    })
+        })
 
-    # --- Marker Helpers ---
-    update_start <- function(lng, lat) {
-      coords <- list(lat = round(lat, 5), lon = round(lng, 5))
-      locations$start <- coords
-      session$sendCustomMessage(
-        'updateMarker',
-        list(id = 'start', lng = lng, lat = lat)
-      )
-      shiny::updateTextInput(
-        session,
-        "start_coords_input",
-        value = paste(coords$lat, coords$lon, sep = ", ")
-      )
-      # Clear old stats if points move
-      route_summary(NULL)
-      current_steps(NULL)
-    }
+    
 
-    update_end <- function(lng, lat) {
-      coords <- list(lat = round(lat, 5), lon = round(lng, 5))
-      locations$end <- coords
-      session$sendCustomMessage(
-        'updateMarker',
-        list(id = 'end', lng = lng, lat = lat)
-      )
-      shiny::updateTextInput(
-        session,
-        "end_coords_input",
-        value = paste(coords$lat, coords$lon, sep = ", ")
-      )
-      # Clear old stats if points move
-      route_summary(NULL)
-      current_steps(NULL)
-    }
+        output$route_stats <- shiny::renderUI({
 
-    # --- Interaction Handlers ---
-    # Left Click -> Start
-    shiny::observeEvent(input$map_click, {
-      shiny::req(input$map_click)
-      update_start(input$map_click$lng, input$map_click$lat)
-    })
+          stats <- route_summary()
 
-    # Right Click -> End (Only in route mode)
-    shiny::observeEvent(input$js_right_click, {
-      shiny::req(input$js_right_click)
-      if (input$mode == 'route') {
-        update_end(input$js_right_click$lng, input$js_right_click$lat)
-      }
-    })
+          if (is.null(stats)) {
 
-    # Drag
-    shiny::observeEvent(input$marker_dragged, {
-      drag <- input$marker_dragged
-      if (drag$id == "start") {
-        update_start(drag$lng, drag$lat)
-      } else if (drag$id == "end") {
-        update_end(drag$lng, drag$lat)
-      }
-    })
+            return(NULL)
 
-    # Reset
-    shiny::observeEvent(input$reset, {
-      locations$start <- NULL
-      locations$end <- NULL
-      route_summary(NULL)
-      current_steps(NULL)
-      session$sendCustomMessage('clearAllMarkers', 'clear')
-      shiny::updateTextInput(session, "start_coords_input", value = "")
-      shiny::updateTextInput(session, "end_coords_input", value = "")
+          }
 
-      proxy <- mapgl::maplibre_proxy("map")
-      # We cannot remove sources easily, so we hide layers or clear data
-      if (init$route) {
-        # Hide route layer
-        mapgl::set_layout_property(proxy, "route_layer", "visibility", "none")
-      }
-      if (init$iso) {
-        # Hide iso layer
-        mapgl::set_layout_property(proxy, "iso_layer", "visibility", "none")
-      }
-      if (init$highlight) {
-        mapgl::set_layout_property(
-          proxy,
-          "highlight_layer",
-          "visibility",
-          "none"
-        )
-      }
-      mapgl::clear_legend(proxy)
-    })
+    
 
-    # --- Calculation Logic ---
+          shiny::div(
 
-    # Route
-    shiny::observe({
-      shiny::req(input$mode == "route")
-      shiny::req(locations$start, locations$end)
+            class = "route-stats-overlay",
 
-      shiny::withProgress(message = 'Calculating Route...', {
-        tryCatch(
-          {
+            shiny::div(
+
+              shiny::tags$b("Duration: "),
+
+              shiny::span(
+
+                paste(round(stats$duration, 1), "min"),
+
+                class = "stat-val",
+
+                style = "color: #007bff;"
+
+              )
+
+            ),
+
+            shiny::div(
+
+              shiny::tags$b("Distance: "),
+
+              shiny::span(
+
+                paste(round(stats$distance, 2), "km"),
+
+                class = "stat-val",
+
+                style = "color: #28a745;"
+
+              )
+
+            )
+
+          )
+
+        })
+
+    
+
+        shiny::observeEvent(input$toggle_autozoom, {
+
+          autozoom_enabled(!autozoom_enabled())
+
+        })
+
+        
+
+        shiny::observeEvent(input$toggle_tracking, {
+
+          tracking_enabled(!tracking_enabled())
+
+        })
+
+    
+
+        # --- Marker Helpers ---
+
+        update_start <- function(lng, lat) {
+
+          coords <- list(lat = round(lat, 5), lon = round(lng, 5))
+
+          locations$start <- coords
+
+          tracking_coords$start <- coords
+
+          session$sendCustomMessage(
+
+            'updateMarker',
+
+            list(id = 'start', lng = lng, lat = lat)
+
+          )
+
+          shiny::updateTextInput(
+
+            session,
+
+            "start_coords_input",
+
+            value = paste(coords$lat, coords$lon, sep = ", ")
+
+          )
+
+          # Clear old stats if points move
+
+          route_summary(NULL)
+
+          current_steps(NULL)
+
+        }
+
+    
+
+        update_end <- function(lng, lat) {
+
+          coords <- list(lat = round(lat, 5), lon = round(lng, 5))
+
+          locations$end <- coords
+
+          tracking_coords$end <- coords
+
+          session$sendCustomMessage(
+
+            'updateMarker',
+
+            list(id = 'end', lng = lng, lat = lat)
+
+          )
+
+          shiny::updateTextInput(
+
+            session,
+
+            "end_coords_input",
+
+            value = paste(coords$lat, coords$lon, sep = ", ")
+
+          )
+
+          # Clear old stats if points move
+
+          route_summary(NULL)
+
+          current_steps(NULL)
+
+        }
+
+    
+
+        # --- Interaction Handlers ---
+
+        # Left Click -> Start
+
+        shiny::observeEvent(input$map_click, {
+
+          shiny::req(input$map_click)
+
+          update_start(input$map_click$lng, input$map_click$lat)
+
+        })
+
+    
+
+        # Right Click -> End (Only in route mode)
+
+        shiny::observeEvent(input$js_right_click, {
+
+          shiny::req(input$js_right_click)
+
+          if (input$mode == 'route') {
+
+            update_end(input$js_right_click$lng, input$js_right_click$lat)
+
+          }
+
+        })
+
+    
+
+        # Drag End (Final positions)
+
+        shiny::observeEvent(input$marker_dragged, {
+
+          drag <- input$marker_dragged
+
+          if (drag$id == "start") {
+
+            update_start(drag$lng, drag$lat)
+
+          } else if (drag$id == "end") {
+
+            update_end(drag$lng, drag$lat)
+
+          }
+
+        })
+
+        
+
+        # Active Dragging (Throttled update)
+
+        shiny::observeEvent(input$marker_moving, {
+
+          moving <- input$marker_moving
+
+          tracking_coords[[moving$id]] <- list(lat = round(moving$lat, 5), lon = round(moving$lng, 5))
+
+        })
+
+    
+
+        # Reset
+
+        shiny::observeEvent(input$reset, {
+
+          locations$start <- NULL
+
+          locations$end <- NULL
+
+          tracking_coords$start <- NULL
+
+          tracking_coords$end <- NULL
+
+          route_summary(NULL)
+
+          current_steps(NULL)
+
+          session$sendCustomMessage('clearAllMarkers', 'clear')
+
+          shiny::updateTextInput(session, "start_coords_input", value = "")
+
+          shiny::updateTextInput(session, "end_coords_input", value = "")
+
+    
+
+          proxy <- mapgl::maplibre_proxy("map")
+
+          # We cannot remove sources easily, so we hide layers or clear data
+
+          if (init$route) {
+
+            # Hide route layer
+
+            mapgl::set_layout_property(proxy, "route_layer", "visibility", "none")
+
+          }
+
+          if (init$iso) {
+
+            # Hide iso layer
+
+            mapgl::set_layout_property(proxy, "iso_layer", "visibility", "none")
+
+          }
+
+          if (init$highlight) {
+
+            mapgl::set_layout_property(proxy, "highlight_layer", "visibility", "none")
+
+          }
+
+          mapgl::clear_legend(proxy)
+
+        })
+
+    
+
+        # --- Calculation Logic ---
+
+        
+
+        # Throttled live route calculation for tracking
+
+        active_tracking_data <- shiny::throttle(shiny::reactive({
+
+          list(start = tracking_coords$start, end = tracking_coords$end)
+
+        }), 200)
+
+        
+
+        shiny::observe({
+
+          shiny::req(tracking_enabled())
+
+          shiny::req(input$mode == "route")
+
+          coords <- active_tracking_data()
+
+          shiny::req(coords$start, coords$end)
+
+          
+
+          tryCatch({
+
             route <- osrm::osrmRoute(
-              src = c(locations$start$lon, locations$start$lat),
-              dst = c(locations$end$lon, locations$end$lat),
+
+              src = c(coords$start$lon, coords$start$lat),
+
+              dst = c(coords$end$lon, coords$end$lat),
+
               overview = "full"
+
             )
 
             if (!is.null(route)) {
-              # Update stats in sidebar
-              route_summary(list(
-                duration = route$duration[1],
-                distance = route$distance[1]
-              ))
+
+              route_summary(list(duration = route$duration[1], distance = route$distance[1]))
 
               proxy <- mapgl::maplibre_proxy("map")
 
               if (!init$route) {
-                # Initial Add
+
                 mapgl::add_source(proxy, id = "route_source", data = route)
-                mapgl::add_line_layer(
-                  proxy,
-                  id = "route_layer",
-                  source = "route_source",
-                  line_color = "#3b82f6",
-                  line_width = 5,
-                  line_opacity = 0.8
-                )
+
+                mapgl::add_line_layer(proxy, id = "route_layer", source = "route_source",
+
+                                      line_color = "#3b82f6", line_width = 5, line_opacity = 0.8)
+
                 init$route <- TRUE
+
               } else {
-                # Update
-                mapgl::set_source(
-                  proxy,
-                  layer_id = "route_layer",
-                  source = route
-                )
-                mapgl::set_layout_property(
-                  proxy,
-                  "route_layer",
-                  "visibility",
-                  "visible"
-                )
+
+                mapgl::set_source(proxy, layer_id = "route_layer", source = route)
+
+                mapgl::set_layout_property(proxy, "route_layer", "visibility", "visible")
+
               }
 
-              # Combined bounds: include both the route geometry and the user-selected points.
-              # This ensures 'wiggly' routes aren't cut off while guaranteeing markers are visible.
-              # Padding increased to 150px for a less aggressive zoom.
-              pts_sf <- sf::st_as_sf(
-                data.frame(
-                  lon = c(locations$start$lon, locations$end$lon),
-                  lat = c(locations$start$lat, locations$end$lat)
-                ),
-                coords = c("lon", "lat"),
-                crs = 4326
-              )
-              # Combine into a single sf object with a geometry column named 'geometry'
-                            combined_sf <- rbind(
-                              sf::st_sf(geometry = sf::st_geometry(route)),
-                              sf::st_sf(geometry = sf::st_geometry(pts_sf))
-                            )
-                            if (shiny::isolate(autozoom_enabled())) {
-                              # Reduce padding on small screens to prevent over-zooming out
-                              map_width <- session$clientData$output_map_width %||% 1000
-                              padding <- if (map_width < 768) 50 else 150
-                              mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = padding)
-                            }
-                          }
-                        },          error = function(e) {
-            shiny::showNotification(
-              paste("Routing failed:", e$message),
-              type = "error"
+            }
+
+          }, error = function(e) NULL)
+
+        })
+
+    
+
+        # Final Route Update (Heavy)
+
+        shiny::observe({
+
+          shiny::req(input$mode == "route")
+
+          shiny::req(locations$start, locations$end)
+
+    
+
+          shiny::withProgress(message = 'Calculating Route...', {
+
+            tryCatch(
+
+              {
+
+                route <- osrm::osrmRoute(
+
+                  src = c(locations$start$lon, locations$start$lat),
+
+                  dst = c(locations$end$lon, locations$end$lat),
+
+                  overview = "full"
+
+                )
+
+    
+
+                if (!is.null(route)) {
+
+                  # Update stats in sidebar
+
+                  route_summary(list(
+
+                    duration = route$duration[1], 
+
+                    distance = route$distance[1]
+
+                  ))
+
+                  
+
+                  proxy <- mapgl::maplibre_proxy("map")
+
+    
+
+                  if (!init$route) {
+
+                    # Initial Add
+
+                    mapgl::add_source(proxy, id = "route_source", data = route)
+
+                    mapgl::add_line_layer(
+
+                      proxy,
+
+                      id = "route_layer",
+
+                      source = "route_source",
+
+                      line_color = "#3b82f6",
+
+                      line_width = 5,
+
+                      line_opacity = 0.8
+
+                    )
+
+                    init$route <- TRUE
+
+                  } else {
+
+                    # Update
+
+                    mapgl::set_source(
+
+                      proxy,
+
+                      layer_id = "route_layer",
+
+                      source = route
+
+                    )
+
+                    mapgl::set_layout_property(
+
+                      proxy,
+
+                      "route_layer",
+
+                      "visibility",
+
+                      "visible"
+
+                    )
+
+                  }
+
+                  
+
+                  # Combined bounds: include both the route geometry and the user-selected points.
+
+                  # This ensures 'wiggly' routes aren't cut off while guaranteeing markers are visible.
+
+                  # Padding increased to 150px for a less aggressive zoom.
+
+                  pts_sf <- sf::st_as_sf(
+
+                    data.frame(
+
+                      lon = c(locations$start$lon, locations$end$lon),
+
+                      lat = c(locations$start$lat, locations$end$lat)
+
+                    ),
+
+                    coords = c("lon", "lat"),
+
+                    crs = 4326
+
+                  )
+
+                  # Combine into a single sf object with a geometry column named 'geometry'
+
+                  combined_sf <- rbind(
+
+                    sf::st_sf(geometry = sf::st_geometry(route)),
+
+                    sf::st_sf(geometry = sf::st_geometry(pts_sf))
+
+                  )
+
+                  if (shiny::isolate(autozoom_enabled())) {
+
+                    # Reduce padding on small screens to prevent over-zooming out
+
+                    map_width <- session$clientData$output_map_width %||% 1000
+
+                    padding <- if (map_width < 768) 50 else 150
+
+                    mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = padding)
+
+                  }
+
+                }
+
+              },
+
+              error = function(e) {
+
+                shiny::showNotification(
+
+                  paste("Routing failed:", e$message),
+
+                  type = "error"
+
+                )
+
+              }
+
             )
-          }
-        )
-      })
-    })
+
+          })
+
+        })
 
     # Isochrone
     shiny::observe({
