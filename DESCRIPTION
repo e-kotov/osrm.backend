@@ -19,10 +19,13 @@ Imports:
     processx,
     ps
 Suggests:
+    DT,
     knitr,
+    mapgl,
     osrm,
     rmarkdown,
     sf,
+    shiny,
     testthat (>= 3.0.0),
     tibble
 VignetteBuilder:
