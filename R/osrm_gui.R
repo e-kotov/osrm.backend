@@ -536,7 +536,24 @@ osrm_gui <- function(
                   "visible"
                 )
               }
-              mapgl::fit_bounds(proxy, route, animate = TRUE, padding = 50)
+              
+              # Combined bounds: include both the route geometry and the user-selected points.
+              # This ensures 'wiggly' routes aren't cut off while guaranteeing markers are visible.
+              # Padding increased to 150px for a less aggressive zoom.
+              pts_sf <- sf::st_as_sf(
+                data.frame(
+                  lon = c(locations$start$lon, locations$end$lon),
+                  lat = c(locations$start$lat, locations$end$lat)
+                ),
+                coords = c("lon", "lat"),
+                crs = 4326
+              )
+              # Combine into a single sf object with a geometry column named 'geometry'
+              combined_sf <- rbind(
+                sf::st_sf(geometry = sf::st_geometry(route)),
+                sf::st_sf(geometry = sf::st_geometry(pts_sf))
+              )
+              mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = 150)
             }
           },
           error = function(e) {
