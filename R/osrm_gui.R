@@ -115,6 +115,7 @@ osrm_gui <- function(
     )
     autozoom_enabled <- shiny::reactiveVal(autozoom)
     live_update_enabled <- shiny::reactiveVal(update_while_drag)
+    is_dragging <- shiny::reactiveVal(FALSE)
 
     # Store latest route summary for the sidebar
     route_summary <- shiny::reactiveVal(NULL)
@@ -124,6 +125,128 @@ osrm_gui <- function(
     tracking_coords <- shiny::reactiveValues(start = NULL, end = NULL)
     # Store trip result for table
     trip_result <- shiny::reactiveVal(NULL)
+
+    # --- History Manager ---
+    history <- shiny::reactiveValues(past = list(), future = list())
+    
+    # Snapshot current state
+    get_state_snapshot <- function() {
+      shiny::reactiveValuesToList(locations)
+    }
+    
+    # Commit current state to history BEFORE making changes
+    commit <- function() {
+      history$past <- c(history$past, list(get_state_snapshot()))
+      history$future <- list() # Clear future on new branch
+    }
+    
+    # Restore state from snapshot
+    restore <- function(snapshot) {
+      # 1. Update Internal State
+      locations$start <- snapshot$start
+      locations$end <- snapshot$end
+      locations$trip <- snapshot$trip
+      
+      # 2. Clear Tracking Overrides (Fix for Undo/Redo glitch with live updates)
+      tracking_coords$start <- NULL
+      tracking_coords$end <- NULL
+      for (n in names(tracking_coords)) {
+         if (startsWith(n, "trip_")) tracking_coords[[n]] <- NULL
+      }
+      
+      # 3. Sync Map Visuals
+      session$sendCustomMessage("clearAllMarkers", "clear")
+      
+      if (!is.null(snapshot$start)) {
+        session$sendCustomMessage('updateMarker', list(id = 'start', lng = snapshot$start$lng, lat = snapshot$start$lat))
+        shiny::updateTextInput(session, "start_coords_input", value = paste(snapshot$start$lat, snapshot$start$lng, sep = ", "))
+      } else {
+        shiny::updateTextInput(session, "start_coords_input", value = "")
+      }
+      
+      if (!is.null(snapshot$end)) {
+        session$sendCustomMessage('updateMarker', list(id = 'end', lng = snapshot$end$lng, lat = snapshot$end$lat))
+        shiny::updateTextInput(session, "end_coords_input", value = paste(snapshot$end$lat, snapshot$end$lng, sep = ", "))
+      } else {
+        shiny::updateTextInput(session, "end_coords_input", value = "")
+      }
+      
+      if (!is.null(snapshot$trip)) {
+        for (pt in snapshot$trip) {
+          session$sendCustomMessage('updateTripMarker', list(action = 'add', id = pt$id, lng = pt$lng, lat = pt$lat))
+        }
+      }
+      
+      # Trigger route recalculation by invalidating/clearing result cache
+      route_summary(NULL)
+      current_steps(NULL)
+      trip_result(NULL)
+      
+      # Force map layer updates (Reset clears them, Observers re-add them)
+      # Simpler to just trigger the observers via locations change, 
+      # but we might need to clear layers if state is empty.
+      proxy <- mapgl::maplibre_proxy("map")
+      has_content <- !is.null(snapshot$start) || !is.null(snapshot$end) || length(snapshot$trip) > 0
+      
+      if (!has_content) {
+         if (init$route) mapgl::set_layout_property(proxy, "route_layer", "visibility", "none")
+         if (init$iso) mapgl::set_layout_property(proxy, "iso_layer", "visibility", "none")
+         if (init$trip) mapgl::set_layout_property(proxy, "trip_layer", "visibility", "none")
+         if (init$highlight) mapgl::set_layout_property(proxy, "highlight_layer", "visibility", "none")
+         mapgl::clear_legend(proxy)
+      }
+    }
+
+    output$map_edit_controls <- shiny::renderUI({
+       has_history <- length(history$past) > 0
+       has_future <- length(history$future) > 0
+       has_content <- !is.null(locations$start) || !is.null(locations$end) || length(locations$trip) > 0
+       
+       if (!has_history && !has_future && !has_content) return(NULL)
+       
+       btns <- list()
+       
+       style_base <- "background: white; border: none; border-radius: 4px; box-shadow: 0 0 0 2px rgba(0,0,0,0.1); width: 30px; height: 30px; padding: 0; color: #555; margin-bottom: 5px;"
+       
+       if (has_history) {
+         btns[[length(btns) + 1]] <- shiny::actionButton("undo_btn", shiny::icon("rotate-left"), style = style_base, title = "Undo")
+       }
+       
+       if (has_future) {
+         btns[[length(btns) + 1]] <- shiny::actionButton("redo_btn", shiny::icon("rotate-right"), style = style_base, title = "Redo")
+       }
+       
+       if (has_content) {
+         btns[[length(btns) + 1]] <- shiny::actionButton("clear_map_icon", shiny::icon("trash"), style = style_base, title = "Clear Map")
+       }
+       
+       shiny::div(
+         style = "position: absolute; top: 150px; right: 10px; z-index: 1000; display: flex; flex-direction: column;",
+         btns
+       )
+    })
+    
+    shiny::observeEvent(input$undo_btn, {
+      req(length(history$past) > 0)
+      current <- get_state_snapshot()
+      # Push current to future
+      history$future <- c(list(current), history$future)
+      # Pop from past
+      prev <- history$past[[length(history$past)]]
+      history$past <- history$past[-length(history$past)]
+      restore(prev)
+    })
+    
+    shiny::observeEvent(input$redo_btn, {
+      req(length(history$future) > 0)
+      current <- get_state_snapshot()
+      # Push current to past
+      history$past <- c(history$past, list(current))
+      # Pop from future
+      next_state <- history$future[[1]]
+      history$future <- history$future[-1]
+      restore(next_state)
+    })
 
     # --- UI Helpers ---
     output$mode_button_ui <- shiny::renderUI({
@@ -210,9 +333,11 @@ osrm_gui <- function(
 
     # --- Marker Helpers ---
     update_start <- function(lng, lat) {
+      commit()
+      is_dragging(FALSE)
       coords <- list(lat = round(lat, 5), lng = round(lng, 5))
       locations$start <- coords
-      tracking_coords$start <- coords
+      tracking_coords$start <- NULL
       session$sendCustomMessage(
         'updateMarker',
         list(id = 'start', lng = lng, lat = lat)
@@ -227,9 +352,11 @@ osrm_gui <- function(
     }
 
     update_end <- function(lng, lat) {
+      commit()
+      is_dragging(FALSE)
       coords <- list(lat = round(lat, 5), lng = round(lng, 5))
       locations$end <- coords
-      tracking_coords$end <- coords
+      tracking_coords$end <- NULL
       session$sendCustomMessage(
         'updateMarker',
         list(id = 'end', lng = lng, lat = lat)
@@ -244,6 +371,7 @@ osrm_gui <- function(
     }
 
     add_trip_point <- function(lng, lat) {
+      commit()
       id <- paste0("trip_", as.integer(Sys.time()), "_", sample(1000:9999, 1))
       locations$trip[[id]] <- list(id = id, lat = lat, lng = lng)
       session$sendCustomMessage(
@@ -253,6 +381,8 @@ osrm_gui <- function(
     }
 
     remove_trip_point <- function(id) {
+      commit()
+      is_dragging(FALSE)
       locations$trip[[id]] <- NULL
       tracking_coords[[id]] <- NULL
       session$sendCustomMessage(
@@ -263,8 +393,11 @@ osrm_gui <- function(
 
     move_trip_point <- function(id, lng, lat) {
       if (!is.null(locations$trip[[id]])) {
+        commit()
+        is_dragging(FALSE)
         locations$trip[[id]]$lat <- lat
         locations$trip[[id]]$lng <- lng
+        tracking_coords[[id]] <- NULL
       }
     }
 
@@ -295,6 +428,7 @@ osrm_gui <- function(
     })
 
     shiny::observeEvent(input$marker_moving, {
+      is_dragging(TRUE)
       moving <- input$marker_moving
       tracking_coords[[moving$id]] <- list(
         lat = round(moving$lat, 5),
@@ -313,6 +447,7 @@ osrm_gui <- function(
 
     # Reset Logic
     reset_all <- function() {
+      commit()
       locations$start <- NULL
       locations$end <- NULL
       locations$trip <- list()
@@ -347,8 +482,8 @@ osrm_gui <- function(
       mapgl::clear_legend(proxy)
     }
 
-    shiny::observeEvent(input$reset, reset_all())
-    shiny::observeEvent(input$clear_map_icon, reset_all())
+    shiny::observeEvent(input$reset, { reset_all() })
+    shiny::observeEvent(input$clear_map_icon, { reset_all() })
 
     # --- Calculation Logic ---
 
@@ -383,7 +518,7 @@ osrm_gui <- function(
     # Route Calculation: Live Tracking
     # Route Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), input$mode == "route")
+      shiny::req(live_update_enabled(), is_dragging(), input$mode == "route")
       coords <- active_coords()
       shiny::req(coords$start, coords$end)
       tryCatch(
@@ -497,7 +632,7 @@ osrm_gui <- function(
 
     # Trip Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), input$mode == "trip")
+      shiny::req(live_update_enabled(), is_dragging(), input$mode == "trip")
       coords_data <- active_coords()
       trip_pts <- coords_data$trip
       lons <- numeric(0)
@@ -649,7 +784,7 @@ osrm_gui <- function(
 
     # Isochrone: Live Tracking (Custom Resolution)
     shiny::observe({
-      shiny::req(live_update_enabled(), input$mode == "iso")
+      shiny::req(live_update_enabled(), is_dragging(), input$mode == "iso")
       coords <- active_coords()
       shiny::req(coords$start)
       
