@@ -725,7 +725,7 @@ osrm_gui <- function(
         }
         res
       }),
-      150
+      250
     )
 
     # Route Calculation: Live Tracking
