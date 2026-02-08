@@ -232,7 +232,7 @@ osrm_gui <- function(
   ui <- shiny::fluidPage(
     # Header
     shiny::div(
-      style = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0;",
+      style = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0; flex-wrap: wrap; gap: 10px;",
       shiny::div(
         style = "display: flex; align-items: center;",
         shiny::HTML('<div id="hamburger_btn" class="hamburger-btn">&#9776;</div>'),
@@ -763,19 +763,18 @@ osrm_gui <- function(
                 crs = 4326
               )
               # Combine into a single sf object with a geometry column named 'geometry'
-              combined_sf <- rbind(
-                sf::st_sf(geometry = sf::st_geometry(route)),
-                sf::st_sf(geometry = sf::st_geometry(pts_sf))
-              )
-                            if (autozoom_enabled()) {
+                            combined_sf <- rbind(
+                              sf::st_sf(geometry = sf::st_geometry(route)),
+                              sf::st_sf(geometry = sf::st_geometry(pts_sf))
+                            )
+                            if (shiny::isolate(autozoom_enabled())) {
                               # Reduce padding on small screens to prevent over-zooming out
                               map_width <- session$clientData$output_map_width %||% 1000
                               padding <- if (map_width < 768) 50 else 150
                               mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = padding)
                             }
                           }
-                        },
-          error = function(e) {
+                        },          error = function(e) {
             shiny::showNotification(
               paste("Routing failed:", e$message),
               type = "error"
@@ -846,7 +845,7 @@ osrm_gui <- function(
                   )
                 )
               }
-              if (autozoom_enabled()) {
+              if (shiny::isolate(autozoom_enabled())) {
                 # Reduce padding on small screens to prevent over-zooming out
                 map_width <- session$clientData$output_map_width %||% 1000
                 padding <- if (map_width < 768) 20 else 50
