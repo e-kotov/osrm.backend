@@ -153,6 +153,9 @@ osrm_gui <- function(
     # Store trip result for table
     trip_result <- shiny::reactiveVal(NULL)
 
+    # Time of last mode switch (for robust autozoom suppression)
+    last_mode_switch <- shiny::reactiveVal(Sys.time())
+
     # --- History Manager ---
     history <- shiny::reactiveValues(past = list(), future = list())
 
@@ -428,6 +431,15 @@ osrm_gui <- function(
         shiny::updateTextInput(session, "end_coords_input", value = "")
       }
     })
+
+    # Mode Switch: Record timestamp to suppress immediate auto-zooms
+    shiny::observeEvent(
+      input$mode,
+      {
+        last_mode_switch(Sys.time())
+      },
+      priority = 100
+    )
 
     output$autozoom_button_ui <- shiny::renderUI({
       state <- autozoom_enabled()
@@ -804,7 +816,15 @@ osrm_gui <- function(
                   "visible"
                 )
               }
-              if (shiny::isolate(autozoom_enabled())) {
+              # Check if enough time has passed since mode switch (e.g., 1.0s)
+              time_since_switch <- as.numeric(difftime(
+                Sys.time(),
+                last_mode_switch(),
+                units = "secs"
+              ))
+              should_autozoom <- time_since_switch > 1.0
+
+              if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
                 pts_sf <- sf::st_as_sf(
                   data.frame(
                     lon = c(locations$start$lng, locations$end$lng),
@@ -1049,7 +1069,15 @@ osrm_gui <- function(
                 "visible"
               )
             }
-            if (shiny::isolate(autozoom_enabled())) {
+            # Check if enough time has passed since mode switch
+            time_since_switch <- as.numeric(difftime(
+              Sys.time(),
+              last_mode_switch(),
+              units = "secs"
+            ))
+            should_autozoom <- time_since_switch > 1.0
+
+            if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
               pts_sf <- sf::st_as_sf(
                 data.frame(
                   lon = as.numeric(local_lons),
@@ -1251,7 +1279,15 @@ osrm_gui <- function(
                     )
                   )
                 }
-                if (shiny::isolate(autozoom_enabled())) {
+                # Check if enough time has passed since mode switch
+                time_since_switch <- as.numeric(difftime(
+                  Sys.time(),
+                  last_mode_switch(),
+                  units = "secs"
+                ))
+                should_autozoom <- time_since_switch > 1.0
+
+                if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
                   map_width <- session$clientData$output_map_width %||% 1000
                   padding <- if (map_width < 768) 20 else 50
                   mapgl::fit_bounds(
