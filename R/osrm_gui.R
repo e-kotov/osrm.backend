@@ -26,12 +26,12 @@
 #'   [osrm_servers()]. If multiple servers are running, the most recent one is selected
 #'   with a warning. If no servers are running, an error is raised.
 #' @param style Character. Map style for `mapgl`. Defaults to "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json".
-#' @param center Numeric vector of length 2 (`c(lng, lat)`), or named list 
-#'   (`list(lng = ..., lat = ...)`), or `NULL` (default). Initial map center. 
-#'   If `NULL` and `input_osrm` is a `.osm.pbf` file, attempts to auto-center 
-#'   on the PBF extent. Uses `osmium fileinfo` (fast, all file sizes) if 
+#' @param center Numeric vector of length 2 (`c(lng, lat)`), or named list
+#'   (`list(lng = ..., lat = ...)`), or `NULL` (default). Initial map center.
+#'   If `NULL` and `input_osrm` is a `.osm.pbf` file, attempts to auto-center
+#'   on the PBF extent. Uses `osmium fileinfo` (fast, all file sizes) if
 #'   available, otherwise falls back to GDAL or sampling features (< 50 MB).
-#' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is 
+#' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is
 #'   auto-detected from PBF, defaults to 9. Otherwise uses map default.
 #' @param autozoom Logical. Whether to enable auto-zoom by default. Defaults to `TRUE`.
 #' @return No return value; launches a Shiny Gadget.
@@ -137,8 +137,11 @@ osrm_gui <- function(
       warning(
         "Multiple OSRM servers running (ports: ",
         paste(alive_servers$port, collapse = ", "),
-        "). Using most recent (port ", active_port, ", started at ",
-        format(most_recent$started_at), "). ",
+        "). Using most recent (port ",
+        active_port,
+        ", started at ",
+        format(most_recent$started_at),
+        "). ",
         "Specify 'port' explicitly to select a different server.",
         call. = FALSE
       )
@@ -159,8 +162,10 @@ osrm_gui <- function(
   if (is.null(center)) {
     # Determine the PBF path for extent detection
     pbf_path <- NULL
-    if (is.character(input_osrm) &&
-        grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)) {
+    if (
+      is.character(input_osrm) &&
+        grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)
+    ) {
       pbf_path <- input_osrm
     } else if (is.null(input_osrm) || inherits(input_osrm, "process")) {
       # Auto-detect or process mode: look up input_osm from registry
@@ -177,22 +182,30 @@ osrm_gui <- function(
       if (!is.null(pbf_info)) {
         auto_center <- pbf_info$center
         auto_zoom <- if (is.null(zoom)) 9 else zoom
-        message("Auto-centered map on PBF extent: ", paste(round(auto_center, 4), collapse = ", "))
+        message(
+          "Auto-centered map on PBF extent: ",
+          paste(round(auto_center, 4), collapse = ", ")
+        )
       }
     }
   }
-  
+
   # Normalize center parameter
   map_center <- center %||% auto_center
   map_zoom <- zoom %||% auto_zoom
   if (!is.null(map_center)) {
     if (is.list(map_center)) {
-      map_center <- c(map_center$lng %||% map_center$lon %||% map_center$x,
-                      map_center$lat %||% map_center$y)
+      map_center <- c(
+        map_center$lng %||% map_center$lon %||% map_center$x,
+        map_center$lat %||% map_center$y
+      )
     }
     map_center <- as.numeric(map_center)
     if (length(map_center) != 2 || any(is.na(map_center))) {
-      stop("'center' must be a numeric vector of length 2 (lng, lat) or a named list.", call. = FALSE)
+      stop(
+        "'center' must be a numeric vector of length 2 (lng, lat) or a named list.",
+        call. = FALSE
+      )
     }
   }
 
@@ -222,6 +235,7 @@ osrm_gui <- function(
       style = "display: flex; justify-content: space-between; align-items: center; padding: 10px 0;",
       shiny::div(
         style = "display: flex; align-items: center;",
+        shiny::HTML('<div id="hamburger_btn" class="hamburger-btn">&#9776;</div>'),
         shiny::h3(
           shiny::HTML("<b>osrm.backend</b> GUI"),
           style = "margin: 0;"
@@ -240,13 +254,112 @@ osrm_gui <- function(
     shiny::tags$head(
       shiny::tags$style(shiny::HTML(
         "
+      html, body { height: 100%; margin: 0; overflow: hidden; }
+      .container-fluid { height: 100%; display: flex; flex-direction: column; }
       #shiny-notification-panel { top: 70px; right: 10px; left: auto; bottom: auto; }
-      .map-wrapper { position: relative; }
+      
+      .sidebar-layout { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+      .sidebar-panel { 
+        height: 100%; 
+        overflow-y: auto; 
+        padding: 15px;
+        background-color: #f8f9fa;
+        border-right: 1px solid #dee2e6;
+      }
+      .main-panel { 
+        height: 100%; 
+        display: flex; 
+        flex-direction: column; 
+        padding: 15px; 
+        overflow: hidden;
+      }
+      
+      .map-wrapper { position: relative; flex: 3; min-height: 300px; }
+      #map { height: 100% !important; }
+      
+      .table-wrapper { 
+        flex: 2; 
+        overflow-y: auto; 
+        margin-top: 10px; 
+        border-top: 1px solid #eee;
+        padding-top: 10px;
+      }
+      
+      .route-stats-overlay {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.9);
+        padding: 8px 12px;
+        border-radius: 4px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        pointer-events: none;
+        display: flex;
+        gap: 15px;
+        font-size: 14px;
+        border: 1px solid #ddd;
+      }
+      .route-stats-overlay b { color: #333; }
+      .stat-val { font-weight: bold; }
+      
+      .segments-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 5px;
+      }
+      
+      /* Mobile/Responsive Styles */
+      .hamburger-btn { display: none; margin-right: 10px; font-size: 20px; cursor: pointer; }
+      
+      @media (max-width: 768px) {
+        .sidebar-panel {
+          position: absolute;
+          left: -100%;
+          top: 50px; /* Below header */
+          bottom: 0;
+          width: 80% !important;
+          z-index: 2000;
+          transition: left 0.3s ease;
+          box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+        }
+        .sidebar-panel.show-sidebar {
+          left: 0;
+        }
+        .main-panel {
+          width: 100% !important;
+        }
+        .hamburger-btn {
+          display: inline-block;
+        }
+        /* Overlay to close sidebar when clicking outside */
+        .sidebar-overlay {
+          display: none;
+          position: fixed;
+          top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.5);
+          z-index: 1999;
+        }
+        .sidebar-overlay.show-overlay {
+          display: block;
+        }
+      }
     "
       )),
       # Inject custom JS for right-click and marker dragging
       shiny::tags$script(shiny::HTML(
         "
+    $(document).on('click', '#hamburger_btn', function() {
+      $('.sidebar-panel').toggleClass('show-sidebar');
+      $('.sidebar-overlay').toggleClass('show-overlay');
+    });
+    
+    $(document).on('click', '.sidebar-overlay', function() {
+      $('.sidebar-panel').removeClass('show-sidebar');
+      $('.sidebar-overlay').removeClass('show-overlay');
+    });
+
     function initializeMapListeners(mapId) {
       const mapElement = document.getElementById(mapId);
       if (!mapElement) return;
@@ -330,9 +443,15 @@ osrm_gui <- function(
       ))
     ),
 
-    shiny::sidebarLayout(
-      shiny::sidebarPanel(
-        width = 3,
+    shiny::div(
+      class = "sidebar-overlay"
+    ),
+
+    shiny::div(
+      class = "sidebar-layout",
+      shiny::div(
+        class = "sidebar-panel",
+        style = "width: 25%;",
         shiny::h4("OSRM Controls"),
         shiny::selectInput(
           "mode",
@@ -383,21 +502,33 @@ osrm_gui <- function(
         )
       ),
 
-      shiny::mainPanel(
-        width = 9,
-        shiny::tags$style(
-          type = "text/css",
-          "#map {height: calc(60vh) !important;}"
-        ),
+      shiny::div(
+        class = "main-panel",
+        style = "width: 75%;",
         shiny::div(
           class = "map-wrapper",
+          shiny::conditionalPanel(
+            condition = "input.mode == 'route'",
+            shiny::uiOutput("route_stats", class = "route-stats-overlay")
+          ),
           mapgl::maplibreOutput("map")
         ),
-        shiny::hr(),
-        shiny::conditionalPanel(
-          condition = "input.mode == 'route'",
-          shiny::h4("Route Details"),
-          DT::dataTableOutput("itinerary_table")
+        shiny::div(
+          class = "table-wrapper",
+          shiny::conditionalPanel(
+            condition = "input.mode == 'route'",
+            shiny::div(
+              class = "segments-header",
+              shiny::h4("Route Segments", style = "margin: 0;"),
+              shiny::actionButton(
+                "clear_selection",
+                "Deselect All",
+                class = "btn-xs btn-default",
+                style = "font-size: 11px; padding: 2px 8px;"
+              )
+            ),
+            DT::dataTableOutput("itinerary_table")
+          )
         )
       )
     )
@@ -420,8 +551,12 @@ osrm_gui <- function(
 
     # State
     locations <- shiny::reactiveValues(start = NULL, end = NULL)
-    init <- shiny::reactiveValues(route = FALSE, iso = FALSE)
+    init <- shiny::reactiveValues(route = FALSE, iso = FALSE, highlight = FALSE)
     autozoom_enabled <- shiny::reactiveVal(autozoom)
+    # Store latest route summary for the sidebar
+    route_summary <- shiny::reactiveVal(NULL)
+    # Store current route steps for highlighting
+    current_steps <- shiny::reactiveVal(NULL)
 
     # --- UI Helpers ---
     output$autozoom_button_ui <- shiny::renderUI({
@@ -431,7 +566,36 @@ osrm_gui <- function(
       shiny::actionButton(
         "toggle_autozoom",
         label,
-        style = sprintf("background-color: %s; color: white; border-width: 0px;", color)
+        style = sprintf(
+          "background-color: %s; color: white; border-width: 0px;",
+          color
+        )
+      )
+    })
+
+    output$route_stats <- shiny::renderUI({
+      stats <- route_summary()
+      if (is.null(stats)) {
+        return(NULL)
+      }
+
+      shiny::tagList(
+        shiny::div(
+          shiny::tags$b("Duration: "),
+          shiny::span(
+            paste(round(stats$duration, 1), "min"),
+            class = "stat-val",
+            style = "color: #007bff;"
+          )
+        ),
+        shiny::div(
+          shiny::tags$b("Distance: "),
+          shiny::span(
+            paste(round(stats$distance, 2), "km"),
+            class = "stat-val",
+            style = "color: #28a745;"
+          )
+        )
       )
     })
 
@@ -452,6 +616,9 @@ osrm_gui <- function(
         "start_coords_input",
         value = paste(coords$lat, coords$lon, sep = ", ")
       )
+      # Clear old stats if points move
+      route_summary(NULL)
+      current_steps(NULL)
     }
 
     update_end <- function(lng, lat) {
@@ -466,6 +633,9 @@ osrm_gui <- function(
         "end_coords_input",
         value = paste(coords$lat, coords$lon, sep = ", ")
       )
+      # Clear old stats if points move
+      route_summary(NULL)
+      current_steps(NULL)
     }
 
     # --- Interaction Handlers ---
@@ -497,6 +667,8 @@ osrm_gui <- function(
     shiny::observeEvent(input$reset, {
       locations$start <- NULL
       locations$end <- NULL
+      route_summary(NULL)
+      current_steps(NULL)
       session$sendCustomMessage('clearAllMarkers', 'clear')
       shiny::updateTextInput(session, "start_coords_input", value = "")
       shiny::updateTextInput(session, "end_coords_input", value = "")
@@ -510,6 +682,14 @@ osrm_gui <- function(
       if (init$iso) {
         # Hide iso layer
         mapgl::set_layout_property(proxy, "iso_layer", "visibility", "none")
+      }
+      if (init$highlight) {
+        mapgl::set_layout_property(
+          proxy,
+          "highlight_layer",
+          "visibility",
+          "none"
+        )
       }
       mapgl::clear_legend(proxy)
     })
@@ -531,6 +711,12 @@ osrm_gui <- function(
             )
 
             if (!is.null(route)) {
+              # Update stats in sidebar
+              route_summary(list(
+                duration = route$duration[1],
+                distance = route$distance[1]
+              ))
+
               proxy <- mapgl::maplibre_proxy("map")
 
               if (!init$route) {
@@ -559,7 +745,7 @@ osrm_gui <- function(
                   "visible"
                 )
               }
-              
+
               # Combined bounds: include both the route geometry and the user-selected points.
               # This ensures 'wiggly' routes aren't cut off while guaranteeing markers are visible.
               # Padding increased to 150px for a less aggressive zoom.
@@ -576,11 +762,14 @@ osrm_gui <- function(
                 sf::st_sf(geometry = sf::st_geometry(route)),
                 sf::st_sf(geometry = sf::st_geometry(pts_sf))
               )
-              if (autozoom_enabled()) {
-                mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = 150)
-              }
-            }
-          },
+                            if (autozoom_enabled()) {
+                              # Reduce padding on small screens to prevent over-zooming out
+                              map_width <- session$clientData$output_map_width %||% 1000
+                              padding <- if (map_width < 768) 50 else 150
+                              mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = padding)
+                            }
+                          }
+                        },
           error = function(e) {
             shiny::showNotification(
               paste("Routing failed:", e$message),
@@ -611,7 +800,7 @@ osrm_gui <- function(
             iso <- osrm::osrmIsochrone(
               loc = c(locations$start$lon, locations$start$lat),
               breaks = breaks,
-              res = input$iso_res
+              n = input$iso_res
             )
 
             if (!is.null(iso) && nrow(iso) > 0) {
@@ -653,7 +842,10 @@ osrm_gui <- function(
                 )
               }
               if (autozoom_enabled()) {
-                mapgl::fit_bounds(proxy, iso, animate = TRUE, padding = 50)
+                # Reduce padding on small screens to prevent over-zooming out
+                map_width <- session$clientData$output_map_width %||% 1000
+                padding <- if (map_width < 768) 20 else 50
+                mapgl::fit_bounds(proxy, iso, animate = TRUE, padding = padding)
               }
             }
           },
@@ -670,27 +862,133 @@ osrm_gui <- function(
     # --- Table Output ---
     output$itinerary_table <- DT::renderDataTable({
       shiny::req(input$mode == "route", locations$start, locations$end)
-      # We re-calculate purely for the table data display (quick enough for OSRM)
-      # or ideally store reactive. For simplicity re-running osrmRoute overview=FALSE
+
+      # Use httr2 to get detailed steps directly from the API,
+      # as osrm 5.0.0 osrmRoute doesn't expose them easily.
+      server_url <- getOption("osrm.server")
+      profile <- getOption("osrm.profile")
+
+      # Use geometries=geojson to get coordinate arrays directly
+      url <- sprintf(
+        "%sroute/v1/%s/%f,%f;%f,%f?steps=true&overview=false&geometries=geojson",
+        server_url,
+        profile,
+        locations$start$lon,
+        locations$start$lat,
+        locations$end$lon,
+        locations$end$lat
+      )
+
       res <- tryCatch(
         {
-          osrm::osrmRoute(
-            src = c(locations$start$lon, locations$start$lat),
-            dst = c(locations$end$lon, locations$end$lat),
-            overview = FALSE
-          )
+          req <- httr2::request(url)
+          resp <- httr2::req_perform(req)
+          httr2::resp_body_json(resp)
         },
         error = function(e) NULL
       )
 
-      if (!is.null(res)) {
-        df <- data.frame(
-          Parameter = c("Duration (min)", "Distance (km)"),
-          Value = c(round(res["duration"], 2), round(res["distance"], 2))
+      if (!is.null(res) && length(res$routes) > 0) {
+        steps <- res$routes[[1]]$legs[[1]]$steps
+        current_steps(steps) # Save steps for highlighting
+
+        df <- do.call(
+          rbind,
+          lapply(steps, function(s) {
+            # Combine type and modifier for a better instruction
+            instr <- s$maneuver$type
+            if (!is.null(s$maneuver$modifier)) {
+              instr <- paste(instr, s$maneuver$modifier)
+            }
+
+            data.frame(
+              Instruction = instr,
+              Road = if (is.null(s$name) || s$name == "") "-" else s$name,
+              `Distance (km)` = round(s$distance / 1000, 3),
+              `Duration (min)` = round(s$duration / 60, 2),
+              stringsAsFactors = FALSE,
+              check.names = FALSE
+            )
+          })
         )
-        DT::datatable(df, options = list(dom = 't'), rownames = FALSE)
+        DT::datatable(
+          df,
+          selection = "multiple",
+          options = list(pageLength = 10, scrollX = TRUE),
+          rownames = FALSE
+        )
       }
     })
+
+    # Clear table selection
+    shiny::observeEvent(input$clear_selection, {
+      DT::selectRows(DT::dataTableProxy("itinerary_table"), NULL)
+    })
+
+    # Handle segment highlighting on selection
+    shiny::observeEvent(
+      input$itinerary_table_rows_selected,
+      {
+        proxy <- mapgl::maplibre_proxy("map")
+        idx <- input$itinerary_table_rows_selected
+        steps <- current_steps()
+
+        if (is.null(idx) || length(idx) == 0 || is.null(steps)) {
+          if (init$highlight) {
+            mapgl::set_layout_property(
+              proxy,
+              "highlight_layer",
+              "visibility",
+              "none"
+            )
+          }
+          return()
+        }
+
+        # Extract geometries for all selected steps
+        segment_list <- lapply(idx, function(i) {
+          step <- steps[[i]]
+          coords <- matrix(
+            unlist(step$geometry$coordinates),
+            ncol = 2,
+            byrow = TRUE
+          )
+          sf::st_linestring(coords)
+        })
+
+        # Combine all selected segments into a single MULTILINESTRING feature
+        # This avoids potential serialization issues with multiple features in mapgl update
+        segment_sfc <- sf::st_sfc(segment_list, crs = 4326)
+        combined_geom <- sf::st_combine(segment_sfc)
+        segment_sf <- sf::st_sf(geometry = combined_geom)
+
+        if (!init$highlight) {
+          mapgl::add_source(proxy, id = "highlight_source", data = segment_sf)
+          mapgl::add_line_layer(
+            proxy,
+            id = "highlight_layer",
+            source = "highlight_source",
+            line_color = "#facc15", # Bright yellow
+            line_width = 8,
+            line_opacity = 0.9
+          )
+          init$highlight <- TRUE
+        } else {
+          mapgl::set_source(
+            proxy,
+            layer_id = "highlight_layer",
+            source = segment_sf
+          )
+          mapgl::set_layout_property(
+            proxy,
+            "highlight_layer",
+            "visibility",
+            "visible"
+          )
+        }
+      },
+      ignoreNULL = FALSE
+    )
 
     # Quit
     shiny::observeEvent(input$quit_app, {
