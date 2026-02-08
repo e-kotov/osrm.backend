@@ -344,6 +344,10 @@ osrm_gui <- function(
         .sidebar-overlay.show-overlay {
           display: block;
         }
+        .route-stats-overlay {
+          flex-direction: column;
+          gap: 2px;
+        }
       }
     "
       )),
@@ -509,7 +513,7 @@ osrm_gui <- function(
           class = "map-wrapper",
           shiny::conditionalPanel(
             condition = "input.mode == 'route'",
-            shiny::uiOutput("route_stats", class = "route-stats-overlay")
+            shiny::uiOutput("route_stats")
           ),
           mapgl::maplibreOutput("map")
         ),
@@ -579,7 +583,8 @@ osrm_gui <- function(
         return(NULL)
       }
 
-      shiny::tagList(
+      shiny::div(
+        class = "route-stats-overlay",
         shiny::div(
           shiny::tags$b("Duration: "),
           shiny::span(
