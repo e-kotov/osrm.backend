@@ -33,6 +33,7 @@
 #'   available, otherwise falls back to GDAL or sampling features (< 50 MB).
 #' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is 
 #'   auto-detected from PBF, defaults to 9. Otherwise uses map default.
+#' @param autozoom Logical. Whether to enable auto-zoom by default. Defaults to `TRUE`.
 #' @return No return value; launches a Shiny Gadget.
 #' @export
 #' @examples
@@ -63,7 +64,8 @@ osrm_gui <- function(
   port = "auto",
   style = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
   center = NULL,
-  zoom = NULL
+  zoom = NULL,
+  autozoom = TRUE
 ) {
   # 1. Check Dependencies
   required_pkgs <- c("shiny", "mapgl", "osrm", "sf", "DT")
@@ -225,10 +227,14 @@ osrm_gui <- function(
           style = "margin: 0;"
         )
       ),
-      shiny::actionButton(
-        "quit_app",
-        "Quit",
-        style = "background-color: #d9534f; color: white; border-width: 0px;"
+      shiny::div(
+        style = "display: flex; gap: 10px; align-items: center;",
+        shiny::uiOutput("autozoom_button_ui", inline = TRUE),
+        shiny::actionButton(
+          "quit_app",
+          "Quit",
+          style = "background-color: #d9534f; color: white; border-width: 0px;"
+        )
       )
     ),
     shiny::tags$head(
@@ -415,6 +421,23 @@ osrm_gui <- function(
     # State
     locations <- shiny::reactiveValues(start = NULL, end = NULL)
     init <- shiny::reactiveValues(route = FALSE, iso = FALSE)
+    autozoom_enabled <- shiny::reactiveVal(autozoom)
+
+    # --- UI Helpers ---
+    output$autozoom_button_ui <- shiny::renderUI({
+      state <- autozoom_enabled()
+      label <- if (state) "Autozoom: ON" else "Autozoom: OFF"
+      color <- if (state) "#5cb85c" else "#777"
+      shiny::actionButton(
+        "toggle_autozoom",
+        label,
+        style = sprintf("background-color: %s; color: white; border-width: 0px;", color)
+      )
+    })
+
+    shiny::observeEvent(input$toggle_autozoom, {
+      autozoom_enabled(!autozoom_enabled())
+    })
 
     # --- Marker Helpers ---
     update_start <- function(lng, lat) {
@@ -553,7 +576,9 @@ osrm_gui <- function(
                 sf::st_sf(geometry = sf::st_geometry(route)),
                 sf::st_sf(geometry = sf::st_geometry(pts_sf))
               )
-              mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = 150)
+              if (autozoom_enabled()) {
+                mapgl::fit_bounds(proxy, combined_sf, animate = TRUE, padding = 150)
+              }
             }
           },
           error = function(e) {
@@ -627,7 +652,9 @@ osrm_gui <- function(
                   )
                 )
               }
-              mapgl::fit_bounds(proxy, iso, animate = TRUE, padding = 50)
+              if (autozoom_enabled()) {
+                mapgl::fit_bounds(proxy, iso, animate = TRUE, padding = 50)
+              }
             }
           },
           error = function(e) {
