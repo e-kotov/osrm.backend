@@ -589,6 +589,12 @@ gui_ui_layout <- function() {
             condition = "input.mode == 'route'",
             shiny::uiOutput("route_stats")
           ),
+          shiny::actionButton(
+            "clear_map_icon",
+            shiny::icon("trash"),
+            style = "position: absolute; top: 150px; right: 10px; z-index: 1000; background: white; border: none; border-radius: 4px; box-shadow: 0 0 0 2px rgba(0,0,0,0.1); width: 30px; height: 30px; padding: 0; color: #555;",
+            title = "Clear Map"
+          ),
           mapgl::maplibreOutput("map")
         ),
         shiny::div(

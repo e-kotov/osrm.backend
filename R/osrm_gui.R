@@ -311,8 +311,8 @@ osrm_gui <- function(
       move_trip_point(mv$id, mv$lng, mv$lat)
     })
 
-    # Reset
-    shiny::observeEvent(input$reset, {
+    # Reset Logic
+    reset_all <- function() {
       locations$start <- NULL
       locations$end <- NULL
       locations$trip <- list()
@@ -345,7 +345,10 @@ osrm_gui <- function(
         )
       }
       mapgl::clear_legend(proxy)
-    })
+    }
+
+    shiny::observeEvent(input$reset, reset_all())
+    shiny::observeEvent(input$clear_map_icon, reset_all())
 
     # --- Calculation Logic ---
 
