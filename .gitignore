@@ -54,3 +54,4 @@ private
 inst/doc
 **/.quarto/
 cran-cookbook
+.Rprofile
