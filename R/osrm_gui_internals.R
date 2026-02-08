@@ -482,6 +482,7 @@ gui_ui_layout <- function() {
       ),
       shiny::div(
         style = "display: flex; gap: 10px; align-items: center;",
+        shiny::uiOutput("mode_button_ui", inline = TRUE),
         shiny::uiOutput("autozoom_button_ui", inline = TRUE),
         shiny::uiOutput("tracking_button_ui", inline = TRUE),
         shiny::actionButton(

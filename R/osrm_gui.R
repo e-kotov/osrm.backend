@@ -126,6 +126,27 @@ osrm_gui <- function(
     trip_result <- shiny::reactiveVal(NULL)
 
     # --- UI Helpers ---
+    output$mode_button_ui <- shiny::renderUI({
+      current_mode <- input$mode
+      labels <- c("route" = "Route", "iso" = "Isochrone", "trip" = "Trip")
+      label <- labels[current_mode]
+      if (is.na(label)) label <- "Route"
+      
+      shiny::actionButton(
+        "cycle_mode",
+        paste("Mode:", label),
+        style = "background-color: #337ab7; color: white; border-width: 0px;"
+      )
+    })
+
+    shiny::observeEvent(input$cycle_mode, {
+      modes <- c("route", "iso", "trip")
+      current_idx <- match(input$mode, modes)
+      if (is.na(current_idx)) current_idx <- 1
+      next_idx <- if (current_idx >= length(modes)) 1 else current_idx + 1
+      shiny::updateSelectInput(session, "mode", selected = modes[next_idx])
+    })
+
     output$autozoom_button_ui <- shiny::renderUI({
       state <- autozoom_enabled()
       label <- if (state) "Autozoom: ON" else "Autozoom: OFF"
