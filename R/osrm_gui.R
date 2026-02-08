@@ -611,7 +611,7 @@ osrm_gui <- function(
             iso <- osrm::osrmIsochrone(
               loc = c(locations$start$lon, locations$start$lat),
               breaks = breaks,
-              n = input$iso_res
+              res = input$iso_res
             )
 
             if (!is.null(iso) && nrow(iso) > 0) {
