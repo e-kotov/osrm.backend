@@ -729,9 +729,8 @@ osrm_gui <- function(
     )
 
     # Route Calculation: Live Tracking
-    # Route Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging(), input$mode == "route")
+      shiny::req(live_update_enabled(), is_dragging())
       coords <- active_coords()
       shiny::req(coords$start, coords$end)
       tryCatch(
@@ -770,6 +769,12 @@ osrm_gui <- function(
               init$route <- TRUE
             } else {
               mapgl::set_source(proxy, layer_id = "route_layer", source = route)
+              mapgl::set_layout_property(
+                proxy,
+                "route_layer",
+                "visibility",
+                "visible"
+              )
             }
           }
         },
@@ -779,7 +784,7 @@ osrm_gui <- function(
 
     # Route Calculation: Stable Updates
     shiny::observe({
-      shiny::req(input$mode == "route", locations$start, locations$end)
+      shiny::req(locations$start, locations$end)
       calc_route <- function() {
         tryCatch(
           {
@@ -873,7 +878,7 @@ osrm_gui <- function(
 
     # Trip Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging(), input$mode == "trip")
+      shiny::req(live_update_enabled(), is_dragging())
       coords_data <- active_coords()
       trip_pts <- coords_data$trip
 
@@ -938,6 +943,12 @@ osrm_gui <- function(
                 layer_id = "trip_layer",
                 source = trip_geom
               )
+              mapgl::set_layout_property(
+                proxy,
+                "trip_layer",
+                "visibility",
+                "visible"
+              )
             }
           },
           error = function(e) {
@@ -972,7 +983,7 @@ osrm_gui <- function(
 
     # Trip Calculation: Stable Updates
     shiny::observe({
-      shiny::req(input$mode == "trip")
+      shiny::req(!is.null(locations$trip))
       trip_pts <- locations$trip
 
       # Safer extraction using vapply
@@ -1149,7 +1160,7 @@ osrm_gui <- function(
 
     # Isochrone: Live Tracking (Custom Resolution)
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging(), input$mode == "iso")
+      shiny::req(live_update_enabled(), is_dragging())
       coords <- active_coords()
       shiny::req(coords$iso_start)
 
@@ -1206,6 +1217,12 @@ osrm_gui <- function(
               init$iso <- TRUE
             } else {
               mapgl::set_source(proxy, layer_id = "iso_layer", source = iso)
+              mapgl::set_layout_property(
+                proxy,
+                "iso_layer",
+                "visibility",
+                "visible"
+              )
             }
           }
         },
@@ -1217,7 +1234,7 @@ osrm_gui <- function(
     shiny::observeEvent(
       list(locations$iso_start, input$iso_breaks, input$iso_res),
       {
-        shiny::req(input$mode == "iso", locations$iso_start)
+        shiny::req(locations$iso_start)
         breaks <- tryCatch(
           sort(as.numeric(unlist(strsplit(input$iso_breaks, ",")))),
           error = function(e) c(5, 10, 15)
