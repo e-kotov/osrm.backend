@@ -608,8 +608,15 @@ osrm_gui <- function(
       }
     })
 
+    # --- Live Events (Direct for responsiveness) ---
+
+    # 1. Marker Dragged (Drop)
     shiny::observeEvent(input$marker_dragged, {
       drag <- input$marker_dragged
+      if (is.null(drag)) {
+        return()
+      }
+
       if (drag$id == "start") {
         update_start(drag$lng, drag$lat)
       } else if (drag$id == "end") {
@@ -619,9 +626,14 @@ osrm_gui <- function(
       }
     })
 
+    # 2. Marker Moving (Live Drag)
     shiny::observeEvent(input$marker_moving, {
       is_dragging(TRUE)
       moving <- input$marker_moving
+      if (is.null(moving)) {
+        return()
+      }
+
       tracking_coords[[moving$id]] <- list(
         lat = round(moving$lat, 5),
         lng = round(moving$lng, 5)

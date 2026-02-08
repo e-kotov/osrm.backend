@@ -714,13 +714,41 @@ api_fetch_trip <- function(pts_df, debug = FALSE) {
 
       # Extract overall geometry (full route as one line)
       coords <- trip_data$geometry$coordinates
+      if (length(coords) < 2) {
+        if (debug) {
+          message("DEBUG [Trip API]: Not enough coordinates for LINESTRING")
+        }
+        return(NULL)
+      }
+
       coord_matrix <- do.call(
         rbind,
         lapply(coords, function(c) c(c[[1]], c[[2]]))
       )
 
+      # Validate matrix dimensions to prevent segfaults in st_linestring
+      if (
+        is.null(coord_matrix) ||
+          nrow(coord_matrix) < 2 ||
+          ncol(coord_matrix) != 2
+      ) {
+        if (debug) {
+          message("DEBUG [Trip API]: Invalid coordinate matrix")
+        }
+        return(NULL)
+      }
+
       # Build sf LINESTRING for the full trip
       trip_line <- sf::st_linestring(coord_matrix)
+
+      # Ensure geometry is valid
+      if (any(is.na(coord_matrix))) {
+        if (debug) {
+          message("DEBUG [Trip API]: NA values in coordinates")
+        }
+        return(NULL)
+      }
+
       trip_sfc <- sf::st_sfc(trip_line, crs = 4326)
 
       # Build segments from legs if available
