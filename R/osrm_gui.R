@@ -156,6 +156,9 @@ osrm_gui <- function(
     # Time of last mode switch (for robust autozoom suppression)
     last_mode_switch <- shiny::reactiveVal(Sys.time())
 
+    # Track which marker type is currently being dragged
+    drag_type <- shiny::reactiveVal(NULL)
+
     # --- History Manager ---
     history <- shiny::reactiveValues(past = list(), future = list())
 
@@ -634,6 +637,15 @@ osrm_gui <- function(
         return()
       }
 
+      # Determine drag type to guide background updates
+      if (moving$id == "start" || moving$id == "end") {
+        drag_type("route")
+      } else if (moving$id == "iso_start") {
+        drag_type("iso")
+      } else if (startsWith(moving$id, "trip_")) {
+        drag_type("trip")
+      }
+
       tracking_coords[[moving$id]] <- list(
         lat = round(moving$lat, 5),
         lng = round(moving$lng, 5)
@@ -696,32 +708,55 @@ osrm_gui <- function(
 
     # --- Calculation Logic ---
 
-    active_coords <- shiny::throttle(
+    # --- Specialized Reactive Coordinates (Decoupled & Throttled) ---
+    # We split these to ensure dragging a Route marker doesn't trigger a Trip/Iso calc.
+
+    active_route_coords <- shiny::throttle(
       shiny::reactive({
-        res <- list(
-          start = locations$start,
-          end = locations$end,
-          iso_start = locations$iso_start,
-          trip = locations$trip
-        )
+        res <- list(start = locations$start, end = locations$end)
         if (!is.null(tracking_coords$start)) {
           res$start <- tracking_coords$start
         }
         if (!is.null(tracking_coords$end)) {
           res$end <- tracking_coords$end
         }
-        if (!is.null(tracking_coords$iso_start)) {
-          res$iso_start <- tracking_coords$iso_start
+        res
+      }),
+      250
+    )
+
+    active_trip_coords <- shiny::throttle(
+      shiny::reactive({
+        # Start with the stable base
+        pts_list <- locations$trip
+        if (is.null(pts_list) || length(pts_list) == 0) {
+          return(list())
         }
-        for (id in names(tracking_coords)) {
+
+        # Overlay with any active tracking data
+        tracking_list <- shiny::reactiveValuesToList(tracking_coords)
+        for (id in names(tracking_list)) {
           if (
             startsWith(id, "trip_") &&
-              !is.null(res$trip[[id]]) &&
-              !is.null(tracking_coords[[id]])
+              !is.null(pts_list[[id]]) &&
+              !is.null(tracking_list[[id]]$lat) &&
+              !is.null(tracking_list[[id]]$lng)
           ) {
-            res$trip[[id]]$lat <- tracking_coords[[id]]$lat
-            res$trip[[id]]$lng <- tracking_coords[[id]]$lng
+            # Only overlay if the tracking coordinate is actually present/valid
+            pts_list[[id]]$lat <- as.numeric(tracking_list[[id]]$lat)
+            pts_list[[id]]$lng <- as.numeric(tracking_list[[id]]$lng)
           }
+        }
+        pts_list
+      }),
+      250
+    )
+
+    active_iso_coords <- shiny::throttle(
+      shiny::reactive({
+        res <- locations$iso_start
+        if (!is.null(tracking_coords$iso_start)) {
+          res <- tracking_coords$iso_start
         }
         res
       }),
@@ -730,8 +765,8 @@ osrm_gui <- function(
 
     # Route Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging())
-      coords <- active_coords()
+      shiny::req(live_update_enabled(), is_dragging(), drag_type() == "route")
+      coords <- active_route_coords()
       shiny::req(coords$start, coords$end)
       tryCatch(
         {
@@ -783,116 +818,165 @@ osrm_gui <- function(
     })
 
     # Route Calculation: Stable Updates
-    shiny::observe({
-      shiny::req(locations$start, locations$end)
-      calc_route <- function() {
-        tryCatch(
-          {
-            debug_msg(
-              "Route (Stable) request: ",
-              locations$start$lng,
-              ",",
-              locations$start$lat,
-              " -> ",
-              locations$end$lng,
-              ",",
-              locations$end$lat
-            )
-            route <- osrm::osrmRoute(
-              src = c(locations$start$lng, locations$start$lat),
-              dst = c(locations$end$lng, locations$end$lat),
-              overview = "full"
-            )
-            if (!is.null(route)) {
-              route_summary(list(
-                duration = route$duration[1],
-                distance = route$distance[1]
-              ))
-              proxy <- mapgl::maplibre_proxy("map")
-              if (!init$route) {
-                mapgl::add_source(proxy, id = "route_source", data = route)
-                mapgl::add_line_layer(
-                  proxy,
-                  id = "route_layer",
-                  source = "route_source",
-                  line_color = "#3b82f6",
-                  line_width = 5,
-                  line_opacity = 0.8
-                )
-                init$route <- TRUE
-              } else {
-                mapgl::set_source(
-                  proxy,
-                  layer_id = "route_layer",
-                  source = route
-                )
-                mapgl::set_layout_property(
-                  proxy,
-                  "route_layer",
-                  "visibility",
-                  "visible"
-                )
-              }
-              # Check if enough time has passed since mode switch (e.g., 1.0s)
-              time_since_switch <- as.numeric(difftime(
-                Sys.time(),
-                last_mode_switch(),
-                units = "secs"
-              ))
-              should_autozoom <- time_since_switch > 1.0
+    shiny::observeEvent(
+      list(locations$start, locations$end),
+      {
+        shiny::req(locations$start, locations$end)
+        calc_route <- function() {
+          tryCatch(
+            {
+              debug_msg(
+                "Route (Stable) request: ",
+                locations$start$lng,
+                ",",
+                locations$start$lat,
+                " -> ",
+                locations$end$lng,
+                ",",
+                locations$end$lat
+              )
+              # Use consolidated API fetch to get both geometry and steps in one call
+              res <- api_fetch_route_detailed(
+                locations$start,
+                locations$end,
+                overview = "full",
+                debug = debug
+              )
 
-              if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
-                pts_sf <- sf::st_as_sf(
-                  data.frame(
-                    lon = c(locations$start$lng, locations$end$lng),
-                    lat = c(locations$start$lat, locations$end$lat)
-                  ),
-                  coords = c("lon", "lat"),
-                  crs = 4326
+              if (!is.null(res) && length(res$routes) > 0) {
+                route_data <- res$routes[[1]]
+
+                # 1. Update Route Summary
+                route_summary(list(
+                  duration = route_data$duration / 60, # OSRM returns seconds, convert to minutes
+                  distance = route_data$distance / 1000 # OSRM returns meters, convert to km
+                ))
+
+                # 2. Update Current Steps (for Itinerary Table and Highlighting)
+                if (!is.null(route_data$legs[[1]]$steps)) {
+                  current_steps(route_data$legs[[1]]$steps)
+                }
+
+                # 3. Create sf geometry for mapping
+                coords <- route_data$geometry$coordinates
+                coord_matrix <- do.call(rbind, lapply(coords, as.numeric))
+                route <- sf::st_sf(
+                  geometry = sf::st_sfc(
+                    sf::st_linestring(coord_matrix),
+                    crs = 4326
+                  )
                 )
-                combined_sf <- rbind(
-                  sf::st_sf(geometry = sf::st_geometry(route)),
-                  sf::st_sf(geometry = sf::st_geometry(pts_sf))
-                )
-                map_width <- session$clientData$output_map_width %||% 1000
-                padding <- if (map_width < 768) 50 else 150
-                mapgl::fit_bounds(
-                  proxy,
-                  combined_sf,
-                  animate = TRUE,
-                  padding = padding
-                )
+                proxy <- mapgl::maplibre_proxy("map")
+                if (!init$route) {
+                  mapgl::add_source(proxy, id = "route_source", data = route)
+                  mapgl::add_line_layer(
+                    proxy,
+                    id = "route_layer",
+                    source = "route_source",
+                    line_color = "#3b82f6",
+                    line_width = 5,
+                    line_opacity = 0.8
+                  )
+                  init$route <- TRUE
+                } else {
+                  mapgl::set_source(
+                    proxy,
+                    layer_id = "route_layer",
+                    source = route
+                  )
+                  mapgl::set_layout_property(
+                    proxy,
+                    "route_layer",
+                    "visibility",
+                    "visible"
+                  )
+                }
+                # Check if enough time has passed since mode switch (isloated to prevent re-calc on switch)
+                time_since_switch <- as.numeric(difftime(
+                  Sys.time(),
+                  shiny::isolate(last_mode_switch()),
+                  units = "secs"
+                ))
+                should_autozoom <- time_since_switch > 1.0
+
+                if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
+                  pts_sf <- sf::st_as_sf(
+                    data.frame(
+                      lon = c(locations$start$lng, locations$end$lng),
+                      lat = c(locations$start$lat, locations$end$lat)
+                    ),
+                    coords = c("lon", "lat"),
+                    crs = 4326
+                  )
+                  combined_sf <- rbind(
+                    sf::st_sf(geometry = sf::st_geometry(route)),
+                    sf::st_sf(geometry = sf::st_geometry(pts_sf))
+                  )
+                  map_width <- shiny::isolate(
+                    session$clientData$output_map_width
+                  ) %||%
+                    1000
+                  padding <- if (map_width < 768) 50 else 150
+                  mapgl::fit_bounds(
+                    proxy,
+                    combined_sf,
+                    animate = TRUE,
+                    padding = padding
+                  )
+                }
               }
+            },
+            error = function(e) {
+              shiny::showNotification(
+                paste("Routing failed:", e$message),
+                type = "error"
+              )
             }
-          },
-          error = function(e) {
-            shiny::showNotification(
-              paste("Routing failed:", e$message),
-              type = "error"
-            )
-          }
-        )
+          )
+        }
+        shiny::withProgress(message = "Calculating Route...", calc_route())
       }
-      shiny::withProgress(message = "Calculating Route...", calc_route())
-    })
+    )
 
     # Trip Calculation: Live Tracking
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging())
-      coords_data <- active_coords()
-      trip_pts <- coords_data$trip
+      shiny::req(live_update_enabled(), is_dragging(), drag_type() == "trip")
+      trip_pts <- active_trip_coords()
 
-      # Safer extraction using vapply
-      lons <- tryCatch(
-        unname(vapply(trip_pts, function(p) as.numeric(p$lng), numeric(1))),
-        error = function(e) numeric(0)
-      )
-      lats <- tryCatch(
-        unname(vapply(trip_pts, function(p) as.numeric(p$lat), numeric(1))),
-        error = function(e) numeric(0)
-      )
+      if (debug) {
+        debug_msg(
+          "Trip (Live) observer firing with ",
+          length(trip_pts),
+          " points."
+        )
+      }
+      if (length(trip_pts) < 2) {
+        return()
+      }
 
-      shiny::req(length(lons) >= 2, length(lats) == length(lons))
+      # Handle extraction with explicit NA checks to avoid dying on req
+      pt_ids <- names(trip_pts)
+      lons <- numeric(length(pt_ids))
+      lats <- numeric(length(pt_ids))
+
+      for (i in seq_along(pt_ids)) {
+        id <- pt_ids[i]
+        lons[i] <- as.numeric(trip_pts[[id]]$lng %||% NA)
+        lats[i] <- as.numeric(trip_pts[[id]]$lat %||% NA)
+      }
+
+      # If any are NA, we prefer to skip this frame rather than dying on req
+      # and we definitely don't want to fetch
+      if (any(is.na(lons)) || any(is.na(lats))) {
+        if (debug) {
+          debug_msg(
+            "Trip (Live): Skipping frame due to incomplete coordinates."
+          )
+        }
+        return()
+      }
+
+      shiny::req(length(lons) >= 2)
 
       # Ensure data frame is as clean as possible
       pts_df <- data.frame(lon = lons, lat = lats)
@@ -982,159 +1066,105 @@ osrm_gui <- function(
     })
 
     # Trip Calculation: Stable Updates
-    shiny::observe({
-      shiny::req(!is.null(locations$trip))
-      trip_pts <- locations$trip
+    shiny::observeEvent(
+      locations$trip,
+      {
+        shiny::req(!is.null(locations$trip))
+        trip_pts <- locations$trip
 
-      # Safer extraction using vapply
-      lons <- tryCatch(
-        unname(vapply(trip_pts, function(p) as.numeric(p$lng), numeric(1))),
-        error = function(e) numeric(0)
-      )
-      lats <- tryCatch(
-        unname(vapply(trip_pts, function(p) as.numeric(p$lat), numeric(1))),
-        error = function(e) numeric(0)
-      )
+        # Unified robust extraction mapping
+        coords_list <- unname(lapply(trip_pts, function(p) {
+          lng <- as.numeric(p$lng %||% NA)
+          lat <- as.numeric(p$lat %||% NA)
+          if (is.na(lng) || is.na(lat)) {
+            return(NULL)
+          }
+          c(lng, lat)
+        }))
 
-      shiny::req(length(lons) >= 2, length(lats) == length(lons))
+        # Filter NULLs and validate count
+        coords_list <- coords_list[!vapply(coords_list, is.null, logical(1))]
+        shiny::req(length(coords_list) >= 2)
 
-      # Ensure data frame is as clean as possible
-      pts_df <- data.frame(lon = lons, lat = lats)
-      rownames(pts_df) <- NULL
+        coord_matrix <- do.call(rbind, coords_list)
+        lons <- coord_matrix[, 1]
+        lats <- coord_matrix[, 2]
 
-      calc_trip <- function() {
-        local_lons <- lons
-        local_lats <- lats
+        shiny::req(length(lons) >= 2, length(lats) == length(lons))
 
-        if (debug) {
-          debug_msg("Trip (Stable) request points:")
-          print(data.frame(lon = local_lons, lat = local_lats))
-          debug_msg(
-            "  class(local_lons)=",
-            class(local_lons),
-            " length=",
-            length(local_lons)
+        # Ensure data frame is as clean as possible
+        pts_df <- data.frame(lon = lons, lat = lats)
+        rownames(pts_df) <- NULL
+
+        calc_trip <- function() {
+          local_lons <- lons
+          local_lats <- lats
+
+          if (debug) {
+            debug_msg("Trip (Stable) request points:")
+            print(data.frame(lon = local_lons, lat = local_lats))
+            debug_msg(
+              "  class(local_lons)=",
+              class(local_lons),
+              " length=",
+              length(local_lons)
+            )
+            debug_msg(
+              "  class(local_lats)=",
+              class(local_lats),
+              " length=",
+              length(local_lats)
+            )
+            debug_msg("  osrm.server=", getOption("osrm.server"))
+            debug_msg("  osrm.profile=", getOption("osrm.profile"))
+            debug_msg("  init$trip=", init$trip)
+          }
+
+          # Create the data.frame outside the tryCatch for cleaner debugging
+          trip_df <- data.frame(
+            lon = as.numeric(local_lons),
+            lat = as.numeric(local_lats)
           )
-          debug_msg(
-            "  class(local_lats)=",
-            class(local_lats),
-            " length=",
-            length(local_lats)
-          )
-          debug_msg("  osrm.server=", getOption("osrm.server"))
-          debug_msg("  osrm.profile=", getOption("osrm.profile"))
-          debug_msg("  init$trip=", init$trip)
-        }
+          rownames(trip_df) <- NULL
 
-        # Create the data.frame outside the tryCatch for cleaner debugging
-        trip_df <- data.frame(
-          lon = as.numeric(local_lons),
-          lat = as.numeric(local_lats)
-        )
-        rownames(trip_df) <- NULL
+          if (debug) {
+            debug_msg(
+              "  trip_df created successfully, calling api_fetch_trip..."
+            )
+          }
 
-        if (debug) {
-          debug_msg("  trip_df created successfully, calling api_fetch_trip...")
-        }
+          # 1. Calculate trip using direct HTTP API (bypasses osrm::osrmTrip issues)
+          trip_result_data <- api_fetch_trip(trip_df, debug = debug)
 
-        # 1. Calculate trip using direct HTTP API (bypasses osrm::osrmTrip issues)
-        trip_result_data <- api_fetch_trip(trip_df, debug = debug)
+          if (is.null(trip_result_data) || is.null(trip_result_data$trip)) {
+            shiny::showNotification(
+              "Trip failed: No route returned (Is OSRM Trip service enabled? Are points within map coverage?)",
+              type = "error"
+            )
+            return()
+          }
 
-        if (is.null(trip_result_data) || is.null(trip_result_data$trip)) {
-          shiny::showNotification(
-            "Trip failed: No route returned (Is OSRM Trip service enabled? Are points within map coverage?)",
-            type = "error"
-          )
-          return()
-        }
+          trip_geom <- trip_result_data$trip
+          trip_result(trip_result_data)
 
-        trip_geom <- trip_result_data$trip
-        trip_result(trip_result_data)
+          summary <- trip_result_data$summary
+          dur <- if (!is.null(summary$duration)) {
+            as.numeric(summary$duration)
+          } else {
+            0
+          }
+          dis <- if (!is.null(summary$distance)) {
+            as.numeric(summary$distance)
+          } else {
+            0
+          }
+          route_summary(list(duration = dur, distance = dis))
 
-        summary <- trip_result_data$summary
-        dur <- if (!is.null(summary$duration)) {
-          as.numeric(summary$duration)
-        } else {
-          0
-        }
-        dis <- if (!is.null(summary$distance)) {
-          as.numeric(summary$distance)
-        } else {
-          0
-        }
-        route_summary(list(duration = dur, distance = dis))
-
-        # 2. Render on map (with fallback if set_source fails)
-        tryCatch(
-          {
-            proxy <- mapgl::maplibre_proxy("map")
-            if (!init$trip) {
-              mapgl::add_source(proxy, id = "trip_source", data = trip_geom)
-              mapgl::add_line_layer(
-                proxy,
-                id = "trip_layer",
-                source = "trip_source",
-                line_color = "#984ea3",
-                line_width = 5,
-                line_opacity = 0.8
-              )
-              init$trip <- TRUE
-            } else {
-              mapgl::set_source(
-                proxy,
-                layer_id = "trip_layer",
-                source = trip_geom
-              )
-              mapgl::set_layout_property(
-                proxy,
-                "trip_layer",
-                "visibility",
-                "visible"
-              )
-            }
-            # Check if enough time has passed since mode switch
-            time_since_switch <- as.numeric(difftime(
-              Sys.time(),
-              last_mode_switch(),
-              units = "secs"
-            ))
-            should_autozoom <- time_since_switch > 1.0
-
-            if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
-              pts_sf <- sf::st_as_sf(
-                data.frame(
-                  lon = as.numeric(local_lons),
-                  lat = as.numeric(local_lats)
-                ),
-                coords = c("lon", "lat"),
-                crs = 4326
-              )
-              combined_sf <- rbind(
-                sf::st_sf(geometry = sf::st_geometry(trip_geom)),
-                sf::st_sf(geometry = sf::st_geometry(pts_sf))
-              )
-              map_width <- session$clientData$output_map_width %||% 1000
-              padding <- if (map_width < 768) 50 else 150
-              mapgl::fit_bounds(
-                proxy,
-                combined_sf,
-                animate = TRUE,
-                padding = padding
-              )
-            }
-          },
-          error = function(e) {
-            if (debug) {
-              debug_msg(
-                "Trip map update error: ",
-                e$message,
-                " -- resetting layer"
-              )
-            }
-            tryCatch(
-              {
-                proxy <- mapgl::maplibre_proxy("map")
-                init$trip <- FALSE
+          # 2. Render on map (with fallback if set_source fails)
+          tryCatch(
+            {
+              proxy <- mapgl::maplibre_proxy("map")
+              if (!init$trip) {
                 mapgl::add_source(proxy, id = "trip_source", data = trip_geom)
                 mapgl::add_line_layer(
                   proxy,
@@ -1145,24 +1175,94 @@ osrm_gui <- function(
                   line_opacity = 0.8
                 )
                 init$trip <- TRUE
-              },
-              error = function(e2) {
-                if (debug) {
-                  debug_msg("Trip layer reset also failed: ", e2$message)
-                }
+              } else {
+                mapgl::set_source(
+                  proxy,
+                  layer_id = "trip_layer",
+                  source = trip_geom
+                )
+                mapgl::set_layout_property(
+                  proxy,
+                  "trip_layer",
+                  "visibility",
+                  "visible"
+                )
               }
-            )
-          }
-        )
+              # Check if enough time has passed since mode switch
+              time_since_switch <- as.numeric(difftime(
+                Sys.time(),
+                shiny::isolate(last_mode_switch()),
+                units = "secs"
+              ))
+              should_autozoom <- time_since_switch > 1.0
+
+              if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
+                pts_sf <- sf::st_as_sf(
+                  data.frame(
+                    lon = as.numeric(local_lons),
+                    lat = as.numeric(local_lats)
+                  ),
+                  coords = c("lon", "lat"),
+                  crs = 4326
+                )
+                combined_sf <- rbind(
+                  sf::st_sf(geometry = sf::st_geometry(trip_geom)),
+                  sf::st_sf(geometry = sf::st_geometry(pts_sf))
+                )
+                map_width <- shiny::isolate(
+                  session$clientData$output_map_width
+                ) %||%
+                  1000
+                padding <- if (map_width < 768) 50 else 150
+                mapgl::fit_bounds(
+                  proxy,
+                  combined_sf,
+                  animate = TRUE,
+                  padding = padding
+                )
+              }
+            },
+            error = function(e) {
+              if (debug) {
+                debug_msg(
+                  "Trip map update error: ",
+                  e$message,
+                  " -- resetting layer"
+                )
+              }
+              tryCatch(
+                {
+                  proxy <- mapgl::maplibre_proxy("map")
+                  init$trip <- FALSE
+                  mapgl::add_source(proxy, id = "trip_source", data = trip_geom)
+                  mapgl::add_line_layer(
+                    proxy,
+                    id = "trip_layer",
+                    source = "trip_source",
+                    line_color = "#984ea3",
+                    line_width = 5,
+                    line_opacity = 0.8
+                  )
+                  init$trip <- TRUE
+                },
+                error = function(e2) {
+                  if (debug) {
+                    debug_msg("Trip layer reset also failed: ", e2$message)
+                  }
+                }
+              )
+            }
+          )
+        }
+        shiny::withProgress(message = "Calculating Trip...", calc_trip())
       }
-      shiny::withProgress(message = "Calculating Trip...", calc_trip())
-    })
+    )
 
     # Isochrone: Live Tracking (Custom Resolution)
     shiny::observe({
-      shiny::req(live_update_enabled(), is_dragging())
-      coords <- active_coords()
-      shiny::req(coords$iso_start)
+      shiny::req(live_update_enabled(), is_dragging(), drag_type() == "iso")
+      iso_start <- active_iso_coords()
+      shiny::req(iso_start)
 
       tryCatch(
         {
@@ -1177,9 +1277,9 @@ osrm_gui <- function(
           # Live resolution
           debug_msg(
             "Isochrone (Live) request: ",
-            coords$iso_start$lng,
+            iso_start$lng,
             ",",
-            coords$iso_start$lat,
+            iso_start$lat,
             " breaks: ",
             paste(breaks, collapse = ",")
           )
@@ -1193,7 +1293,7 @@ osrm_gui <- function(
           }
 
           iso <- osrm::osrmIsochrone(
-            loc = c(coords$iso_start$lng, coords$iso_start$lat),
+            loc = c(iso_start$lng, iso_start$lat),
             breaks = breaks,
             n = n_val
           )
@@ -1311,13 +1411,16 @@ osrm_gui <- function(
                 # Check if enough time has passed since mode switch
                 time_since_switch <- as.numeric(difftime(
                   Sys.time(),
-                  last_mode_switch(),
+                  shiny::isolate(last_mode_switch()),
                   units = "secs"
                 ))
                 should_autozoom <- time_since_switch > 1.0
 
                 if (shiny::isolate(autozoom_enabled()) && should_autozoom) {
-                  map_width <- session$clientData$output_map_width %||% 1000
+                  map_width <- shiny::isolate(
+                    session$clientData$output_map_width
+                  ) %||%
+                    1000
                   padding <- if (map_width < 768) 20 else 50
                   mapgl::fit_bounds(
                     proxy,
@@ -1341,40 +1444,35 @@ osrm_gui <- function(
 
     # --- Table Output ---
     output$itinerary_table <- DT::renderDataTable({
-      shiny::req(input$mode == "route", locations$start, locations$end)
-      res <- api_fetch_route_detailed(
-        locations$start,
-        locations$end,
-        debug = debug
-      )
+      shiny::req(input$mode == "route")
+      steps <- current_steps()
+      shiny::req(steps)
 
-      if (!is.null(res) && length(res$routes) > 0) {
-        steps <- res$routes[[1]]$legs[[1]]$steps
-        current_steps(steps)
-        df <- do.call(
-          rbind,
-          lapply(steps, function(s) {
-            instr <- s$maneuver$type
-            if (!is.null(s$maneuver$modifier)) {
-              instr <- paste(instr, s$maneuver$modifier)
-            }
-            data.frame(
-              Instruction = instr,
-              Road = if (is.null(s$name) || s$name == "") "-" else s$name,
-              `Distance (km)` = round(s$distance / 1000, 3),
-              `Duration (min)` = round(s$duration / 60, 2),
-              stringsAsFactors = FALSE,
-              check.names = FALSE
-            )
-          })
-        )
-        DT::datatable(
-          df,
-          selection = "multiple",
-          options = list(pageLength = 10, scrollX = TRUE),
-          rownames = FALSE
-        )
-      }
+      # Use the cached steps from the stable Route observer instead of re-fetching
+      # This is the key fix for redundant requests on mode switch.
+      df <- do.call(
+        rbind,
+        lapply(steps, function(s) {
+          instr <- s$maneuver$type
+          if (!is.null(s$maneuver$modifier)) {
+            instr <- paste(instr, s$maneuver$modifier)
+          }
+          data.frame(
+            Instruction = instr,
+            Road = if (is.null(s$name) || s$name == "") "-" else s$name,
+            `Distance (km)` = round(s$distance / 1000, 3),
+            `Duration (min)` = round(s$duration / 60, 2),
+            stringsAsFactors = FALSE,
+            check.names = FALSE
+          )
+        })
+      )
+      DT::datatable(
+        df,
+        selection = "multiple",
+        options = list(pageLength = 10, scrollX = TRUE),
+        rownames = FALSE
+      )
     })
 
     shiny::observeEvent(input$clear_selection, {
@@ -1405,8 +1503,17 @@ osrm_gui <- function(
             ncol = 2,
             byrow = TRUE
           )
+          if (nrow(coords) < 2 || any(is.na(coords))) {
+            return(NULL)
+          }
           sf::st_linestring(coords)
         })
+        # Filter out invalid segments
+        segment_list <- segment_list[!vapply(segment_list, is.null, logical(1))]
+        if (length(segment_list) == 0) {
+          return()
+        }
+
         segment_sfc <- sf::st_sfc(segment_list, crs = 4326)
         combined_geom <- sf::st_combine(segment_sfc)
         segment_sf <- sf::st_sf(geometry = combined_geom)
@@ -1441,18 +1548,13 @@ osrm_gui <- function(
     output$trip_table <- DT::renderDataTable({
       shiny::req(input$mode == "trip")
       trip_data <- trip_result()
-      shiny::req(trip_data)
-      trip_geom <- trip_data$trip
-      df <- sf::st_drop_geometry(trip_geom)
-      if ("duration" %in% names(df)) {
-        df$duration <- round(df$duration, 2)
-      }
-      if ("distance" %in% names(df)) {
-        df$distance <- round(df$distance, 2)
-      }
-      colnames(df) <- c("From", "To", "Duration (min)", "Distance (km)")
+      shiny::req(trip_data, trip_data$legs)
+
+      df <- trip_data$legs
+
       DT::datatable(
         df,
+        selection = "none",
         options = list(pageLength = 10, scrollX = TRUE),
         rownames = FALSE
       )

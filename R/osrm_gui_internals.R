@@ -639,19 +639,25 @@ gui_ui_layout <- function() {
 
 #' Fetch Detailed Route Steps
 #' @noRd
-api_fetch_route_detailed <- function(src, dst, debug = FALSE) {
+api_fetch_route_detailed <- function(
+  src,
+  dst,
+  overview = "false",
+  debug = FALSE
+) {
   server_url <- getOption("osrm.server")
   profile <- getOption("osrm.profile")
 
   # Use geometries=geojson to get coordinate arrays directly
   url <- sprintf(
-    "%sroute/v1/%s/%f,%f;%f,%f?steps=true&overview=false&geometries=geojson",
+    "%sroute/v1/%s/%f,%f;%f,%f?steps=true&overview=%s&geometries=geojson",
     server_url,
     profile,
     src$lng,
     src$lat,
     dst$lng,
-    dst$lat
+    dst$lat,
+    overview
   )
 
   if (debug) {
@@ -723,14 +729,16 @@ api_fetch_trip <- function(pts_df, debug = FALSE) {
 
       coord_matrix <- do.call(
         rbind,
-        lapply(coords, function(c) c(c[[1]], c[[2]]))
+        lapply(coords, as.numeric)
       )
 
-      # Validate matrix dimensions to prevent segfaults in st_linestring
+      # Validate matrix dimensions and contents to prevent segfaults in st_linestring
       if (
         is.null(coord_matrix) ||
+          !is.matrix(coord_matrix) ||
           nrow(coord_matrix) < 2 ||
-          ncol(coord_matrix) != 2
+          ncol(coord_matrix) != 2 ||
+          any(is.na(coord_matrix))
       ) {
         if (debug) {
           message("DEBUG [Trip API]: Invalid coordinate matrix")
@@ -738,63 +746,56 @@ api_fetch_trip <- function(pts_df, debug = FALSE) {
         return(NULL)
       }
 
-      # Build sf LINESTRING for the full trip
+      # Build SINGLE-ROW sf LINESTRING for mapping (most stable)
       trip_line <- sf::st_linestring(coord_matrix)
-
-      # Ensure geometry is valid
-      if (any(is.na(coord_matrix))) {
-        if (debug) {
-          message("DEBUG [Trip API]: NA values in coordinates")
-        }
-        return(NULL)
-      }
-
       trip_sfc <- sf::st_sfc(trip_line, crs = 4326)
+      trip_sf_map <- sf::st_sf(geometry = trip_sfc)
 
-      # Build segments from legs if available
+      # 2. Extract Legs for Table Display (Pure data, no geometry)
       legs <- trip_data$legs
       n_legs <- length(legs)
 
       if (n_legs > 0) {
-        # Create a data.frame with leg info
-        seg_data <- data.frame(
-          start = seq_len(n_legs),
-          end = c(seq(2, n_legs), 1), # circular: last leg returns to start
-          duration = unname(vapply(
-            legs,
-            function(l) l$duration / 60,
-            numeric(1)
-          )),
-          distance = unname(vapply(
-            legs,
-            function(l) l$distance / 1000,
-            numeric(1)
-          ))
-        )
-
-        # For simplicity, use the full geometry for the trip sf object
-        # A more complete implementation would split the geometry per leg
-        trip_sf <- sf::st_sf(
-          seg_data,
-          geometry = sf::st_sfc(rep(list(trip_line), n_legs), crs = 4326)
+        legs_df <- data.frame(
+          Start = seq_len(n_legs),
+          End = c(seq(2, n_legs), 1), # Circular: last leg returns to start
+          `Duration (min)` = round(
+            unname(vapply(
+              legs,
+              function(l) as.numeric(l$duration) / 60,
+              numeric(1)
+            )),
+            2
+          ),
+          `Distance (km)` = round(
+            unname(vapply(
+              legs,
+              function(l) as.numeric(l$distance) / 1000,
+              numeric(1)
+            )),
+            3
+          ),
+          stringsAsFactors = FALSE,
+          check.names = FALSE
         )
       } else {
-        # Fallback: single row
-        trip_sf <- sf::st_sf(
-          start = 1,
-          end = 2,
-          duration = trip_data$duration / 60,
-          distance = trip_data$distance / 1000,
-          geometry = trip_sfc
+        # Fallback: single entry
+        legs_df <- data.frame(
+          Start = 1,
+          End = 2,
+          `Duration (min)` = round(as.numeric(trip_data$duration) / 60, 2),
+          `Distance (km)` = round(as.numeric(trip_data$distance) / 1000, 3),
+          stringsAsFactors = FALSE,
+          check.names = FALSE
         )
       }
 
       summary <- list(
-        duration = trip_data$duration / 60,
-        distance = trip_data$distance / 1000
+        duration = as.numeric(trip_data$duration) / 60,
+        distance = as.numeric(trip_data$distance) / 1000
       )
 
-      list(trip = trip_sf, summary = summary)
+      list(trip = trip_sf_map, legs = legs_df, summary = summary)
     },
     error = function(e) {
       if (debug) {
