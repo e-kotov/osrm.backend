@@ -9,7 +9,9 @@ osrm_gui(
   port = "auto",
   style = "https://basemaps.cartocdn.com/gl/voyager-gl-style/style.json",
   center = NULL,
-  zoom = NULL
+  zoom = NULL,
+  autozoom = TRUE,
+  tracking = FALSE
 )
 }
 \arguments{
@@ -38,6 +40,10 @@ available, otherwise falls back to GDAL or sampling features (< 50 MB).}
 
 \item{zoom}{Numeric. Initial zoom level. If \code{NULL} (default) and center is
 auto-detected from PBF, defaults to 9. Otherwise uses map default.}
+
+\item{autozoom}{Logical. Whether to enable auto-zoom by default. Defaults to \code{TRUE}.}
+
+\item{tracking}{Logical. Whether to enable live tracking mode by default (updates route while dragging). Defaults to \code{FALSE}.}
 }
 \value{
 No return value; launches a Shiny Gadget.
