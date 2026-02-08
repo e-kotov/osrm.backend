@@ -119,6 +119,7 @@ osrm_start <- function(
   }
 
   final_graph_path <- NULL
+  original_osm_path <- NULL
 
   if (dir.exists(path)) {
     # Input is a directory
@@ -152,6 +153,7 @@ osrm_start <- function(
         )
       }
       osm_input <- osm_files[1]
+      original_osm_path <- osm_input
 
       if (!quiet) {
         message(
@@ -171,9 +173,16 @@ osrm_start <- function(
       final_graph_path <- prepared_graph$osrm_job_artifact
       if (!quiet) message("Graph preparation complete.")
     }
+
+    # If graph was already prepared, we skipped the PBF lookup — find it now
+    if (is.null(original_osm_path)) {
+      osm_files <- list.files(path, pattern = "\\.osm\\.pbf$", full.names = TRUE)
+      if (length(osm_files) > 0) original_osm_path <- osm_files[1]
+    }
   } else {
     # Input is a file
     if (grepl("\\.osm(\\.pbf|\\.bz2)?$", path, ignore.case = TRUE)) {
+      original_osm_path <- path
       base_name <- sub("\\.osm(\\.pbf|\\.bz2)?$", "", path, ignore.case = TRUE)
 
       # Look for graph file matching the requested algorithm
@@ -224,6 +233,7 @@ osrm_start <- function(
 
   # 3. Start the server
   server_args$osrm_path <- final_graph_path
+  server_args$input_osm <- original_osm_path
   server_call_args <- utils::modifyList(
     server_args,
     list(quiet = quiet, verbose = verbose)

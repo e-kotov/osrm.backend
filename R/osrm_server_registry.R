@@ -182,7 +182,7 @@
 
 # Registration API used by osrm_start_server() --------------------------------
 
-.osrm_register <- function(proc, port, prefix, algorithm, log = NULL) {
+.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL) {
   ts <- format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC", usetz = FALSE)
   pid <- tryCatch(
     if (!is.null(proc)) proc$get_pid() else NA_integer_,
@@ -208,6 +208,7 @@
     algorithm = as.character(algorithm %||% ""),
     started_at = ts,
     log = as.character(log %||% ""),
+    input_osm = as.character(input_osm %||% ""),
     proc = proc
   )
 

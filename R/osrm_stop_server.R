@@ -50,6 +50,7 @@ osrm_servers <- function() {
       alive = logical(),
       has_handle = logical(),
       log = character(),
+      input_osm = character(),
       stringsAsFactors = FALSE
     )
     return(out)
@@ -77,6 +78,7 @@ osrm_servers <- function() {
     alive = alive_vec,
     has_handle = handle_vec,
     log = vapply(reg, function(e) as.character(e$log %||% ""), ""),
+    input_osm = vapply(reg, function(e) as.character(e$input_osm %||% ""), ""),
     stringsAsFactors = FALSE
   )
   out

@@ -27,7 +27,8 @@ osrm_start_server(
   max_matching_radius = -1L,
   quiet = FALSE,
   verbose = FALSE,
-  echo_cmd = FALSE
+  echo_cmd = FALSE,
+  input_osm = NULL
 )
 }
 \arguments{

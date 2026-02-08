@@ -120,7 +120,8 @@ osrm_start_server <- function(
   max_matching_radius = -1L,
   quiet = FALSE,
   verbose = FALSE,
-  echo_cmd = FALSE
+  echo_cmd = FALSE,
+  input_osm = NULL
 ) {
   # Dependencies
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -511,7 +512,8 @@ osrm_start_server <- function(
       port = port,
       prefix = prefix,
       algorithm = algorithm,
-      log = log_file_path
+      log = log_file_path,
+      input_osm = input_osm
     ),
     silent = TRUE
   )
