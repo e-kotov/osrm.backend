@@ -48,6 +48,8 @@
 #' @param max_nearest_size Integer (default: `100`)
 #' @param max_alternatives Integer (default: `3`)
 #' @param max_matching_radius Integer; use `-1` for unlimited (default: `-1`)
+#' @param input_osm Character or NULL; path to the original OSM input file (for tracking purposes).
+#'   This parameter is typically used internally by [osrm_start()] to record the source data.
 #' @param echo_cmd Logical; echo command line to console before launch (default: `FALSE`)
 #' @param quiet Logical; when `TRUE`, suppresses package messages.
 #' @param verbose Logical; when `TRUE`, routes server stdout and stderr to the R

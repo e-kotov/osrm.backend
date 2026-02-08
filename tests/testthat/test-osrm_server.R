@@ -166,7 +166,8 @@ test_that("osrm_servers returns empty data frame when no servers", {
           "started_at",
           "alive",
           "has_handle",
-          "log"
+          "log",
+          "input_osm"
         )
       )
     },
@@ -878,7 +879,7 @@ test_that("osrm_start_server handles log file read errors gracefully during fail
               unlink(mock_log_file)
               log_deleted <<- TRUE
             }
-            FALSE  # Simulate immediate failure
+            FALSE # Simulate immediate failure
           },
           get_pid = function() 12345,
           kill = function() TRUE,
@@ -912,7 +913,7 @@ test_that("osrm_start_server handles log file read errors gracefully during fail
 test_that("osrm_start_server handles permission errors when reading log file", {
   skip_if_not_installed("processx")
   skip_on_cran()
-  skip_on_os("windows")  # Permission changes work differently on Windows
+  skip_on_os("windows") # Permission changes work differently on Windows
   skip_if(
     packageVersion("testthat") < "3.2.0",
     "Requires testthat >= 3.2.0 for object mocking"
@@ -934,7 +935,7 @@ test_that("osrm_start_server handles permission errors when reading log file", {
 
       structure(
         list(
-          is_alive = function() FALSE,  # Simulate immediate failure
+          is_alive = function() FALSE, # Simulate immediate failure
           get_pid = function() 12345,
           kill = function() TRUE,
           wait = function(...) TRUE,
@@ -949,14 +950,17 @@ test_that("osrm_start_server handles permission errors when reading log file", {
     {
       # Use the mock log file
       old_opt <- options(osrm.server.log_file = mock_log_file)
-      on.exit({
-        options(old_opt)
-        # Restore permissions so cleanup can work
-        if (file.exists(mock_log_file)) {
-          try(Sys.chmod(mock_log_file, mode = "644"), silent = TRUE)
-          unlink(mock_log_file)
-        }
-      }, add = TRUE)
+      on.exit(
+        {
+          options(old_opt)
+          # Restore permissions so cleanup can work
+          if (file.exists(mock_log_file)) {
+            try(Sys.chmod(mock_log_file, mode = "644"), silent = TRUE)
+            unlink(mock_log_file)
+          }
+        },
+        add = TRUE
+      )
 
       # Should still get an error message, even though log file is unreadable
       expect_error(
@@ -992,7 +996,7 @@ test_that("osrm_start_server handles empty log file during error reporting", {
 
       structure(
         list(
-          is_alive = function() FALSE,  # Simulate immediate failure
+          is_alive = function() FALSE, # Simulate immediate failure
           get_pid = function() 12345,
           kill = function() TRUE,
           wait = function(...) TRUE,

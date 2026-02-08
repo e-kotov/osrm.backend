@@ -362,7 +362,7 @@ osrm_gui <- function(
     })
 
     shiny::observeEvent(input$undo_btn, {
-      req(length(history$past) > 0)
+      shiny::req(length(history$past) > 0)
       current <- get_state_snapshot()
       # Push current to future
       history$future <- c(list(current), history$future)
@@ -373,7 +373,7 @@ osrm_gui <- function(
     })
 
     shiny::observeEvent(input$redo_btn, {
-      req(length(history$future) > 0)
+      shiny::req(length(history$future) > 0)
       current <- get_state_snapshot()
       # Push current to past
       history$past <- c(history$past, list(current))

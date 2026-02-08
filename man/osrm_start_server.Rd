@@ -79,6 +79,9 @@ console for live debugging. Note: This can cause deadlocks in tight loops
 if R is busy. Defaults to \code{FALSE}, which writes logs to a temporary file.}
 
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
+
+\item{input_osm}{Character or NULL; path to the original OSM input file (for tracking purposes).
+This parameter is typically used internally by \code{\link[=osrm_start]{osrm_start()}} to record the source data.}
 }
 \value{
 A \code{processx::process} object for the running server (also registered internally).
