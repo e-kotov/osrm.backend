@@ -106,7 +106,7 @@ osrm_gui <- function(
     })
 
     # State
-    locations <- shiny::reactiveValues(start = NULL, end = NULL, trip = list())
+    locations <- shiny::reactiveValues(start = NULL, end = NULL, iso_start = NULL, trip = list())
     init <- shiny::reactiveValues(
       route = FALSE,
       iso = FALSE,
@@ -122,7 +122,7 @@ osrm_gui <- function(
     # Store current route steps for highlighting
     current_steps <- shiny::reactiveVal(NULL)
     # Store intermediate coords for tracking
-    tracking_coords <- shiny::reactiveValues(start = NULL, end = NULL)
+    tracking_coords <- shiny::reactiveValues(start = NULL, end = NULL, iso_start = NULL)
     # Store trip result for table
     trip_result <- shiny::reactiveVal(NULL)
 
@@ -145,11 +145,13 @@ osrm_gui <- function(
       # 1. Update Internal State
       locations$start <- snapshot$start
       locations$end <- snapshot$end
+      locations$iso_start <- snapshot$iso_start
       locations$trip <- snapshot$trip
       
       # 2. Clear Tracking Overrides (Fix for Undo/Redo glitch with live updates)
       tracking_coords$start <- NULL
       tracking_coords$end <- NULL
+      tracking_coords$iso_start <- NULL
       for (n in names(tracking_coords)) {
          if (startsWith(n, "trip_")) tracking_coords[[n]] <- NULL
       }
@@ -159,16 +161,20 @@ osrm_gui <- function(
       
       if (!is.null(snapshot$start)) {
         session$sendCustomMessage('updateMarker', list(id = 'start', lng = snapshot$start$lng, lat = snapshot$start$lat))
-        shiny::updateTextInput(session, "start_coords_input", value = paste(snapshot$start$lat, snapshot$start$lng, sep = ", "))
-      } else {
-        shiny::updateTextInput(session, "start_coords_input", value = "")
       }
-      
       if (!is.null(snapshot$end)) {
         session$sendCustomMessage('updateMarker', list(id = 'end', lng = snapshot$end$lng, lat = snapshot$end$lat))
-        shiny::updateTextInput(session, "end_coords_input", value = paste(snapshot$end$lat, snapshot$end$lng, sep = ", "))
-      } else {
-        shiny::updateTextInput(session, "end_coords_input", value = "")
+      }
+      if (!is.null(snapshot$iso_start)) {
+        session$sendCustomMessage('updateMarker', list(id = 'iso_start', lng = snapshot$iso_start$lng, lat = snapshot$iso_start$lat))
+      }
+      
+      # Update inputs based on active mode for clarity (optional, but good for UX)
+      if (input$mode == "route") {
+         if (!is.null(snapshot$start)) shiny::updateTextInput(session, "start_coords_input", value = paste(snapshot$start$lat, snapshot$start$lng, sep = ", "))
+         if (!is.null(snapshot$end)) shiny::updateTextInput(session, "end_coords_input", value = paste(snapshot$end$lat, snapshot$end$lng, sep = ", "))
+      } else if (input$mode == "iso") {
+         if (!is.null(snapshot$iso_start)) shiny::updateTextInput(session, "start_coords_input", value = paste(snapshot$iso_start$lat, snapshot$iso_start$lng, sep = ", "))
       }
       
       if (!is.null(snapshot$trip)) {
@@ -183,11 +189,15 @@ osrm_gui <- function(
       trip_result(NULL)
       
       # Force map layer updates (Reset clears them, Observers re-add them)
-      # Simpler to just trigger the observers via locations change, 
-      # but we might need to clear layers if state is empty.
       proxy <- mapgl::maplibre_proxy("map")
-      has_content <- !is.null(snapshot$start) || !is.null(snapshot$end) || length(snapshot$trip) > 0
       
+      # Ensure all initialized layers are visible
+      if (init$route) mapgl::set_layout_property(proxy, "route_layer", "visibility", "visible")
+      if (init$iso) mapgl::set_layout_property(proxy, "iso_layer", "visibility", "visible")
+      if (init$trip) mapgl::set_layout_property(proxy, "trip_layer", "visibility", "visible")
+      if (init$highlight) mapgl::set_layout_property(proxy, "highlight_layer", "visibility", "visible")
+      
+      has_content <- !is.null(snapshot$start) || !is.null(snapshot$end) || !is.null(snapshot$iso_start) || length(snapshot$trip) > 0
       if (!has_content) {
          if (init$route) mapgl::set_layout_property(proxy, "route_layer", "visibility", "none")
          if (init$iso) mapgl::set_layout_property(proxy, "iso_layer", "visibility", "none")
@@ -200,7 +210,7 @@ osrm_gui <- function(
     output$map_edit_controls <- shiny::renderUI({
        has_history <- length(history$past) > 0
        has_future <- length(history$future) > 0
-       has_content <- !is.null(locations$start) || !is.null(locations$end) || length(locations$trip) > 0
+       has_content <- !is.null(locations$start) || !is.null(locations$end) || !is.null(locations$iso_start) || length(locations$trip) > 0
        
        if (!has_history && !has_future && !has_content) return(NULL)
        
@@ -369,6 +379,23 @@ osrm_gui <- function(
       route_summary(NULL)
       current_steps(NULL)
     }
+    
+    update_iso_start <- function(lng, lat) {
+      commit()
+      is_dragging(FALSE)
+      coords <- list(lat = round(lat, 5), lng = round(lng, 5))
+      locations$iso_start <- coords
+      tracking_coords$iso_start <- NULL
+      session$sendCustomMessage(
+        'updateMarker',
+        list(id = 'iso_start', lng = lng, lat = lat)
+      )
+      shiny::updateTextInput(
+        session,
+        "start_coords_input",
+        value = paste(coords$lat, coords$lng, sep = ", ")
+      )
+    }
 
     add_trip_point <- function(lng, lat) {
       commit()
@@ -406,6 +433,8 @@ osrm_gui <- function(
       shiny::req(input$map_click)
       if (input$mode == 'trip') {
         add_trip_point(input$map_click$lng, input$map_click$lat)
+      } else if (input$mode == 'iso') {
+        update_iso_start(input$map_click$lng, input$map_click$lat)
       } else {
         update_start(input$map_click$lng, input$map_click$lat)
       }
@@ -424,6 +453,8 @@ osrm_gui <- function(
         update_start(drag$lng, drag$lat)
       } else if (drag$id == "end") {
         update_end(drag$lng, drag$lat)
+      } else if (drag$id == "iso_start") {
+        update_iso_start(drag$lng, drag$lat)
       }
     })
 
@@ -450,6 +481,7 @@ osrm_gui <- function(
       commit()
       locations$start <- NULL
       locations$end <- NULL
+      locations$iso_start <- NULL
       locations$trip <- list()
       for (n in names(tracking_coords)) {
         tracking_coords[[n]] <- NULL
@@ -492,6 +524,7 @@ osrm_gui <- function(
         res <- list(
           start = locations$start,
           end = locations$end,
+          iso_start = locations$iso_start,
           trip = locations$trip
         )
         if (!is.null(tracking_coords$start)) {
@@ -499,6 +532,9 @@ osrm_gui <- function(
         }
         if (!is.null(tracking_coords$end)) {
           res$end <- tracking_coords$end
+        }
+        if (!is.null(tracking_coords$iso_start)) {
+          res$iso_start <- tracking_coords$iso_start
         }
         for (id in names(tracking_coords)) {
           if (
@@ -786,7 +822,7 @@ osrm_gui <- function(
     shiny::observe({
       shiny::req(live_update_enabled(), is_dragging(), input$mode == "iso")
       coords <- active_coords()
-      shiny::req(coords$start)
+      shiny::req(coords$iso_start)
       
       tryCatch({
         breaks <- tryCatch(
@@ -801,7 +837,7 @@ osrm_gui <- function(
         if (is.na(n_val)) n_val <- 200
         
         iso <- osrm::osrmIsochrone(
-          loc = c(coords$start$lng, coords$start$lat),
+          loc = c(coords$iso_start$lng, coords$iso_start$lat),
           breaks = breaks,
           n = n_val
         )
@@ -831,8 +867,8 @@ osrm_gui <- function(
     })
 
     # Isochrone: Stable Updates
-    shiny::observe({
-      shiny::req(input$mode == "iso", locations$start)
+    shiny::observeEvent(list(locations$iso_start, input$iso_breaks, input$iso_res), {
+      shiny::req(input$mode == "iso", locations$iso_start)
       breaks <- tryCatch(
         sort(as.numeric(unlist(strsplit(input$iso_breaks, ",")))),
         error = function(e) c(5, 10, 15)
@@ -851,7 +887,7 @@ osrm_gui <- function(
           if (is.na(n_val)) n_val <- 500
 
             iso <- osrm::osrmIsochrone(
-              loc = c(locations$start$lng, locations$start$lat),
+              loc = c(locations$iso_start$lng, locations$iso_start$lat),
               breaks = breaks,
               n = n_val
             )

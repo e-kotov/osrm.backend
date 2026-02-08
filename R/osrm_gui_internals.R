@@ -310,6 +310,7 @@ gui_ui_resources <- function() {
 
           let startMarker = null;
           let endMarker = null;
+          let isoStartMarker = null;
           const tripMarkers = {};
 
           Shiny.addCustomMessageHandler('updateMarker', function(message) {
@@ -359,6 +360,16 @@ gui_ui_resources <- function() {
                 endMarker.on('drag', () => createDragCallback('end')(endMarker));
               } else {
                 endMarker.setLngLat(lngLat);
+              }
+            } else if (markerId === 'iso_start') {
+              if (!isoStartMarker) {
+                isoStartMarker = new maplibregl.Marker({ draggable: true, color: '#CC79A7' })
+                  .setLngLat(lngLat)
+                  .addTo(map);
+                isoStartMarker.on('dragend', () => createDragEndCallback('iso_start')(isoStartMarker));
+                isoStartMarker.on('drag', () => createDragCallback('iso_start')(isoStartMarker));
+              } else {
+                isoStartMarker.setLngLat(lngLat);
               }
             }
           });
@@ -423,6 +434,10 @@ gui_ui_resources <- function() {
               if(endMarker) {
                   endMarker.remove();
                   endMarker = null;
+              }
+              if(isoStartMarker) {
+                  isoStartMarker.remove();
+                  isoStartMarker = null;
               }
               // Also clear trip markers
               for (const id in tripMarkers) {
