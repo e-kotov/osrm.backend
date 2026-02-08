@@ -444,19 +444,21 @@ gui_ui_resources <- function() {
       // Customize the Isochrone slider labels to show real values
       // We wait briefly to ensure the slider is initialized
       setTimeout(function() {
-        const $el = $(\"#iso_res\");
-        const slider = $el.data(\"ionRangeSlider\");
-        if (slider) {
-          const valMap = {
-            1: '100', 2: '200', 3: '500', 4: '1k',
-            5: '2k', 6: '5k', 7: '10k', 8: '20k', 9: '50k'
-          };
-          slider.update({
-            prettify: function(n) {
-              return valMap[Math.round(n)] || n;
-            }
-          });
-        }
+        [\"#iso_res\", \"#iso_live_res\"].forEach(function(id) {
+          const $el = $(id);
+          const slider = $el.data(\"ionRangeSlider\");
+          if (slider) {
+            const valMap = {
+              1: '100', 2: '200', 3: '500', 4: '1k',
+              5: '2k', 6: '5k', 7: '10k', 8: '20k', 9: '50k'
+            };
+            slider.update({
+              prettify: function(n) {
+                return valMap[Math.round(n)] || n;
+              }
+            });
+          }
+        });
       }, 500);
     });
   "
@@ -526,6 +528,15 @@ gui_ui_layout <- function() {
             min = 1,
             max = 9,
             value = 3,
+            step = 1,
+            ticks = TRUE
+          ),
+          shiny::sliderInput(
+            "iso_live_res",
+            "Live Resolution (Drag):",
+            min = 1,
+            max = 9,
+            value = 2,
             step = 1,
             ticks = TRUE
           )

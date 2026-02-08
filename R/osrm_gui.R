@@ -34,7 +34,7 @@
 #' @param zoom Numeric. Initial zoom level. If `NULL` (default) and center is
 #'   auto-detected from PBF, defaults to 9. Otherwise uses map default.
 #' @param autozoom Logical. Whether to enable auto-zoom by default. Defaults to `TRUE`.
-#' @param tracking Logical. Whether to enable live tracking mode by default (updates route while dragging). Defaults to `FALSE`.
+#' @param update_while_drag Logical. Whether to enable live tracking mode by default (updates route while dragging). Defaults to `FALSE`.
 #' @return No return value; launches a Shiny Gadget.
 #' @export
 #' @examples
@@ -67,7 +67,7 @@ osrm_gui <- function(
   center = NULL,
   zoom = NULL,
   autozoom = TRUE,
-  tracking = FALSE
+  update_while_drag = FALSE
 ) {
   # 1. Check Dependencies
   gui_check_dependencies()
@@ -114,7 +114,7 @@ osrm_gui <- function(
       trip = FALSE
     )
     autozoom_enabled <- shiny::reactiveVal(autozoom)
-    tracking_enabled <- shiny::reactiveVal(tracking)
+    live_update_enabled <- shiny::reactiveVal(update_while_drag)
 
     # Store latest route summary for the sidebar
     route_summary <- shiny::reactiveVal(NULL)
@@ -162,11 +162,11 @@ osrm_gui <- function(
     })
 
     output$tracking_button_ui <- shiny::renderUI({
-      state <- tracking_enabled()
-      label <- if (state) "Tracking: ON" else "Tracking: OFF"
+      state <- live_update_enabled()
+      label <- if (state) "Update on Drag: ON" else "Update on Drag: OFF"
       color <- if (state) "#5cb85c" else "#777"
       shiny::actionButton(
-        "toggle_tracking",
+        "toggle_update_on_drag",
         label,
         style = sprintf(
           "background-color: %s; color: white; border-width: 0px;",
@@ -174,7 +174,7 @@ osrm_gui <- function(
         )
       )
     })
-
+    
     output$route_stats <- shiny::renderUI({
       stats <- route_summary()
       if (is.null(stats)) {
@@ -204,8 +204,8 @@ osrm_gui <- function(
     shiny::observeEvent(input$toggle_autozoom, {
       autozoom_enabled(!autozoom_enabled())
     })
-    shiny::observeEvent(input$toggle_tracking, {
-      tracking_enabled(!tracking_enabled())
+    shiny::observeEvent(input$toggle_update_on_drag, {
+      live_update_enabled(!live_update_enabled())
     })
 
     # --- Marker Helpers ---
@@ -378,8 +378,9 @@ osrm_gui <- function(
     )
 
     # Route Calculation: Live Tracking
+    # Route Calculation: Live Tracking
     shiny::observe({
-      shiny::req(tracking_enabled(), input$mode == "route")
+      shiny::req(live_update_enabled(), input$mode == "route")
       coords <- active_coords()
       shiny::req(coords$start, coords$end)
       tryCatch(
@@ -493,7 +494,7 @@ osrm_gui <- function(
 
     # Trip Calculation: Live Tracking
     shiny::observe({
-      shiny::req(tracking_enabled(), input$mode == "trip")
+      shiny::req(live_update_enabled(), input$mode == "trip")
       coords_data <- active_coords()
       trip_pts <- coords_data$trip
       lons <- numeric(0)
@@ -643,7 +644,55 @@ osrm_gui <- function(
       shiny::withProgress(message = "Calculating Trip...", calc_trip())
     })
 
-    # Isochrone
+    # Isochrone: Live Tracking (Custom Resolution)
+    shiny::observe({
+      shiny::req(live_update_enabled(), input$mode == "iso")
+      coords <- active_coords()
+      shiny::req(coords$start)
+      
+      tryCatch({
+        breaks <- tryCatch(
+          sort(as.numeric(unlist(strsplit(input$iso_breaks, ",")))),
+          error = function(e) c(5, 10, 15)
+        )
+        if (length(breaks) == 0) breaks <- c(5, 10, 15)
+        
+        # Live resolution
+        n_vals <- c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+        n_val <- tryCatch(n_vals[as.integer(input$iso_live_res)], error = function(e) 200)
+        if (is.na(n_val)) n_val <- 200
+        
+        iso <- osrm::osrmIsochrone(
+          loc = c(coords$start$lng, coords$start$lat),
+          breaks = breaks,
+          n = n_val
+        )
+        
+        if (!is.null(iso) && nrow(iso) > 0) {
+          proxy <- mapgl::maplibre_proxy("map")
+          if (!init$iso) {
+            mapgl::add_source(proxy, id = "iso_source", data = iso)
+            mapgl::add_fill_layer(
+              proxy,
+              id = "iso_layer",
+              source = "iso_source",
+              fill_color = mapgl::interpolate(
+                column = "isomax",
+                values = c(0, max(breaks)),
+                stops = c("#fde725", "#440154")
+              ),
+              fill_opacity = 0.5,
+              fill_outline_color = "white"
+            )
+            init$iso <- TRUE
+          } else {
+            mapgl::set_source(proxy, layer_id = "iso_layer", source = iso)
+          }
+        }
+      }, error = function(e) NULL)
+    })
+
+    # Isochrone: Stable Updates
     shiny::observe({
       shiny::req(input$mode == "iso", locations$start)
       breaks <- tryCatch(
