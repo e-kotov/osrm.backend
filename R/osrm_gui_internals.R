@@ -200,13 +200,9 @@ gui_ui_resources <- function() {
       #shiny-notification-panel { top: 70px; right: 10px; left: auto; bottom: auto; }
       
       .sidebar-layout { flex: 1; display: flex; overflow: hidden; min-height: 0; }
-      .sidebar-panel { 
-        height: 100%; 
-        overflow-y: auto; 
-        padding: 15px;
-        background-color: #f8f9fa;
-        border-right: 1px solid #dee2e6;
-      }
+      .sidebar-panel h4:first-child { margin-top: 0; }
+      .sidebar-panel h4 { margin-top: 20px; }
+      
       .main-panel { 
         height: 100%; 
         display: flex; 
@@ -592,10 +588,15 @@ gui_ui_layout <- function() {
         class = "sidebar-panel",
         style = "width: 25%;",
         shiny::h4("OSRM Controls"),
-        shiny::selectInput(
-          "mode",
-          "Analysis Mode:",
-          choices = c("Route" = "route", "Isochrone" = "iso", "Trip" = "trip")
+        
+        # Hidden but functional for R/JS conditions
+        shiny::div(
+          style = "display: none;",
+          shiny::selectInput(
+            "mode",
+            "Mode",
+            choices = c("Route" = "route", "Isochrone" = "iso", "Trip" = "trip")
+          )
         ),
 
         shiny::conditionalPanel(
