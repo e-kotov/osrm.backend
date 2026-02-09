@@ -223,6 +223,22 @@ gui_ui_resources <- function() {
       .route-stats-overlay b { color: #333; }
       .stat-val { font-weight: bold; }
 
+      .trip-marker-label {
+        background-color: #984ea3;
+        color: white;
+        border: 2px solid white;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        font-weight: bold;
+        font-size: 12px;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        cursor: pointer;
+      }
+
       .exec-time-overlay {
         position: absolute;
         top: 10px;
@@ -394,8 +410,12 @@ gui_ui_resources <- function() {
             
             if (message.action === 'add') {
                const lngLat = [message.lng, message.lat];
-               // Use a distinct color for trip markers (e.g., purple)
-               const marker = new maplibregl.Marker({ draggable: true, color: '#984ea3' })
+               
+               const el = document.createElement('div');
+               el.className = 'trip-marker-label';
+               el.innerText = '?'; // Default until optimized
+               
+               const marker = new maplibregl.Marker({ draggable: true, element: el })
                  .setLngLat(lngLat)
                  .addTo(map);
                  
@@ -420,7 +440,7 @@ gui_ui_resources <- function() {
                });
                
                // Add click listener to element for removal
-               marker.getElement().addEventListener('click', (e) => {
+               el.addEventListener('click', (e) => {
                  e.stopPropagation(); // Prevent map click
                  Shiny.setInputValue('remove_trip_point', {id: id, nonce: Math.random()});
                });
@@ -439,6 +459,17 @@ gui_ui_resources <- function() {
                // Clear object
                for (const key in tripMarkers) delete tripMarkers[key];
             }
+          });
+
+          Shiny.addCustomMessageHandler('updateTripLabels', function(message) {
+            // message is an array of {id: ..., label: ...}
+            message.forEach(item => {
+              const marker = tripMarkers[item.id];
+              if (marker) {
+                const el = marker.getElement();
+                if (el) el.innerText = item.label;
+              }
+            });
           });
 
           Shiny.addCustomMessageHandler('clearAllMarkers', function(message) {
@@ -733,6 +764,11 @@ api_fetch_trip <- function(pts_df, debug = FALSE) {
       # Parse the first trip
       trip_data <- res$trips[[1]]
 
+      # Extract waypoint order (which input index maps to which trip position)
+      # res$waypoints is in the order of input coordinates.
+      # res$waypoints[[i]]$waypoint_index is the position in the optimized trip.
+      waypoint_order <- vapply(res$waypoints, function(w) as.integer(w$waypoint_index) + 1L, integer(1))
+
       # Extract overall geometry (full route as one line)
       coords <- trip_data$geometry$coordinates
       if (length(coords) < 2) {
@@ -810,7 +846,7 @@ api_fetch_trip <- function(pts_df, debug = FALSE) {
         distance = as.numeric(trip_data$distance) / 1000
       )
 
-      list(trip = trip_sf_map, legs = legs_df, summary = summary)
+      list(trip = trip_sf_map, legs = legs_df, summary = summary, waypoint_order = waypoint_order)
     },
     error = function(e) {
       if (debug) {

@@ -1017,7 +1017,15 @@ osrm_gui <- function(
         }
         route_summary(list(duration = dur, distance = dis))
 
-        # 2. Render on map (with fallback if set_source fails)
+        # 2. Update Marker Labels
+        if (!is.null(trip_result_data$waypoint_order)) {
+          labels_payload <- lapply(seq_along(pt_ids), function(i) {
+            list(id = pt_ids[i], label = as.character(trip_result_data$waypoint_order[i]))
+          })
+          session$sendCustomMessage('updateTripLabels', labels_payload)
+        }
+
+        # 3. Render on map (with fallback if set_source fails)
         tryCatch(
           {
             proxy <- mapgl::maplibre_proxy("map")
@@ -1159,6 +1167,15 @@ osrm_gui <- function(
 
           trip_geom <- trip_result_data$trip
           trip_result(trip_result_data)
+
+          # Update Marker Labels
+          if (!is.null(trip_result_data$waypoint_order)) {
+            pt_ids <- names(trip_pts)
+            labels_payload <- lapply(seq_along(pt_ids), function(i) {
+              list(id = pt_ids[i], label = as.character(trip_result_data$waypoint_order[i]))
+            })
+            session$sendCustomMessage('updateTripLabels', labels_payload)
+          }
 
           summary <- trip_result_data$summary
           dur <- if (!is.null(summary$duration)) {
