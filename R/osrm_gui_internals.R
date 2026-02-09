@@ -4,7 +4,7 @@
 #' Check for required GUI dependencies
 #' @noRd
 gui_check_dependencies <- function() {
-  required_pkgs <- c("shiny", "mapgl", "osrm", "sf", "DT")
+  required_pkgs <- c("shiny", "mapgl", "osrm", "sf", "DT", "viridisLite")
   missing_pkgs <- required_pkgs[
     !vapply(required_pkgs, requireNamespace, logical(1), quietly = TRUE)
   ]

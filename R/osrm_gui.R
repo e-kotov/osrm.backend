@@ -1402,8 +1402,8 @@ osrm_gui <- function(
                 source = "iso_source",
                 fill_color = mapgl::interpolate(
                   column = "isomax",
-                  values = c(0, max(breaks)),
-                  stops = c("#fde725", "#440154")
+                  values = seq(0, max(breaks), length.out = 5),
+                  stops = viridisLite::viridis(5, direction = -1)
                 ),
                 fill_opacity = 0.5,
                 fill_outline_color = "white"
@@ -1479,8 +1479,8 @@ osrm_gui <- function(
                     source = "iso_source",
                     fill_color = mapgl::interpolate(
                       column = "isomax",
-                      values = c(0, max(breaks)),
-                      stops = c("#fde725", "#440154")
+                      values = seq(0, max(breaks), length.out = 5),
+                      stops = viridisLite::viridis(5, direction = -1)
                     ),
                     fill_opacity = 0.5,
                     fill_outline_color = "white"
@@ -1500,8 +1500,8 @@ osrm_gui <- function(
                     name = "fill-color",
                     value = mapgl::interpolate(
                       column = "isomax",
-                      values = c(0, max(breaks)),
-                      stops = c("#fde725", "#440154")
+                      values = seq(0, max(breaks), length.out = 5),
+                      stops = viridisLite::viridis(5, direction = -1)
                     )
                   )
                 }
