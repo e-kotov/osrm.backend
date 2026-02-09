@@ -170,6 +170,27 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
   list(center = final_center, zoom = final_zoom)
 }
 
+#' Robustly Parse Isochrone Breaks from Text Input
+#' @noRd
+gui_parse_breaks <- function(input_str, default = c(5, 10, 15)) {
+  if (is.null(input_str) || !nzchar(trimws(input_str))) {
+    return(default)
+  }
+  
+  # Split, trim, and convert
+  parts <- unlist(strsplit(input_str, ","))
+  nums <- suppressWarnings(as.numeric(trimws(parts)))
+  
+  # Clean up
+  nums <- nums[!is.na(nums) & nums > 0]
+  
+  if (length(nums) == 0) {
+    return(default)
+  }
+  
+  sort(unique(nums))
+}
+
 #' UI Resources (CSS/JS)
 #' @noRd
 gui_ui_resources <- function() {
@@ -210,15 +231,15 @@ gui_ui_resources <- function() {
         top: 10px;
         left: 10px;
         z-index: 1000;
-        background: rgba(255, 255, 255, 0.9);
+        background: rgba(245, 245, 245, 0.9);
         padding: 8px 12px;
         border-radius: 4px;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        box-shadow: 0 2px 4px rgba(0,0,0,0.15);
         pointer-events: none;
         display: flex;
         gap: 15px;
         font-size: 14px;
-        border: 1px solid #ddd;
+        border: 1px solid #ccc;
       }
       .stat-val { font-weight: bold; }
 

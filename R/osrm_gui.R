@@ -513,13 +513,32 @@ osrm_gui <- function(
         
         if (is.null(iso_data)) return(NULL)
         
+        # Generate colors matching the map scale (inverted viridis)
+        # We need to match the map's interpolation: 0 to max(isomax) -> viridis(direction = -1)
+        max_iso <- max(iso_data$isomax)
+        label_colors <- if (max_iso > 0) {
+          # Interpolate between the viridis stops based on isomax position
+          v_stops <- viridisLite::viridis(5, direction = -1)
+          # Map each isomax to a color by interpolating the 5 stops
+          v_func <- grDevices::colorRamp(v_stops)
+          
+          vapply(iso_data$isomax, function(m) {
+            # Normalize m to 0-1 range
+            rel_pos <- m / max_iso
+            rgb_val <- v_func(rel_pos)
+            grDevices::rgb(rgb_val[1], rgb_val[2], rgb_val[3], maxColorValue = 255)
+          }, character(1))
+        } else {
+          viridisLite::viridis(nrow(iso_data), direction = -1)
+        }
+        
         # Create a list of stats for each threshold
         stats_items <- lapply(seq_len(nrow(iso_data)), function(i) {
           shiny::div(
             style = "white-space: nowrap;",
             shiny::tags$b(
               sprintf("Within %g min: ", iso_data$isomax[i]),
-              style = "color: #CC79A7;"
+              style = sprintf("color: %s;", label_colors[i])
             ),
             shiny::span(
               paste(round(iso_data$cum_area[i], 2), "km²"),
@@ -1357,13 +1376,7 @@ osrm_gui <- function(
 
       tryCatch(
         {
-          breaks <- tryCatch(
-            sort(as.numeric(unlist(strsplit(input$iso_breaks, ",")))),
-            error = function(e) c(5, 10, 15)
-          )
-          if (length(breaks) == 0) {
-            breaks <- c(5, 10, 15)
-          }
+          breaks <- gui_parse_breaks(input$iso_breaks)
 
           # Live resolution
           debug_msg(
@@ -1429,13 +1442,7 @@ osrm_gui <- function(
       list(locations$iso_start, input$iso_breaks, input$iso_res),
       {
         shiny::req(locations$iso_start)
-        breaks <- tryCatch(
-          sort(as.numeric(unlist(strsplit(input$iso_breaks, ",")))),
-          error = function(e) c(5, 10, 15)
-        )
-        if (length(breaks) == 0) {
-          breaks <- c(5, 10, 15)
-        }
+        breaks <- gui_parse_breaks(input$iso_breaks)
         shiny::withProgress(message = 'Computing Isochrones...', {
           tryCatch(
             {
