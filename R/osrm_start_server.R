@@ -507,6 +507,15 @@ osrm_start_server <- function(
   }
 
   # --- Register the process for later management (stop by id/port/pid across session) ---
+  
+  # Try to detect profile from metadata
+  profile_detected <- NULL
+  meta_path <- file.path(dirname(osrm_path), "dataset.meta.json")
+  if (file.exists(meta_path)) {
+    meta <- tryCatch(jsonlite::read_json(meta_path), error = function(e) NULL)
+    if (!is.null(meta$profile)) profile_detected <- meta$profile
+  }
+
   # Best-effort: ignore errors if registry is unavailable for any reason.
   try(
     .osrm_register(
@@ -515,7 +524,8 @@ osrm_start_server <- function(
       prefix = prefix,
       algorithm = algorithm,
       log = log_file_path,
-      input_osm = input_osm
+      input_osm = input_osm,
+      profile = profile_detected
     ),
     silent = TRUE
   )

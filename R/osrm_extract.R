@@ -216,6 +216,21 @@ osrm_extract <- function(
     )
   }
 
+  # --- WRITE METADATA ---
+  # Determine profile name: "path/to/car.lua" -> "car"
+  profile_name <- tools::file_path_sans_ext(basename(profile))
+  
+  meta_file <- file.path(dirname(base), "dataset.meta.json")
+  meta_data <- list(
+    profile = profile_name,
+    created_at = format(Sys.time(), "%Y-%m-%dT%H:%M:%SZ", tz = "UTC"),
+    input_osm = basename(input_osm)
+  )
+  try(
+    jsonlite::write_json(meta_data, meta_file, auto_unbox = TRUE, pretty = TRUE), 
+    silent = TRUE
+  )
+
   # Accumulate logs from previous stages
   accumulated_logs <- c(input_logs, list(extract = logs))
 

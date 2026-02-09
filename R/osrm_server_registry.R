@@ -182,7 +182,7 @@
 
 # Registration API used by osrm_start_server() --------------------------------
 
-.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL) {
+.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL, profile = NULL) {
   ts <- format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC", usetz = FALSE)
   pid <- tryCatch(
     if (!is.null(proc)) proc$get_pid() else NA_integer_,
@@ -209,6 +209,7 @@
     started_at = ts,
     log = as.character(log %||% ""),
     input_osm = as.character(input_osm %||% ""),
+    profile = as.character(profile %||% ""),
     proc = proc
   )
 
@@ -261,4 +262,76 @@
   if (isTRUE(stop_on_unload)) {
     try(.osrm_stop_all_internal(), silent = TRUE)
   }
+}
+
+#' Retrieve the OSRM Profile for a Running Server
+#'
+#' @description
+#' Attempts to determine the profile (e.g., "car", "bike", "foot") used by an OSRM server.
+#' It follows a priority list:
+#' 1. Checks the active server registry for the given port or ID.
+#' 2. Checks for a `dataset.meta.json` file in the directory of the graph file.
+#' 3. Checks the graph filename for hints (e.g. `berlin-car.osrm`).
+#' 4. Falls back to `getOption("osrm.profile")`.
+#'
+#' @param input_osrm Optional. Can be an `osrm_job` object, a path string, or NULL.
+#' @param port Optional integer. The port of the server.
+#' @return A character string representing the profile name (default "car").
+#' @export
+osrm_get_server_profile <- function(input_osrm = NULL, port = NULL) {
+  # 1. Check Registry (if port is known or input_osrm is process)
+  reg_profile <- NULL
+  
+  if (inherits(input_osrm, "process")) {
+    # It's an osrm_job process
+    pid <- tryCatch(input_osrm$get_pid(), error = function(e) NA)
+    if (!is.na(pid)) {
+      reg <- .osrm_state$registry
+      match <- Filter(function(x) identical(x$pid, pid), reg)
+      if (length(match) > 0 && nzchar(match[[1]]$profile)) {
+        return(match[[1]]$profile)
+      }
+    }
+  } else if (!is.null(port)) {
+    # Check by port
+    prt <- as.integer(port)
+    reg <- .osrm_state$registry
+    # Find active server on this port
+    match <- Filter(function(x) identical(x$port, prt), reg)
+    if (length(match) > 0) {
+      # Use the most recently started one
+      last <- match[[length(match)]]
+      if (nzchar(last$profile)) return(last$profile)
+      
+      # If registry entry exists but has no profile, maybe we can look up its path?
+      # (Implementation detail: 'prefix' in registry stores the path)
+      if (nzchar(last$prefix)) input_osrm <- last$prefix
+    }
+  }
+
+  # 2. Check Metadata File (if we have a path)
+  path <- NULL
+  if (is.character(input_osrm) && length(input_osrm) == 1) {
+    path <- input_osrm
+  }
+  
+  if (!is.null(path)) {
+    # Check dataset.meta.json
+    meta_path <- file.path(dirname(path), "dataset.meta.json")
+    if (file.exists(meta_path)) {
+      meta <- tryCatch(jsonlite::read_json(meta_path), error = function(e) NULL)
+      if (!is.null(meta) && !is.null(meta$profile) && nzchar(meta$profile)) {
+        return(meta$profile)
+      }
+    }
+    
+    # 3. Heuristic: Check filename (e.g. "berlin-car.osrm")
+    base <- basename(path)
+    if (grepl("car", base, ignore.case = TRUE)) return("car")
+    if (grepl("bike|bicycle", base, ignore.case = TRUE)) return("bike")
+    if (grepl("foot|walk", base, ignore.case = TRUE)) return("foot")
+  }
+
+  # 4. Fallback
+  getOption("osrm.profile", default = "car")
 }

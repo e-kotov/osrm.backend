@@ -87,9 +87,12 @@ osrm_gui <- function(
   view <- gui_resolve_map_view(center, zoom, input_osrm)
 
   # 4. Configure 'osrm' package options for this session context
+  # Detect profile from server registry or metadata
+  detected_profile <- osrm_get_server_profile(input_osrm, srv_context$active_port)
+  
   old_opts <- options(
     osrm.server = paste0(srv_context$host, ":", srv_context$active_port, "/"),
-    osrm.profile = "car"
+    osrm.profile = detected_profile
   )
   on.exit(options(old_opts), add = TRUE)
 

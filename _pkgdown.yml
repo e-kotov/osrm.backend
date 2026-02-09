@@ -71,5 +71,6 @@ reference:
     contents:
       - osrm_start_server
       - osrm_servers
+      - osrm_get_server_profile
       - osrm_stop
       - osrm_stop_all
