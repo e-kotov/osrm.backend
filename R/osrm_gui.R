@@ -492,30 +492,46 @@ osrm_gui <- function(
         iso <- iso_result()
         if (is.null(iso) || nrow(iso) == 0) return(NULL)
         
-        # Calculate area in km2
-        # OSRM Isochrones can sometimes have degenerate geometries. 
-        # We make them valid and wrap in tryCatch for robustness.
-        total_area <- tryCatch({
+        # Calculate cumulative area for each interval
+        iso_data <- tryCatch({
           iso_valid <- sf::st_make_valid(iso)
-          # sf::st_area returns m2 for 4326 by default using s2, we convert to km2
+          # Ensure they are sorted by isomax
+          iso_valid <- iso_valid[order(iso_valid$isomax), ]
+          
           areas <- as.numeric(sf::st_area(iso_valid)) / 1e6
-          sum(areas)
+          cumulative_areas <- cumsum(areas)
+          
+          data.frame(
+            isomax = iso_valid$isomax,
+            cum_area = cumulative_areas,
+            stringsAsFactors = FALSE
+          )
         }, error = function(e) {
           if (debug) debug_msg("Area calculation failed: ", e$message)
-          NA
+          NULL
         })
         
-        if (is.na(total_area)) return(NULL)
+        if (is.null(iso_data)) return(NULL)
         
-        return(shiny::div(
-          class = "route-stats-overlay",
+        # Create a list of stats for each threshold
+        stats_items <- lapply(seq_len(nrow(iso_data)), function(i) {
           shiny::div(
-            shiny::tags$b("Total Area: ", style = "color: #CC79A7;"),
+            style = "white-space: nowrap;",
+            shiny::tags$b(
+              sprintf("Within %g min: ", iso_data$isomax[i]),
+              style = "color: #CC79A7;"
+            ),
             shiny::span(
-              paste(round(total_area, 2), "km²"),
+              paste(round(iso_data$cum_area[i], 2), "km²"),
               class = "stat-val"
             )
           )
+        })
+        
+        return(shiny::div(
+          class = "route-stats-overlay",
+          style = "flex-direction: column; align-items: flex-start; gap: 5px;",
+          stats_items
         ))
       }
       
