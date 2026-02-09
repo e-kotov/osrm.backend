@@ -1664,6 +1664,82 @@ osrm_gui <- function(
       )
     })
 
+    shiny::observeEvent(input$copy_code, {
+      mode <- input$mode
+      
+      # Determine if we have enough data to generate code
+      has_data <- FALSE
+      if (mode == "route") {
+        has_data <- !is.null(locations$start) && !is.null(locations$end)
+      } else if (mode == "trip") {
+        has_data <- length(locations$trip) >= 2
+      } else if (mode == "iso") {
+        has_data <- !is.null(locations$iso_start)
+      }
+
+      if (!has_data) {
+        shiny::showNotification(
+          "Please add the required points to the map first.",
+          type = "warning"
+        )
+        return()
+      }
+
+      # Gather options
+      osrm_server <- getOption("osrm.server")
+      osrm_profile <- getOption("osrm.profile")
+
+      header_code <- sprintf(
+        "library(osrm)\n\n# --- OSRM Configuration ---\noptions(osrm.server = \"%s\")\noptions(osrm.profile = \"%s\")\n\n",
+        osrm_server, osrm_profile
+      )
+
+      main_code <- ""
+      if (mode == "route") {
+        main_code <- sprintf(
+          "# --- Calculate Route ---\nroute <- osrm::osrmRoute(\n  src = c(%.6f, %.6f),\n  dst = c(%.6f, %.6f),\n  overview = \"full\"\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_line_layer(id = \"route\", source = route, line_color = \"#3b82f6\", line_width = 5)",
+          locations$start$lng, locations$start$lat,
+          locations$end$lng, locations$end$lat
+        )
+      } else if (mode == "trip") {
+        pts_list <- locations$trip
+        # Use simple numeric extraction to avoid names/attributes in the paste
+        lons <- vapply(pts_list, function(p) as.numeric(p$lng), numeric(1))
+        lats <- vapply(pts_list, function(p) as.numeric(p$lat), numeric(1))
+        
+        main_code <- sprintf(
+          "# --- Calculate Optimized Trip ---\npoints <- data.frame(\n  lon = c(%s),\n  lat = c(%s)\n)\n\ntrip <- osrm::osrmTrip(\n  loc = points,\n  overview = \"full\"\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_line_layer(id = \"trip\", source = trip[[1]]$trip, line_color = \"#984ea3\", line_width = 5)",
+          paste(sprintf("%.6f", lons), collapse = ", "),
+          paste(sprintf("%.6f", lats), collapse = ", ")
+        )
+      } else if (mode == "iso") {
+        breaks <- gui_parse_breaks(input$iso_breaks)
+        n_vals <- c(100, 200, 500, 1000, 2000, 5000, 10000, 20000, 50000)
+        n_val <- n_vals[as.integer(input$iso_res)]
+        
+        main_code <- sprintf(
+          "# --- Calculate Isochrones ---\niso <- osrm::osrmIsochrone(\n  loc = c(%.6f, %.6f),\n  breaks = c(%s),\n  n = %d\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_fill_layer(\n    id = \"iso\",\n    source = iso,\n    fill_color = mapgl::interpolate(\n      column = \"isomax\",\n      values = seq(0, %g, length.out = 5),\n      stops = viridisLite::viridis(5, direction = -1)\n    ),\n    fill_opacity = 0.5\n  )",
+          locations$iso_start$lng, locations$iso_start$lat,
+          paste(breaks, collapse = ", "),
+          n_val,
+          max(breaks)
+        )
+      }
+
+      shiny::showModal(shiny::modalDialog(
+        title = "R Code for Reproducible Analysis",
+        shiny::tags$pre(
+          id = "copy_code_block",
+          style = "background-color: #f8f9fa; padding: 15px; border: 1px solid #dee2e6; border-radius: 4px; max-height: 400px; overflow-y: auto; white-space: pre-wrap; font-family: monospace; font-size: 13px;",
+          paste0(header_code, main_code)
+        ),
+        shiny::helpText("Copy and run this code in your R console to reproduce the current analysis."),
+        footer = shiny::modalButton("Dismiss"),
+        easyClose = TRUE,
+        size = "l"
+      ))
+    })
+
     output$exec_time_overlay <- shiny::renderUI({
       et <- osrm_exec_time()
       if (is.null(et)) {
