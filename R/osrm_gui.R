@@ -154,6 +154,8 @@ osrm_gui <- function(
     )
     # Store trip result for table
     trip_result <- shiny::reactiveVal(NULL)
+    # Store OSRM execution time
+    osrm_exec_time <- shiny::reactiveVal(NULL)
 
     # Time of last mode switch (for robust autozoom suppression)
     last_mode_switch <- shiny::reactiveVal(Sys.time())
@@ -358,7 +360,7 @@ osrm_gui <- function(
       }
 
       shiny::div(
-        style = "position: absolute; top: 150px; right: 10px; z-index: 1000; display: flex; flex-direction: column;",
+        style = "position: absolute; top: 180px; right: 10px; z-index: 1000; display: flex; flex-direction: column;",
         btns
       )
     })
@@ -676,6 +678,7 @@ osrm_gui <- function(
       route_summary(NULL)
       current_steps(NULL)
       trip_result(NULL)
+      osrm_exec_time(NULL)
       session$sendCustomMessage("clearAllMarkers", "clear")
       shiny::updateTextInput(session, "start_coords_input", value = "")
       shiny::updateTextInput(session, "end_coords_input", value = "")
@@ -782,11 +785,13 @@ osrm_gui <- function(
             ",",
             coords$end$lat
           )
+          t0 <- Sys.time()
           route <- osrm::osrmRoute(
             src = c(coords$start$lng, coords$start$lat),
             dst = c(coords$end$lng, coords$end$lat),
             overview = "full"
           )
+          osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
           if (!is.null(route)) {
             route_summary(list(
               duration = route$duration[1],
@@ -838,12 +843,14 @@ osrm_gui <- function(
                 locations$end$lat
               )
               # Use consolidated API fetch to get both geometry and steps in one call
+              t0 <- Sys.time()
               res <- api_fetch_route_detailed(
                 locations$start,
                 locations$end,
                 overview = "full",
                 debug = debug
               )
+              osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 
               if (!is.null(res) && length(res$routes) > 0) {
                 route_data <- res$routes[[1]]
@@ -990,7 +997,9 @@ osrm_gui <- function(
       }
 
       # 1. Calculate trip using direct HTTP API
+      t0 <- Sys.time()
       trip_result_data <- api_fetch_trip(pts_df, debug = debug)
+      osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 
       if (!is.null(trip_result_data) && !is.null(trip_result_data$trip)) {
         trip_geom <- trip_result_data$trip
@@ -1136,7 +1145,9 @@ osrm_gui <- function(
           }
 
           # 1. Calculate trip using direct HTTP API (bypasses osrm::osrmTrip issues)
+          t0 <- Sys.time()
           trip_result_data <- api_fetch_trip(trip_df, debug = debug)
+          osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 
           if (is.null(trip_result_data) || is.null(trip_result_data$trip)) {
             shiny::showNotification(
@@ -1294,11 +1305,13 @@ osrm_gui <- function(
             n_val <- 200
           }
 
+          t0 <- Sys.time()
           iso <- osrm::osrmIsochrone(
             loc = c(iso_start$lng, iso_start$lat),
             breaks = breaks,
             n = n_val
           )
+          osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 
           if (!is.null(iso) && nrow(iso) > 0) {
             proxy <- mapgl::maplibre_proxy("map")
@@ -1369,11 +1382,13 @@ osrm_gui <- function(
                 " n: ",
                 n_val
               )
+              t0 <- Sys.time()
               iso <- osrm::osrmIsochrone(
                 loc = c(locations$iso_start$lng, locations$iso_start$lat),
                 breaks = breaks,
                 n = n_val
               )
+              osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
               if (!is.null(iso) && nrow(iso) > 0) {
                 proxy <- mapgl::maplibre_proxy("map")
                 if (!init$iso) {
@@ -1559,6 +1574,18 @@ osrm_gui <- function(
         selection = "none",
         options = list(pageLength = 10, scrollX = TRUE),
         rownames = FALSE
+      )
+    })
+
+    output$exec_time_overlay <- shiny::renderUI({
+      et <- osrm_exec_time()
+      if (is.null(et)) {
+        return(NULL)
+      }
+      shiny::div(
+        class = "exec-time-overlay",
+        shiny::div("Last request:"),
+        shiny::div(paste0(round(et * 1000, 0), "ms"), style = "font-weight: bold; color: #333;")
       )
     })
 

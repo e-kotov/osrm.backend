@@ -222,6 +222,20 @@ gui_ui_resources <- function() {
       }
       .route-stats-overlay b { color: #333; }
       .stat-val { font-weight: bold; }
+
+      .exec-time-overlay {
+        position: absolute;
+        top: 10px;
+        right: 50px; /* Offset to avoid overlap with standard zoom/fullscreen controls */
+        z-index: 1000;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        color: #777;
+        pointer-events: none;
+        border: 1px solid rgba(0,0,0,0.1);
+      }
       
       .segments-header {
         display: flex;
@@ -608,6 +622,7 @@ gui_ui_layout <- function() {
             shiny::uiOutput("route_stats")
           ),
           shiny::uiOutput("map_edit_controls"),
+          shiny::uiOutput("exec_time_overlay"),
           mapgl::maplibreOutput("map")
         ),
         shiny::div(
