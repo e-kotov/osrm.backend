@@ -648,7 +648,7 @@ gui_ui_layout <- function() {
         shiny::div(
           class = "map-wrapper",
           shiny::conditionalPanel(
-            condition = "input.mode == 'route' || input.mode == 'trip'",
+            condition = "input.mode == 'route' || input.mode == 'trip' || input.mode == 'iso'",
             shiny::uiOutput("route_stats")
           ),
           shiny::uiOutput("map_edit_controls"),

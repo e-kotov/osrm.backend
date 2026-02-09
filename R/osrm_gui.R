@@ -262,6 +262,7 @@ osrm_gui <- function(
       # Trigger route recalculation by invalidating/clearing result cache
       route_mode_summary(NULL)
       trip_mode_summary(NULL)
+      iso_result(NULL)
       current_steps(NULL)
       trip_result(NULL)
 
@@ -483,7 +484,41 @@ osrm_gui <- function(
       )
     })
 
+    # Store latest isochrone result for area calculation
+    iso_result <- shiny::reactiveVal(NULL)
+
     output$route_stats <- shiny::renderUI({
+      if (input$mode == "iso") {
+        iso <- iso_result()
+        if (is.null(iso) || nrow(iso) == 0) return(NULL)
+        
+        # Calculate area in km2
+        # OSRM Isochrones can sometimes have degenerate geometries. 
+        # We make them valid and wrap in tryCatch for robustness.
+        total_area <- tryCatch({
+          iso_valid <- sf::st_make_valid(iso)
+          # sf::st_area returns m2 for 4326 by default using s2, we convert to km2
+          areas <- as.numeric(sf::st_area(iso_valid)) / 1e6
+          sum(areas)
+        }, error = function(e) {
+          if (debug) debug_msg("Area calculation failed: ", e$message)
+          NA
+        })
+        
+        if (is.na(total_area)) return(NULL)
+        
+        return(shiny::div(
+          class = "route-stats-overlay",
+          shiny::div(
+            shiny::tags$b("Total Area: ", style = "color: #CC79A7;"),
+            shiny::span(
+              paste(round(total_area, 2), "km²"),
+              class = "stat-val"
+            )
+          )
+        ))
+      }
+      
       stats <- if (input$mode == "route") route_mode_summary() else trip_mode_summary()
       if (is.null(stats)) {
         return(NULL)
@@ -685,6 +720,7 @@ osrm_gui <- function(
       }
       route_mode_summary(NULL)
       trip_mode_summary(NULL)
+      iso_result(NULL)
       current_steps(NULL)
       trip_result(NULL)
       osrm_exec_time(NULL)
@@ -1340,6 +1376,7 @@ osrm_gui <- function(
           osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
 
           if (!is.null(iso) && nrow(iso) > 0) {
+            iso_result(iso)
             proxy <- mapgl::maplibre_proxy("map")
             if (!init$iso) {
               mapgl::add_source(proxy, id = "iso_source", data = iso)
@@ -1416,6 +1453,7 @@ osrm_gui <- function(
               )
               osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
               if (!is.null(iso) && nrow(iso) > 0) {
+                iso_result(iso)
                 proxy <- mapgl::maplibre_proxy("map")
                 if (!init$iso) {
                   mapgl::add_source(proxy, id = "iso_source", data = iso)
