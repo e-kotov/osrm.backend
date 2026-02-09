@@ -7,6 +7,8 @@
 osrm_start(
   path,
   algorithm = c("mld", "ch"),
+  force_rebuild = FALSE,
+  show_progress = TRUE,
   quiet = FALSE,
   verbose = FALSE,
   ...

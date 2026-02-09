@@ -40,7 +40,8 @@
 #' @param memory_file Character or NULL; DEPRECATED (behaves like `mmap`)
 #' @param mmap Logical; memory-map data files (default: `FALSE`)
 #' @param dataset_name Character or NULL; name of shared memory dataset
-#' @param algorithm Character or NULL; one of `"CH","CoreCH","MLD"`. If `NULL` (default), auto-selected based on file extension
+#' @param algorithm Character or NULL; one of `"MLD"`, `"CH"`, or `"CoreCH"` (case-insensitive).
+#'   If `NULL` (default), auto-selected based on file extension.
 #' @param max_viaroute_size Integer (default: `500`)
 #' @param max_trip_size Integer (default: `100`)
 #' @param max_table_size Integer (default: `100`)
@@ -158,7 +159,7 @@ osrm_start_server <- function(
   if (is.null(algorithm)) {
     algorithm <- if (ext == "mldgr") "MLD" else "CH"
   } else {
-    algorithm <- match.arg(algorithm, c("CH", "CoreCH", "MLD"))
+    algorithm <- .normalize_algorithm(algorithm)
     if (ext == "mldgr" && algorithm != "MLD") {
       stop(
         "Algorithm must be 'MLD' when using an .osrm.mldgr file",

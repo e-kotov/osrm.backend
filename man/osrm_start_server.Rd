@@ -56,7 +56,8 @@ osrm_start_server(
 
 \item{dataset_name}{Character or NULL; name of shared memory dataset}
 
-\item{algorithm}{Character or NULL; one of \verb{"CH","CoreCH","MLD"}. If \code{NULL} (default), auto-selected based on file extension}
+\item{algorithm}{Character or NULL; one of \code{"MLD"}, \code{"CH"}, or \code{"CoreCH"} (case-insensitive).
+If \code{NULL} (default), auto-selected based on file extension.}
 
 \item{max_viaroute_size}{Integer (default: \code{500})}
 

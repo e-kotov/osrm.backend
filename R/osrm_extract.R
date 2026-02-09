@@ -147,13 +147,18 @@ osrm_extract <- function(
     pattern = paste0("^", basename(base), ".*\\.osrm"),
     ignore.case = TRUE
   )
-  if (length(existing) > 0 && !overwrite) {
-    stop(
-      "Found existing OSRM files: ",
-      paste(existing, collapse = ", "),
-      ".\nSet overwrite = TRUE to proceed.",
-      call. = FALSE
-    )
+  if (length(existing) > 0) {
+    if (!overwrite) {
+      stop(
+        "Found existing OSRM files: ",
+        paste(existing, collapse = ", "),
+        ".\nSet overwrite = TRUE to proceed.",
+        call. = FALSE
+      )
+    } else {
+      if (!quiet) message("Existing OSRM files found. Cleaning up...")
+      osrm_cleanup(base, quiet = quiet)
+    }
   }
 
   # build command arguments

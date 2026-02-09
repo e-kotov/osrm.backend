@@ -55,7 +55,7 @@ the base name are found alongside \code{input_osm}. Set to \code{TRUE} to overwr
 
 \item{dump_nbg_graph}{A logical. Adds \code{--dump-nbg-graph}; default \code{FALSE}.}
 
-\item{algorithm}{A string. One of \code{"mld"} (default) or \code{"ch"}.}
+\item{algorithm}{A string. One of \code{"MLD"} (default) or \code{"CH"} (case-insensitive).}
 
 \item{balance}{A numeric. Balance for \code{osrm-partition}; default \code{1.2}.}
 

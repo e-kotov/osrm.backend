@@ -197,7 +197,8 @@ test_that("Analyze CH and MLD pipeline file conflicts", {
       input_osm = file.path(ch_then_mld_dir, "cur.osm.pbf"),
       algorithm = "mld",
       quiet = TRUE,
-      verbose = FALSE
+      verbose = FALSE,
+      overwrite = TRUE
     ),
     silent = TRUE
   )
@@ -244,7 +245,8 @@ test_that("Analyze CH and MLD pipeline file conflicts", {
       input_osm = file.path(mld_then_ch_dir, "cur.osm.pbf"),
       algorithm = "ch",
       quiet = TRUE,
-      verbose = FALSE
+      verbose = FALSE,
+      overwrite = TRUE
     ),
     silent = TRUE
   )
