@@ -142,8 +142,9 @@ osrm_gui <- function(
       debug_msg("OSRM Profile: ", getOption("osrm.profile"))
     }
 
-    # Store latest route summary for the sidebar
-    route_summary <- shiny::reactiveVal(NULL)
+    # Store latest summaries for different modes
+    route_mode_summary <- shiny::reactiveVal(NULL)
+    trip_mode_summary <- shiny::reactiveVal(NULL)
     # Store current route steps for highlighting
     current_steps <- shiny::reactiveVal(NULL)
     # Store intermediate coords for tracking
@@ -259,7 +260,8 @@ osrm_gui <- function(
       }
 
       # Trigger route recalculation by invalidating/clearing result cache
-      route_summary(NULL)
+      route_mode_summary(NULL)
+      trip_mode_summary(NULL)
       current_steps(NULL)
       trip_result(NULL)
 
@@ -391,15 +393,20 @@ osrm_gui <- function(
     output$mode_button_ui <- shiny::renderUI({
       current_mode <- input$mode
       labels <- c("route" = "Route", "iso" = "Isochrone", "trip" = "Trip")
+      colors <- c("route" = "#3b82f6", "iso" = "#CC79A7", "trip" = "#984ea3")
+      
       label <- labels[current_mode]
+      color <- colors[current_mode]
+      
       if (is.na(label)) {
         label <- "Route"
+        color <- "#3b82f6"
       }
 
       shiny::actionButton(
         "cycle_mode",
         paste("Mode:", label),
-        style = "background-color: #337ab7; color: white; border-width: 0px;"
+        style = sprintf("background-color: %s; color: white; border-width: 0px;", color)
       )
     })
 
@@ -477,26 +484,27 @@ osrm_gui <- function(
     })
 
     output$route_stats <- shiny::renderUI({
-      stats <- route_summary()
+      stats <- if (input$mode == "route") route_mode_summary() else trip_mode_summary()
       if (is.null(stats)) {
         return(NULL)
       }
+      
+      mode_color <- if (input$mode == "route") "#3b82f6" else "#984ea3"
+      
       shiny::div(
         class = "route-stats-overlay",
         shiny::div(
-          shiny::tags$b("Duration: "),
+          shiny::tags$b("Duration: ", style = sprintf("color: %s;", mode_color)),
           shiny::span(
             paste(round(stats$duration, 1), "min"),
-            class = "stat-val",
-            style = "color: #007bff;"
+            class = "stat-val"
           )
         ),
         shiny::div(
-          shiny::tags$b("Distance: "),
+          shiny::tags$b("Distance: ", style = sprintf("color: %s;", mode_color)),
           shiny::span(
             paste(round(stats$distance, 2), "km"),
-            class = "stat-val",
-            style = "color: #28a745;"
+            class = "stat-val"
           )
         )
       )
@@ -525,7 +533,7 @@ osrm_gui <- function(
         "start_coords_input",
         value = paste(coords$lat, coords$lng, sep = ", ")
       )
-      route_summary(NULL)
+      route_mode_summary(NULL)
       current_steps(NULL)
     }
 
@@ -544,7 +552,7 @@ osrm_gui <- function(
         "end_coords_input",
         value = paste(coords$lat, coords$lng, sep = ", ")
       )
-      route_summary(NULL)
+      route_mode_summary(NULL)
       current_steps(NULL)
     }
 
@@ -675,7 +683,8 @@ osrm_gui <- function(
       for (n in names(tracking_coords)) {
         tracking_coords[[n]] <- NULL
       }
-      route_summary(NULL)
+      route_mode_summary(NULL)
+      trip_mode_summary(NULL)
       current_steps(NULL)
       trip_result(NULL)
       osrm_exec_time(NULL)
@@ -793,7 +802,7 @@ osrm_gui <- function(
           )
           osrm_exec_time(as.numeric(difftime(Sys.time(), t0, units = "secs")))
           if (!is.null(route)) {
-            route_summary(list(
+            route_mode_summary(list(
               duration = route$duration[1],
               distance = route$distance[1]
             ))
@@ -856,7 +865,7 @@ osrm_gui <- function(
                 route_data <- res$routes[[1]]
 
                 # 1. Update Route Summary
-                route_summary(list(
+                route_mode_summary(list(
                   duration = route_data$duration / 60, # OSRM returns seconds, convert to minutes
                   distance = route_data$distance / 1000 # OSRM returns meters, convert to km
                 ))
@@ -1015,7 +1024,7 @@ osrm_gui <- function(
         } else {
           0
         }
-        route_summary(list(duration = dur, distance = dis))
+        trip_mode_summary(list(duration = dur, distance = dis))
 
         # 2. Update Marker Labels
         if (!is.null(trip_result_data$waypoint_order)) {
@@ -1188,7 +1197,7 @@ osrm_gui <- function(
           } else {
             0
           }
-          route_summary(list(duration = dur, distance = dis))
+          trip_mode_summary(list(duration = dur, distance = dis))
 
           # 2. Render on map (with fallback if set_source fails)
           tryCatch(

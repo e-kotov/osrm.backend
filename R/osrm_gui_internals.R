@@ -220,7 +220,6 @@ gui_ui_resources <- function() {
         font-size: 14px;
         border: 1px solid #ddd;
       }
-      .route-stats-overlay b { color: #333; }
       .stat-val { font-weight: bold; }
 
       .trip-marker-label {
@@ -649,7 +648,7 @@ gui_ui_layout <- function() {
         shiny::div(
           class = "map-wrapper",
           shiny::conditionalPanel(
-            condition = "input.mode == 'route'",
+            condition = "input.mode == 'route' || input.mode == 'trip'",
             shiny::uiOutput("route_stats")
           ),
           shiny::uiOutput("map_edit_controls"),
