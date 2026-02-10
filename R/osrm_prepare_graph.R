@@ -18,7 +18,7 @@
 #' @param location_dependent_data A string or `NULL`. Path to GeoJSON for extract; default `NULL`.
 #' @param disable_location_cache A logical. Adds `--disable-location-cache`; default `FALSE`.
 #' @param dump_nbg_graph A logical. Adds `--dump-nbg-graph`; default `FALSE`.
-#' @param algorithm A string. One of `"mld"` (default) or `"ch"`.
+#' @param algorithm A string. One of `"MLD"` (default) or `"CH"` (case-insensitive).
 #' @param balance A numeric. Balance for `osrm-partition`; default `1.2`.
 #' @param boundary A numeric. Boundary percentage for `osrm-partition`; default `0.25`.
 #' @param optimizing_cuts An integer. Optimizing cuts for `osrm-partition`; default `10`.
@@ -102,7 +102,10 @@ osrm_prepare_graph <- function(
     stop("'processx' package is required for osrm_prepare_graph", call. = FALSE)
   }
 
-  algorithm <- match.arg(algorithm)
+  algorithm <- tryCatch(.normalize_algorithm(algorithm), error = function(e) {
+    # If algorithm is a vector (default args), normalize first element
+    if (length(algorithm) > 1) .normalize_algorithm(algorithm[1]) else stop(e)
+  })
 
   # Check for algorithm conflicts before starting pipeline
   # Extract path from input
@@ -144,15 +147,14 @@ osrm_prepare_graph <- function(
     } else {
       "mixed"
     }
-    target_algo <- if (algorithm == "ch") "CH" else "MLD"
-
-    if (!quiet && current_algo != target_algo) {
+    
+    if (!quiet && current_algo != algorithm && current_algo != "mixed") {
       message(
         "Note: Directory contains existing ",
         current_algo,
         " algorithm files.\n",
         "overwrite=TRUE will remove them and create new ",
-        target_algo,
+        algorithm,
         " files."
       )
     }
@@ -179,8 +181,8 @@ osrm_prepare_graph <- function(
   )
 
   # 2) Partition+Customize or Contract
-  algorithm <- match.arg(algorithm)
-  if (algorithm == "mld") {
+  # Algorithm already normalized
+  if (algorithm == "MLD") {
     # MLD pipeline: extract -> partition -> customize
     # Use explicit intermediate assignment for readability and to avoid
     # the native pipe operator so older R versions are supported.

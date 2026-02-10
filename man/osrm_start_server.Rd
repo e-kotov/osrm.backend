@@ -27,7 +27,8 @@ osrm_start_server(
   max_matching_radius = -1L,
   quiet = FALSE,
   verbose = FALSE,
-  echo_cmd = FALSE
+  echo_cmd = FALSE,
+  input_osm = NULL
 )
 }
 \arguments{
@@ -43,7 +44,9 @@ osrm_start_server(
 
 \item{ip}{Character; IP address to bind (default: \code{"0.0.0.0"})}
 
-\item{port}{Integer; TCP port to listen on (default: \code{5001})}
+\item{port}{Integer; TCP port to listen on (default: \code{5001}). The function checks
+if this port is already in use by another running OSRM server (even from
+another session) and will stop with an error if a conflict is detected.}
 
 \item{threads}{Integer; number of worker threads (default: \code{8})}
 
@@ -55,7 +58,8 @@ osrm_start_server(
 
 \item{dataset_name}{Character or NULL; name of shared memory dataset}
 
-\item{algorithm}{Character or NULL; one of \verb{"CH","CoreCH","MLD"}. If \code{NULL} (default), auto-selected based on file extension}
+\item{algorithm}{Character or NULL; one of \code{"MLD"}, \code{"CH"}, or \code{"CoreCH"} (case-insensitive).
+If \code{NULL} (default), auto-selected based on file extension.}
 
 \item{max_viaroute_size}{Integer (default: \code{500})}
 
@@ -78,6 +82,9 @@ console for live debugging. Note: This can cause deadlocks in tight loops
 if R is busy. Defaults to \code{FALSE}, which writes logs to a temporary file.}
 
 \item{echo_cmd}{Logical; echo command line to console before launch (default: \code{FALSE})}
+
+\item{input_osm}{Character or NULL; path to the original OSM input file (for tracking purposes).
+This parameter is typically used internally by \code{\link[=osrm_start]{osrm_start()}} to record the source data.}
 }
 \value{
 A \code{processx::process} object for the running server (also registered internally).

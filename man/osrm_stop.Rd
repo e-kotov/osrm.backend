@@ -31,18 +31,23 @@ A list with fields \code{id}, \code{pid}, \code{port}, \code{stopped} (logical).
 }
 \description{
 Terminates an \code{osrm-routed} process launched by \code{osrm_start()} or
-\code{osrm_start_server()}.
+\code{osrm_start_server()}. Can also stop external servers by PID or ID.
 }
 \details{
 This function provides a flexible way to stop a running OSRM process. If no
 arguments are specified, it defaults to stopping the most recently started
-server that is still alive.
+server that is still alive in the current session.
 
 You can also stop a specific server by providing:
 \itemize{
 \item The \code{processx::process} object returned by \code{osrm_start()} or \code{osrm_start_server()}.
 \item The server's \code{id}, \code{port}, or \code{pid} (use \code{osrm_servers()} to find these).
 }
+
+\strong{Advanced Use:}
+You can stop an external \code{osrm-routed} process (one not started by the current
+R session) by passing its PID, or by finding it via \code{osrm_servers(include_all = TRUE)}
+and passing its \code{id} or \code{port}. This requires permission to signal the process.
 }
 \examples{
 \donttest{
@@ -76,6 +81,19 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
     quiet = TRUE
   )
   unlink(osrm_dir, recursive = TRUE)
+}
+
+\dontrun{
+  # Advanced: Stop an external server by PID
+  # 1. Find the PID of an external server
+  srvs <- osrm_servers(include_all = TRUE)
+  # 2. Stop it by PID
+  if (nrow(srvs) > 0) {
+    osrm_stop(pid = srvs$pid[1])
+  }
+  
+  # Or stop by its external ID (e.g., "sys-12345")
+  osrm_stop(id = "sys-12345")
 }
 }
 }

@@ -1,9 +1,10 @@
-# R/zzz.R  — registry with tools::R_user_dir() and jsonlite JSON persistence
+# R/osrm_server_registry.R  — registry with tools::R_user_dir() and jsonlite JSON persistence
 
 # Package-private state --------------------------------------------------------
 
 .osrm_state <- new.env(parent = emptyenv())
 .osrm_state$registry <- list() # id -> list(id, pid, port, prefix, algorithm, started_at, proc?)
+.osrm_state$session_id <- NULL # Unique ID for this R session
 
 # Small helpers ---------------------------------------------------------------
 
@@ -33,7 +34,16 @@
 }
 
 .osrm_registry_path <- function() {
-  file.path(.osrm_registry_dir(), "servers.json")
+  # If session ID isn't set (shouldn't happen if loaded), generate one
+  if (is.null(.osrm_state$session_id)) {
+    .osrm_state$session_id <- sprintf(
+      "session-%s-%s-%s", 
+      Sys.getpid(), 
+      format(Sys.time(), "%Y%m%d%H%M%OS3"),
+      paste0(sample(c(0:9, letters), 6, replace = TRUE), collapse = "")
+    )
+  }
+  file.path(.osrm_registry_dir(), paste0(.osrm_state$session_id, ".json"))
 }
 
 # Persistence (atomic JSON via jsonlite) --------------------------------------
@@ -69,14 +79,20 @@
     .osrm_state$registry <- list()
     return(invisible(NULL))
   }
+  reg <- .osrm_read_registry_file(fn)
+  .osrm_state$registry <- reg
+  .osrm_cleanup_orphans() # Clean up dead processes in *this* session's registry
+  invisible(NULL)
+}
+
+.osrm_read_registry_file <- function(fn) {
   reg <- try(jsonlite::read_json(fn, simplifyVector = TRUE), silent = TRUE)
   if (inherits(reg, "try-error") || !is.list(reg)) {
-    .osrm_state$registry <- list()
-    return(invisible(NULL))
+    return(list())
   }
   # Ensure list with names = ids when possible
   if (!is.null(names(reg)) && all(nzchar(names(reg)))) {
-    .osrm_state$registry <- reg
+    return(reg)
   } else {
     idx <- vapply(
       reg,
@@ -84,16 +100,75 @@
       logical(1)
     )
     if (any(idx)) {
-      .osrm_state$registry <- stats::setNames(
+      return(stats::setNames(
         reg[idx],
         vapply(reg[idx], `[[`, "", "id")
-      )
-    } else {
-      .osrm_state$registry <- list()
+      ))
     }
   }
-  .osrm_cleanup_orphans()
-  invisible(NULL)
+  list()
+}
+
+# Cross-session Management ----------------------------------------------------
+
+# Scan all registry files in the cache dir to find servers from other sessions
+.osrm_registry_scan_others <- function() {
+  dir <- .osrm_registry_dir()
+  if (!dir.exists(dir)) return(list())
+  
+  files <- list.files(dir, pattern = "^session-.*\\.json$", full.names = TRUE)
+  current_fn <- .osrm_registry_path()
+  
+  # Exclude current session
+  files <- setdiff(files, current_fn)
+  
+  all_external <- list()
+  
+  for (f in files) {
+    reg <- .osrm_read_registry_file(f)
+    if (length(reg)) {
+      # Filter for alive processes only
+      alive_reg <- list()
+      has_alive <- FALSE
+      for (entry in reg) {
+        if (!is.null(entry$pid) && .osrm_pid_is_running(entry$pid)) {
+          # Mark as external from registry
+          entry$is_external_registry <- TRUE 
+          alive_reg[[entry$id]] <- entry
+          has_alive <- TRUE
+        }
+      }
+      if (has_alive) {
+        all_external <- c(all_external, alive_reg)
+        # If the owner R session is dead, we can safely prune the file on disk
+        if (has_alive && length(alive_reg) < length(reg)) {
+          owner_pid <- as.integer(sub("^session-([0-9]+)-.*", "\\1", basename(f)))
+          if (!is.na(owner_pid) && !.osrm_pid_is_running(owner_pid)) {
+            # Strip the temporary flag before saving
+            save_reg <- lapply(alive_reg, function(x) {
+              x$is_external_registry <- NULL
+              x
+            })
+            # Atomic write to prevent race conditions
+            tmp_f <- paste0(f, ".tmp-", Sys.getpid())
+            try({
+              jsonlite::write_json(save_reg, tmp_f, auto_unbox = TRUE, pretty = TRUE)
+              file.rename(tmp_f, f)
+            }, silent = TRUE)
+            if (file.exists(tmp_f)) unlink(tmp_f)
+          }
+        }
+      } else {
+        # File contains only dead processes -> garbage collect it
+        try(unlink(f), silent = TRUE)
+      }
+    } else {
+      # Empty file -> garbage collect
+      try(unlink(f), silent = TRUE)
+    }
+  }
+  
+  all_external
 }
 
 # Process utilities (ps optional) ---------------------------------------------
@@ -182,7 +257,7 @@
 
 # Registration API used by osrm_start_server() --------------------------------
 
-.osrm_register <- function(proc, port, prefix, algorithm, log = NULL) {
+.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL, profile = NULL) {
   ts <- format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC", usetz = FALSE)
   pid <- tryCatch(
     if (!is.null(proc)) proc$get_pid() else NA_integer_,
@@ -208,6 +283,8 @@
     algorithm = as.character(algorithm %||% ""),
     started_at = ts,
     log = as.character(log %||% ""),
+    input_osm = as.character(input_osm %||% ""),
+    profile = as.character(profile %||% ""),
     proc = proc
   )
 
@@ -228,6 +305,12 @@
 .osrm_stop_all_internal <- function() {
   reg <- .osrm_state$registry
   if (!length(reg)) {
+    # Even if our registry is empty, we should check if we left a file on disk
+    # and clean it up on unload if it's empty
+    if (!is.null(.osrm_state$session_id)) {
+      path <- .osrm_registry_path()
+      if (file.exists(path)) try(unlink(path), silent = TRUE)
+    }
     return(invisible(NULL))
   }
 
@@ -242,13 +325,25 @@
     }
   }
   .osrm_state$registry <- list()
-  .osrm_registry_save()
+  
+  # On unload, try to remove the registry file completely
+  if (!is.null(.osrm_state$session_id)) {
+    path <- .osrm_registry_path()
+    if (file.exists(path)) try(unlink(path), silent = TRUE)
+  }
   invisible(NULL)
 }
 
 # Lifecycle hooks -------------------------------------------------------------
 
 .onLoad <- function(libname, pkgname) {
+  # Initialize session ID
+  .osrm_state$session_id <- sprintf(
+    "session-%s-%s-%s", 
+    Sys.getpid(), 
+    format(Sys.time(), "%Y%m%d%H%M%OS3"),
+    paste0(sample(c(0:9, letters), 6, replace = TRUE), collapse = "")
+  )
   .osrm_registry_load()
 }
 
@@ -259,5 +354,83 @@
   )
   if (isTRUE(stop_on_unload)) {
     try(.osrm_stop_all_internal(), silent = TRUE)
+  } else {
+    # If not stopping, verify if registry file is empty and clean up if so
+    if (length(.osrm_state$registry) == 0 && !is.null(.osrm_state$session_id)) {
+      path <- .osrm_registry_path()
+      if (file.exists(path)) try(unlink(path), silent = TRUE)
+    }
   }
+}
+
+#' Retrieve the OSRM Profile for a Running Server
+#'
+#' @description
+#' Attempts to determine the profile (e.g., "car", "bike", "foot") used by an OSRM server.
+#' It follows a priority list:
+#' 1. Checks the active server registry for the given port or ID.
+#' 2. Checks for a `dataset.meta.json` file in the directory of the graph file.
+#' 3. Checks the graph filename for hints (e.g. `berlin-car.osrm`).
+#' 4. Falls back to `getOption("osrm.profile")`.
+#'
+#' @param input_osrm Optional. Can be an `osrm_job` object, a path string, or NULL.
+#' @param port Optional integer. The port of the server.
+#' @return A character string representing the profile name (default "car").
+#' @export
+osrm_get_server_profile <- function(input_osrm = NULL, port = NULL) {
+  # 1. Check Registry (if port is known or input_osrm is process)
+  reg_profile <- NULL
+  
+  if (inherits(input_osrm, "process")) {
+    # It's an osrm_job process
+    pid <- tryCatch(input_osrm$get_pid(), error = function(e) NA)
+    if (!is.na(pid)) {
+      reg <- .osrm_state$registry
+      match <- Filter(function(x) identical(x$pid, pid), reg)
+      if (length(match) > 0 && nzchar(match[[1]]$profile)) {
+        return(match[[1]]$profile)
+      }
+    }
+  } else if (!is.null(port)) {
+    # Check by port
+    prt <- as.integer(port)
+    reg <- .osrm_state$registry
+    # Find active server on this port
+    match <- Filter(function(x) identical(x$port, prt), reg)
+    if (length(match) > 0) {
+      # Use the most recently started one
+      last <- match[[length(match)]]
+      if (nzchar(last$profile)) return(last$profile)
+      
+      # If registry entry exists but has no profile, maybe we can look up its path?
+      # (Implementation detail: 'prefix' in registry stores the path)
+      if (nzchar(last$prefix)) input_osrm <- last$prefix
+    }
+  }
+
+  # 2. Check Metadata File (if we have a path)
+  path <- NULL
+  if (is.character(input_osrm) && length(input_osrm) == 1) {
+    path <- input_osrm
+  }
+  
+  if (!is.null(path)) {
+    # Check dataset.meta.json
+    meta_path <- file.path(dirname(path), "dataset.meta.json")
+    if (file.exists(meta_path)) {
+      meta <- tryCatch(jsonlite::read_json(meta_path), error = function(e) NULL)
+      if (!is.null(meta) && !is.null(meta$profile) && nzchar(meta$profile)) {
+        return(meta$profile)
+      }
+    }
+    
+    # 3. Heuristic: Check filename (e.g. "berlin-car.osrm")
+    base <- basename(path)
+    if (grepl("car", base, ignore.case = TRUE)) return("car")
+    if (grepl("bike|bicycle", base, ignore.case = TRUE)) return("bike")
+    if (grepl("foot|walk", base, ignore.case = TRUE)) return("foot")
+  }
+
+  # 4. Fallback
+  getOption("osrm.profile", default = "car")
 }

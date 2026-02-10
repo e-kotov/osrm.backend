@@ -34,13 +34,16 @@
 #' @param verbosity Character; one of `"NONE","ERROR","WARNING","INFO","DEBUG"`
 #' @param trial Logical or integer; if `TRUE` or >0, quits after initialization (default: `FALSE`)
 #' @param ip Character; IP address to bind (default: `"0.0.0.0"`)
-#' @param port Integer; TCP port to listen on (default: `5001`)
+#' @param port Integer; TCP port to listen on (default: `5001`). The function checks
+#'   if this port is already in use by another running OSRM server (even from
+#'   another session) and will stop with an error if a conflict is detected.
 #' @param threads Integer; number of worker threads (default: `8`)
 #' @param shared_memory Logical; load graph from shared memory (default: `FALSE`)
 #' @param memory_file Character or NULL; DEPRECATED (behaves like `mmap`)
 #' @param mmap Logical; memory-map data files (default: `FALSE`)
 #' @param dataset_name Character or NULL; name of shared memory dataset
-#' @param algorithm Character or NULL; one of `"CH","CoreCH","MLD"`. If `NULL` (default), auto-selected based on file extension
+#' @param algorithm Character or NULL; one of `"MLD"`, `"CH"`, or `"CoreCH"` (case-insensitive).
+#'   If `NULL` (default), auto-selected based on file extension.
 #' @param max_viaroute_size Integer (default: `500`)
 #' @param max_trip_size Integer (default: `100`)
 #' @param max_table_size Integer (default: `100`)
@@ -48,6 +51,8 @@
 #' @param max_nearest_size Integer (default: `100`)
 #' @param max_alternatives Integer (default: `3`)
 #' @param max_matching_radius Integer; use `-1` for unlimited (default: `-1`)
+#' @param input_osm Character or NULL; path to the original OSM input file (for tracking purposes).
+#'   This parameter is typically used internally by [osrm_start()] to record the source data.
 #' @param echo_cmd Logical; echo command line to console before launch (default: `FALSE`)
 #' @param quiet Logical; when `TRUE`, suppresses package messages.
 #' @param verbose Logical; when `TRUE`, routes server stdout and stderr to the R
@@ -120,7 +125,8 @@ osrm_start_server <- function(
   max_matching_radius = -1L,
   quiet = FALSE,
   verbose = FALSE,
-  echo_cmd = FALSE
+  echo_cmd = FALSE,
+  input_osm = NULL
 ) {
   # Dependencies
   if (!requireNamespace("processx", quietly = TRUE)) {
@@ -155,7 +161,7 @@ osrm_start_server <- function(
   if (is.null(algorithm)) {
     algorithm <- if (ext == "mldgr") "MLD" else "CH"
   } else {
-    algorithm <- match.arg(algorithm, c("CH", "CoreCH", "MLD"))
+    algorithm <- .normalize_algorithm(algorithm)
     if (ext == "mldgr" && algorithm != "MLD") {
       stop(
         "Algorithm must be 'MLD' when using an .osrm.mldgr file",
@@ -284,6 +290,21 @@ osrm_start_server <- function(
 
   # Finally, add the graph prefix
   arguments <- c(arguments, prefix)
+
+  # --- PORT CONFLICT CHECK ---
+  # Check if the port is already used by a known OSRM server (local or external).
+  # This prevents confusing failures where osrm-routed exits immediately.
+  known_servers <- osrm_servers(include_all = TRUE)
+  if (nrow(known_servers) > 0) {
+    conflict <- known_servers[known_servers$port == as.integer(port) & known_servers$alive, ]
+    if (nrow(conflict) > 0) {
+      stop(sprintf(
+        "Port %d is already in use by another OSRM server (pid %d).",
+        as.integer(port),
+        conflict$pid[1]
+      ), call. = FALSE)
+    }
+  }
 
   # --- LOGGING CONFIGURATION ---
   # We prefer a temp file to prevent pipe deadlocks while keeping debug info.
@@ -504,6 +525,15 @@ osrm_start_server <- function(
   }
 
   # --- Register the process for later management (stop by id/port/pid across session) ---
+  
+  # Try to detect profile from metadata
+  profile_detected <- NULL
+  meta_path <- file.path(dirname(osrm_path), "dataset.meta.json")
+  if (file.exists(meta_path)) {
+    meta <- tryCatch(jsonlite::read_json(meta_path), error = function(e) NULL)
+    if (!is.null(meta$profile)) profile_detected <- meta$profile
+  }
+
   # Best-effort: ignore errors if registry is unavailable for any reason.
   try(
     .osrm_register(
@@ -511,7 +541,9 @@ osrm_start_server <- function(
       port = port,
       prefix = prefix,
       algorithm = algorithm,
-      log = log_file_path
+      log = log_file_path,
+      input_osm = input_osm,
+      profile = profile_detected
     ),
     silent = TRUE
   )

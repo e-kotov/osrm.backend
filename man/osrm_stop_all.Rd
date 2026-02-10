@@ -4,7 +4,7 @@
 \alias{osrm_stop_all}
 \title{Stop all running OSRM servers started via this package}
 \usage{
-osrm_stop_all()
+osrm_stop_all(include_all = FALSE)
 }
 \value{
 The number of servers attempted.

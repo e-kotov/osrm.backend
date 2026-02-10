@@ -19,7 +19,7 @@ test_that("osrm_start errors with invalid file type", {
 
   expect_error(
     osrm_start(path = invalid_path, quiet = TRUE),
-    "Invalid input file type"
+    "Invalid input path"
   )
 })
 
@@ -160,21 +160,27 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   pbf_file <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
   skip_if(!file.exists(pbf_file), "Test data not available")
 
-  tmp_dir <- tempfile()
-  dir.create(tmp_dir)
-  on.exit(unlink(tmp_dir, recursive = TRUE), add = TRUE)
+  # Create separate directories for preparation to avoid conflicts
+  tmp_dir_mld <- tempfile("osrm_mld_pre")
+  tmp_dir_ch <- tempfile("osrm_ch_pre")
+  tmp_dir_final <- tempfile("osrm_final")
+  dir.create(tmp_dir_mld)
+  dir.create(tmp_dir_ch)
+  dir.create(tmp_dir_final)
+  on.exit(unlink(c(tmp_dir_mld, tmp_dir_ch, tmp_dir_final), recursive = TRUE), add = TRUE)
 
-  file.copy(pbf_file, file.path(tmp_dir, "cur.osm.pbf"))
+  file.copy(pbf_file, file.path(tmp_dir_mld, "cur.osm.pbf"))
+  file.copy(pbf_file, file.path(tmp_dir_ch, "cur.osm.pbf"))
 
   skip_if(
     !getOption("osrm.backend.skip_osrm_tests", TRUE) == FALSE,
     "OSRM tests skipped (binary not available)"
   )
 
-  # Prepare both MLD and CH graphs
+  # Prepare MLD graph in its own directory
   mld_result <- try(
     osrm_prepare_graph(
-      input_osm = file.path(tmp_dir, "cur.osm.pbf"),
+      input_osm = file.path(tmp_dir_mld, "cur.osm.pbf"),
       algorithm = "mld",
       quiet = TRUE
     ),
@@ -182,9 +188,10 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   )
   skip_if(inherits(mld_result, "try-error"), "MLD graph preparation failed")
 
+  # Prepare CH graph in its own directory
   ch_result <- try(
     osrm_prepare_graph(
-      input_osm = file.path(tmp_dir, "cur.osm.pbf"),
+      input_osm = file.path(tmp_dir_ch, "cur.osm.pbf"),
       algorithm = "ch",
       quiet = TRUE
     ),
@@ -192,14 +199,20 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   )
   skip_if(inherits(ch_result, "try-error"), "CH graph preparation failed")
 
-  # Both graph types should now exist
-  expect_true(file.exists(mld_result$osrm_job_artifact))
-  expect_true(file.exists(ch_result$osrm_job_artifact))
+  # Merge files into final directory for testing selection logic
+  all_mld <- list.files(tmp_dir_mld, full.names = TRUE)
+  file.copy(all_mld, tmp_dir_final, recursive = TRUE)
+  all_ch <- list.files(tmp_dir_ch, full.names = TRUE)
+  file.copy(all_ch, tmp_dir_final, recursive = TRUE)
+
+  # Both graph types should now exist in the final directory
+  expect_true(file.exists(file.path(tmp_dir_final, "cur.osrm.mldgr")))
+  expect_true(file.exists(file.path(tmp_dir_final, "cur.osrm.hsgr")))
 
   # Test 1: Start with algorithm = "ch" should use CH graph
   server_ch <- try(
     osrm_start(
-      path = tmp_dir,
+      path = tmp_dir_final,
       algorithm = "ch",
       quiet = TRUE
     ),
@@ -207,10 +220,11 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   )
 
   if (!inherits(server_ch, "try-error") && server_ch$is_alive()) {
-    # Check that the server command line contains the CH graph file
+    # Check that the server command line contains the CH algorithm flag
     cmdline <- server_ch$get_cmdline()
-    expect_true(any(grepl("\\.osrm\\.hsgr$", cmdline)))
-    expect_false(any(grepl("\\.osrm\\.mldgr$", cmdline)))
+    # OSRM-routed uses '-a CH' or '-a MLD'
+    expect_true(any(cmdline == "CH"))
+    expect_false(any(cmdline == "MLD"))
     osrm_stop(server_ch, quiet = TRUE)
   } else {
     skip("CH server failed to start")
@@ -219,7 +233,7 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   # Test 2: Start with algorithm = "mld" should use MLD graph
   server_mld <- try(
     osrm_start(
-      path = tmp_dir,
+      path = tmp_dir_final,
       algorithm = "mld",
       quiet = TRUE
     ),
@@ -227,10 +241,10 @@ test_that("osrm_start respects algorithm parameter when selecting existing graph
   )
 
   if (!inherits(server_mld, "try-error") && server_mld$is_alive()) {
-    # Check that the server command line contains the MLD graph file
+    # Check that the server command line contains the MLD algorithm flag
     cmdline <- server_mld$get_cmdline()
-    expect_true(any(grepl("\\.osrm\\.mldgr$", cmdline)))
-    expect_false(any(grepl("\\.osrm\\.hsgr$", cmdline)))
+    expect_true(any(cmdline == "MLD"))
+    expect_false(any(cmdline == "CH"))
     osrm_stop(server_mld, quiet = TRUE)
   } else {
     skip("MLD server failed to start")

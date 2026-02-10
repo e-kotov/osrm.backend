@@ -84,6 +84,8 @@
 osrm_start <- function(
   path,
   algorithm = c("mld", "ch"),
+  force_rebuild = FALSE,
+  show_progress = TRUE,
   quiet = FALSE,
   verbose = FALSE,
   ...
@@ -92,17 +94,27 @@ osrm_start <- function(
   algorithm <- match.arg(algorithm)
   quiet <- isTRUE(quiet)
   verbose <- isTRUE(verbose)
+  force_rebuild <- isTRUE(force_rebuild)
+  show_progress <- isTRUE(show_progress)
 
   # Capture additional arguments
   dot_args <- list(...)
 
   # Separate args for prepare_graph and start_server based on their formals
-  prepare_args_names <- names(formals(osrm_prepare_graph))
-  server_args_names <- names(formals(osrm_start_server))
-
-  prepare_args <- dot_args[names(dot_args) %in% prepare_args_names]
-  server_args <- dot_args[names(dot_args) %in% server_args_names]
-
+  # We use match.arg or similar logic to route them correctly
+  prepare_formals <- names(formals(osrm_prepare_graph))
+  server_formals <- names(formals(osrm_start_server))
+  
+  # Arguments that should go to prepare_graph
+  # We perform a strict check to avoiding passing server args to build
+  build_args <- dot_args[names(dot_args) %in% prepare_formals]
+  
+  # Arguments that should go to start_server
+  server_args <- dot_args[names(dot_args) %in% server_formals]
+  
+  # Common arguments handling: threads, verbosity might be in both
+  # If 'threads' is passed in ..., it goes to both via the above logic
+  
   # 1. Check if OSRM is installed, if not, install it
   osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
   if (!nzchar(Sys.which(osrm_exec))) {
@@ -119,103 +131,82 @@ osrm_start <- function(
   }
 
   final_graph_path <- NULL
-
+  original_osm_path <- NULL
+  should_build <- FALSE
+  
+  # --- LOGIC TO DETERMINE IF WE NEED TO BUILD ---
+  
+  # Case A: Input is a directory
   if (dir.exists(path)) {
-    # Input is a directory
-    # Look for graph files matching the requested algorithm
-    if (algorithm == "mld") {
-      mld_files <- list.files(
-        path,
-        pattern = "\\.osrm\\.mldgr$",
-        full.names = TRUE
-      )
-      if (length(mld_files) > 0) {
-        final_graph_path <- mld_files[1]
-      }
-    } else if (algorithm == "ch") {
-      ch_files <- list.files(path, pattern = "\\.osrm\\.hsgr$", full.names = TRUE)
-      if (length(ch_files) > 0) {
-        final_graph_path <- ch_files[1]
-      }
-    }
-
-    if (is.null(final_graph_path)) {
-      osm_files <- list.files(
-        path,
-        pattern = "\\.osm\\.pbf$",
-        full.names = TRUE
-      )
-      if (length(osm_files) == 0) {
-        stop(
-          "Directory contains no prepared OSRM graphs or .osm.pbf files.",
-          call. = FALSE
-        )
-      }
-      osm_input <- osm_files[1]
-
-      if (!quiet) {
-        message(
-          "OSRM graph not found. Preparing graph from '",
-          basename(osm_input),
-          "', this may take a while..."
-        )
-      }
-      prepare_args$input_osm <- osm_input
-      prepare_args$algorithm <- algorithm
-      prepare_call_args <- utils::modifyList(
-        prepare_args,
-        list(quiet = quiet, verbose = verbose)
-      )
-
-      prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-      final_graph_path <- prepared_graph$osrm_job_artifact
-      if (!quiet) message("Graph preparation complete.")
-    }
-  } else {
-    # Input is a file
-    if (grepl("\\.osm(\\.pbf|\\.bz2)?$", path, ignore.case = TRUE)) {
-      base_name <- sub("\\.osm(\\.pbf|\\.bz2)?$", "", path, ignore.case = TRUE)
-
-      # Look for graph file matching the requested algorithm
-      if (algorithm == "mld") {
-        mld_graph <- paste0(base_name, ".osrm.mldgr")
-        if (file.exists(mld_graph)) {
-          final_graph_path <- mld_graph
-        }
-      } else if (algorithm == "ch") {
-        ch_graph <- paste0(base_name, ".osrm.hsgr")
-        if (file.exists(ch_graph)) {
-          final_graph_path <- ch_graph
-        }
-      }
-
-      if (is.null(final_graph_path)) {
-        if (!quiet) {
-          message(
-            "OSRM graph not found. Preparing graph from '",
-            basename(path),
-            "', this may take a while..."
-          )
-        }
-        prepare_args$input_osm <- path
-        prepare_args$algorithm <- algorithm
-        prepare_call_args <- utils::modifyList(
-          prepare_args,
-          list(quiet = quiet, verbose = verbose)
-        )
-
-        prepared_graph <- do.call(osrm_prepare_graph, prepare_call_args)
-        final_graph_path <- prepared_graph$osrm_job_artifact
-        if (!quiet) message("Graph preparation complete.")
-      }
-    } else if (grepl("\\.osrm\\.(mldgr|hsgr)$", path, ignore.case = TRUE)) {
-      final_graph_path <- path
+    # Check for existing graphs
+    suffix <- if (algorithm == "mld") "\\.osrm\\.mldgr$" else "\\.osrm\\.hsgr$"
+    existing_graphs <- list.files(path, pattern = suffix, full.names = TRUE)
+    
+    if (length(existing_graphs) > 0 && !force_rebuild) {
+      final_graph_path <- existing_graphs[1]
     } else {
-      stop(
-        "Invalid input file type. `path` must be an OSM file, a prepared graph, or a directory.",
-        call. = FALSE
-      )
+      # Need to build. Find source PBF.
+      osm_files <- list.files(path, pattern = "\\.osm(\\.pbf|\\.bz2)?$", full.names = TRUE)
+      if (length(osm_files) == 0) {
+        if (force_rebuild) stop("Force rebuild requested but no source OSM file found in directory.", call. = FALSE)
+        stop("Directory contains no prepared OSRM graphs or source OSM files.", call. = FALSE)
+      }
+      original_osm_path <- osm_files[1]
+      should_build <- TRUE
     }
+  } 
+  # Case B: Input is a source file (.osm.pbf, .osm)
+  else if (grepl("\\.osm(\\.pbf|\\.bz2)?$", path, ignore.case = TRUE)) {
+    original_osm_path <- path
+    base_name <- sub("\\.osm(\\.pbf|\\.bz2)?$", "", path, ignore.case = TRUE)
+    suffix <- if (algorithm == "mld") ".osrm.mldgr" else ".osrm.hsgr"
+    expected_graph <- paste0(base_name, suffix)
+    
+    if (file.exists(expected_graph) && !force_rebuild) {
+      final_graph_path <- expected_graph
+    } else {
+      should_build <- TRUE
+    }
+  }
+  # Case C: Input is already a graph file
+  else if (grepl("\\.osrm\\.(mldgr|hsgr)$", path, ignore.case = TRUE)) {
+    if (force_rebuild) {
+       stop("Cannot force rebuild when input 'path' is already a compiled graph file. Point to the source .osm.pbf instead.", call. = FALSE)
+    }
+    final_graph_path <- path
+    # Try to find original OSM for tracking if possible (heuristic)
+    heuristic_osm <- sub("\\.osrm\\.(mldgr|hsgr)$", ".osm.pbf", path)
+    if (file.exists(heuristic_osm)) original_osm_path <- heuristic_osm
+  } else {
+    stop("Invalid input path. Must be a directory, OSM source file, or OSRM graph.", call. = FALSE)
+  }
+
+  # --- PERFORM BUILD IF NEEDED ---
+  
+  if (should_build) {
+    if (!quiet) {
+      msg <- if (force_rebuild) "Rebuilding OSRM graph..." else "OSRM graph not found. Preparing..."
+      message(msg, " This may take a while.")
+    }
+    
+    # Construct arguments for osrm_prepare_graph
+    # We enforce known args + user provided build_args
+    build_call_args <- utils::modifyList(
+      build_args,
+      list(
+        input_osm = original_osm_path,
+        algorithm = algorithm,
+        quiet = quiet,
+        verbose = verbose,
+        overwrite = force_rebuild || isTRUE(build_args$overwrite) # Ensure overwrite if forced
+      )
+    )
+    
+    # Run build
+    prepared_graph <- do.call(osrm_prepare_graph, build_call_args)
+    final_graph_path <- prepared_graph$osrm_job_artifact
+    
+    if (!quiet) message("Graph preparation complete.")
   }
 
   if (is.null(final_graph_path)) {
@@ -223,11 +214,23 @@ osrm_start <- function(
   }
 
   # 3. Start the server
-  server_args$osrm_path <- final_graph_path
+  # Construct arguments for osrm_start_server
   server_call_args <- utils::modifyList(
     server_args,
-    list(quiet = quiet, verbose = verbose)
+    list(
+      osrm_path = final_graph_path,
+      quiet = quiet,
+      verbose = verbose,
+      input_osm = original_osm_path
+    )
   )
+  
+  # Only pass algorithm if explicitly provided or inferred? 
+  # osrm_start_server usually auto-detects from extension, but we can pass it to be safe if mld/ch match
+  if (is.null(server_call_args$algorithm)) {
+     server_call_args$algorithm <- if (grepl("mldgr$", final_graph_path)) "MLD" else "CH"
+  }
+
   if (!quiet) {
     message(
       "Starting OSRM server with graph '",
@@ -240,7 +243,8 @@ osrm_start <- function(
 
   # Extract info for the final confirmation message
   pid <- osrm_process$get_pid()
-  port <- server_args$port %||% 5001L # Get port from args or use default
+  # Port might be in server_args or default
+  port <- server_call_args$port %||% 5001L
 
   if (!quiet) {
     message(sprintf(
