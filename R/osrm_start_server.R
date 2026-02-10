@@ -34,7 +34,9 @@
 #' @param verbosity Character; one of `"NONE","ERROR","WARNING","INFO","DEBUG"`
 #' @param trial Logical or integer; if `TRUE` or >0, quits after initialization (default: `FALSE`)
 #' @param ip Character; IP address to bind (default: `"0.0.0.0"`)
-#' @param port Integer; TCP port to listen on (default: `5001`)
+#' @param port Integer; TCP port to listen on (default: `5001`). The function checks
+#'   if this port is already in use by another running OSRM server (even from
+#'   another session) and will stop with an error if a conflict is detected.
 #' @param threads Integer; number of worker threads (default: `8`)
 #' @param shared_memory Logical; load graph from shared memory (default: `FALSE`)
 #' @param memory_file Character or NULL; DEPRECATED (behaves like `mmap`)
@@ -288,6 +290,21 @@ osrm_start_server <- function(
 
   # Finally, add the graph prefix
   arguments <- c(arguments, prefix)
+
+  # --- PORT CONFLICT CHECK ---
+  # Check if the port is already used by a known OSRM server (local or external).
+  # This prevents confusing failures where osrm-routed exits immediately.
+  known_servers <- osrm_servers(include_all = TRUE)
+  if (nrow(known_servers) > 0) {
+    conflict <- known_servers[known_servers$port == as.integer(port) & known_servers$alive, ]
+    if (nrow(conflict) > 0) {
+      stop(sprintf(
+        "Port %d is already in use by another OSRM server (pid %d).",
+        as.integer(port),
+        conflict$pid[1]
+      ), call. = FALSE)
+    }
+  }
 
   # --- LOGGING CONFIGURATION ---
   # We prefer a temp file to prevent pipe deadlocks while keeping debug info.

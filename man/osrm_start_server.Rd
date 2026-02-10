@@ -44,7 +44,9 @@ osrm_start_server(
 
 \item{ip}{Character; IP address to bind (default: \code{"0.0.0.0"})}
 
-\item{port}{Integer; TCP port to listen on (default: \code{5001})}
+\item{port}{Integer; TCP port to listen on (default: \code{5001}). The function checks
+if this port is already in use by another running OSRM server (even from
+another session) and will stop with an error if a conflict is detected.}
 
 \item{threads}{Integer; number of worker threads (default: \code{8})}
 
