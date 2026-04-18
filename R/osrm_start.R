@@ -36,6 +36,10 @@
 #'   preparation, either `"mld"` (Multi-Level Dijkstra, default) or `"ch"`
 #'   (Contraction Hierarchies). This is only used when `osrm_prepare_graph` is
 #'   automatically called.
+#' @param force_rebuild A logical value. If `TRUE`, force the rebuilding of the
+#'   OSRM graph even if it already exists.
+#' @param show_progress A logical value. If `TRUE` (default), show a progress
+#'   spinner during graph preparation.
 #' @param verbose A logical. If `FALSE` (default), suppresses detailed console
 #'   output from backend commands. If `TRUE`, shows all output, which is useful
 #'   for debugging.

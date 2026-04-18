@@ -13,6 +13,7 @@ test_that("osrm_server class and metadata are correctly assigned", {
 
   # Create a fake executable path so Sys.which check passes
   fake_osrm <- file.path(tmp_dir, "osrm-routed")
+  if (.Platform$OS.type == "windows") fake_osrm <- paste0(fake_osrm, ".exe")
   file.create(fake_osrm)
   if (.Platform$OS.type == "unix") Sys.chmod(fake_osrm, mode = "0755")
   

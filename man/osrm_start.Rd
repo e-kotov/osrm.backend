@@ -27,6 +27,12 @@ preparation, either \code{"mld"} (Multi-Level Dijkstra, default) or \code{"ch"}
 (Contraction Hierarchies). This is only used when \code{osrm_prepare_graph} is
 automatically called.}
 
+\item{force_rebuild}{A logical value. If \code{TRUE}, force the rebuilding of the
+OSRM graph even if it already exists.}
+
+\item{show_progress}{A logical value. If \code{TRUE} (default), show a progress
+spinner during graph preparation.}
+
 \item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
 warnings. Defaults to \code{FALSE}.}
 

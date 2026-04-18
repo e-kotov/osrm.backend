@@ -525,6 +525,9 @@ osrm_stop <- function(
 
 #' Stop all running OSRM servers started via this package
 #'
+#' @param include_all A logical value. If `TRUE`, stop all OSRM servers found
+#'   running on the system, including those not started by the current R session.
+#'   Requires `ps` and `jsonlite` packages. Defaults to `FALSE`.
 #' @return The number of servers attempted.
 #' @export
 #' @examples
