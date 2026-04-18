@@ -203,6 +203,7 @@ test_that("osrm_servers returns server information correctly", {
       port = 5001L,
       algorithm = "mld",
       started_at = "2025-01-01T12:00:00.000Z",
+      input_osm = "data1.osm.pbf",
       proc = mock_proc
     ),
     "server2" = list(
@@ -211,6 +212,7 @@ test_that("osrm_servers returns server information correctly", {
       port = 5002L,
       algorithm = "ch",
       started_at = "2025-01-01T12:00:01.000Z",
+      input_osm = "data2.osm.pbf",
       proc = NULL
     )
   )
@@ -224,6 +226,7 @@ test_that("osrm_servers returns server information correctly", {
       expect_equal(result$pid, c(1001L, 1002L))
       expect_equal(result$port, c(5001L, 5002L))
       expect_equal(result$algorithm, c("mld", "ch"))
+      expect_equal(result$input_osm, c("data1.osm.pbf", "data2.osm.pbf"))
       expect_true(result$has_handle[1])
       expect_false(result$has_handle[2])
     },
