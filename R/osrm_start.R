@@ -42,7 +42,7 @@
 #' @param ... Additional arguments passed on to `osrm_prepare_graph()` (e.g.,
 #'   `overwrite = TRUE`) and `osrm_start_server()` (e.g., `port = 5001`).
 #'
-#' @return A `processx::process` object for the running server.
+#' @return An OSRM job process (a `processx::process` object) for the running server.
 #' @export
 #' @seealso [osrm_stop()], [osrm_start_server()] for manual server startup.
 #' @examples

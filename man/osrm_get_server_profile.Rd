@@ -7,7 +7,8 @@
 osrm_get_server_profile(input_osrm = NULL, port = NULL)
 }
 \arguments{
-\item{input_osrm}{Optional. Can be an \code{osrm_job} object, a path string, or NULL.}
+\item{input_osrm}{Optional. Can be an OSRM job process (a \code{process} object
+from the \code{processx} package), a path string, or NULL.}
 
 \item{port}{Optional integer. The port of the server.}
 }

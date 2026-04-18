@@ -12,7 +12,7 @@ all \code{osrm-routed} processes, including those not started by this package
 in the current session. Default is \code{FALSE}.}
 }
 \value{
-A data.frame with columns:
+A data.frame of OSRM job processes with columns:
 \code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}, \code{log}, \code{input_osm}.
 External servers will have \code{id} prefixed with \verb{sys-} and \code{log} set to \verb{<external>}.
 }

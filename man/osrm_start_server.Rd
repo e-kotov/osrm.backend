@@ -87,7 +87,8 @@ if R is busy. Defaults to \code{FALSE}, which writes logs to a temporary file.}
 This parameter is typically used internally by \code{\link[=osrm_start]{osrm_start()}} to record the source data.}
 }
 \value{
-A \code{processx::process} object for the running server (also registered internally).
+An OSRM job process (a \code{processx::process} object) for the running
+server (also registered internally).
 }
 \description{
 Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either

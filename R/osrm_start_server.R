@@ -59,7 +59,8 @@
 #'   console for live debugging. Note: This can cause deadlocks in tight loops
 #'   if R is busy. Defaults to `FALSE`, which writes logs to a temporary file.
 #'
-#' @return A `processx::process` object for the running server (also registered internally).
+#' @return An OSRM job process (a `processx::process` object) for the running
+#'   server (also registered internally).
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {

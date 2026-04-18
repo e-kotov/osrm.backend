@@ -18,7 +18,8 @@ osrm_gui(
 \arguments{
 \item{input_osrm}{Optional. Can be:
 \itemize{
-\item An \code{osrm_job} object (process) returned by \code{osrm_start()} or \code{osrm_start_server()}.
+\item An OSRM job process (a \code{process} object from the \code{processx} package)
+returned by \code{osrm_start()} or \code{osrm_start_server()}.
 When providing a process, you must also specify \code{port} explicitly.
 \item A path string to an \code{.osrm.hsgr} or \code{.osrm.mldgr} file.
 \item A path string to an \code{.osm.pbf} file (will be prepared and started).
@@ -62,7 +63,7 @@ supporting left-click for start, right-click for end, and draggable markers.
 The function checks for optional dependencies \code{shiny}, \code{mapgl}, \code{osrm}, \code{sf}, and \code{DT}.
 If missing, it prompts the user to install them.
 
-It attempts to detect an active OSRM server. If an \code{osrm_job} object (from
+It attempts to detect an active OSRM server. If an OSRM job process (from
 \code{osrm_start()}) is passed, it uses that configuration. If a path is passed,
 it will start a temporary server for the session.
 }

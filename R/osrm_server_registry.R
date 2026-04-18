@@ -373,7 +373,8 @@
 #' 3. Checks the graph filename for hints (e.g. `berlin-car.osrm`).
 #' 4. Falls back to `getOption("osrm.profile")`.
 #'
-#' @param input_osrm Optional. Can be an `osrm_job` object, a path string, or NULL.
+#' @param input_osrm Optional. Can be an OSRM job process (a `process` object
+#'   from the `processx` package), a path string, or NULL.
 #' @param port Optional integer. The port of the server.
 #' @return A character string representing the profile name (default "car").
 #' @export
@@ -382,7 +383,7 @@ osrm_get_server_profile <- function(input_osrm = NULL, port = NULL) {
   reg_profile <- NULL
   
   if (inherits(input_osrm, "process")) {
-    # It's an osrm_job process
+    # It's an OSRM job process
     pid <- tryCatch(input_osrm$get_pid(), error = function(e) NA)
     if (!is.na(pid)) {
       reg <- .osrm_state$registry

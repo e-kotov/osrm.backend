@@ -38,7 +38,7 @@ for debugging.}
 \code{overwrite = TRUE}) and \code{osrm_start_server()} (e.g., \code{port = 5001}).}
 }
 \value{
-A \code{processx::process} object for the running server.
+An OSRM job process (a \code{processx::process} object) for the running server.
 }
 \description{
 A high-level, "one-shot" function to start an OSRM server that automatically

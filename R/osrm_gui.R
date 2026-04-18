@@ -8,13 +8,14 @@
 #' The function checks for optional dependencies `shiny`, `mapgl`, `osrm`, `sf`, and `DT`.
 #' If missing, it prompts the user to install them.
 #'
-#' It attempts to detect an active OSRM server. If an `osrm_job` object (from
+#' It attempts to detect an active OSRM server. If an OSRM job process (from
 #' `osrm_start()`) is passed, it uses that configuration. If a path is passed,
 #' it will start a temporary server for the session.
 #'
 #' @param input_osrm Optional. Can be:
 #'   \itemize{
-#'     \item An `osrm_job` object (process) returned by `osrm_start()` or `osrm_start_server()`.
+#'     \item An OSRM job process (a `process` object from the `processx` package)
+#'       returned by `osrm_start()` or `osrm_start_server()`.
 #'       When providing a process, you must also specify `port` explicitly.
 #'     \item A path string to an `.osrm.hsgr` or `.osrm.mldgr` file.
 #'     \item A path string to an `.osm.pbf` file (will be prepared and started).

@@ -14,7 +14,7 @@
 #'   all `osrm-routed` processes, including those not started by this package
 #'   in the current session. Default is `FALSE`.
 #'
-#' @return A data.frame with columns:
+#' @return A data.frame of OSRM job processes with columns:
 #'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`.
 #'   External servers will have `id` prefixed with `sys-` and `log` set to `<external>`.
 #' @examples
@@ -223,7 +223,8 @@ osrm_servers <- function(include_all = FALSE) {
 #'
 #' You can also stop a specific server by providing:
 #' \itemize{
-#'   \item The `processx::process` object returned by `osrm_start()` or `osrm_start_server()`.
+#'   \item The OSRM job process (a `processx::process` object) returned by
+#'     `osrm_start()` or `osrm_start_server()`.
 #'   \item The server's `id`, `port`, or `pid` (use `osrm_servers()` to find these).
 #' }
 #' 
@@ -232,7 +233,8 @@ osrm_servers <- function(include_all = FALSE) {
 #' R session) by passing its PID, or by finding it via `osrm_servers(include_all = TRUE)`
 #' and passing its `id` or `port`. This requires permission to signal the process.
 #'
-#' @param server Optional `processx::process` object returned by `osrm_start_server()`.
+#' @param server Optional OSRM job process (a `processx::process` object)
+#'   returned by `osrm_start_server()`.
 #' @param id Optional character id from `osrm_servers()`.
 #' @param port Optional integer TCP port.
 #' @param pid Optional integer process id.

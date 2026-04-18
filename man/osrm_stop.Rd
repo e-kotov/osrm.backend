@@ -14,7 +14,8 @@ osrm_stop(
 )
 }
 \arguments{
-\item{server}{Optional \code{processx::process} object returned by \code{osrm_start_server()}.}
+\item{server}{Optional OSRM job process (a \code{processx::process} object)
+returned by \code{osrm_start_server()}.}
 
 \item{id}{Optional character id from \code{osrm_servers()}.}
 
@@ -40,7 +41,8 @@ server that is still alive in the current session.
 
 You can also stop a specific server by providing:
 \itemize{
-\item The \code{processx::process} object returned by \code{osrm_start()} or \code{osrm_start_server()}.
+\item The OSRM job process (a \code{processx::process} object) returned by
+\code{osrm_start()} or \code{osrm_start_server()}.
 \item The server's \code{id}, \code{port}, or \code{pid} (use \code{osrm_servers()} to find these).
 }
 
