@@ -39,6 +39,7 @@ jobs:
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
       R_KEEP_PKG_SOURCE: yes
+      PKG_PREFER_BINARIES: true
 
     steps:
       - uses: actions/checkout@v4
@@ -59,6 +60,8 @@ jobs:
         with:
           extra-packages: any::rcmdcheck
           needs: check
+          # Skip suggested packages on Linux for older R versions to avoid build failures in deep dependencies like RcppSimdJson
+          dependencies: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"hard"' || '"all"' }}
 
       - uses: r-lib/actions/check-r-package@v2
         with:
