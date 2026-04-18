@@ -58,7 +58,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::osrm, any::sf
+          extra-packages: any::rcmdcheck
           needs: check
           # Skip suggested packages on Linux for older R versions to avoid build failures in deep dependencies like RcppSimdJson
           dependencies: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"hard"' || '"all"' }}
@@ -66,4 +66,5 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: 'c("--no-manual")'
+          build_args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"c(\"--no-manual\", \"--no-build-vignettes\")"' || '"c(\"--no-manual\")"' }}
+          args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"c(\"--no-manual\", \"--as-cran\", \"--ignore-vignettes\")"' || '"c(\"--no-manual\", \"--as-cran\")"' }}
