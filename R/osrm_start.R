@@ -116,7 +116,12 @@ osrm_start <- function(
   # Common arguments handling: threads, verbosity might be in both
   # If 'threads' is passed in ..., it goes to both via the above logic
   
-  # 1. Check if OSRM is installed, if not, install it
+  # 1. Resolve input path and prepare graph if necessary
+  if (!file.exists(path)) {
+    stop("Input path does not exist: ", path, call. = FALSE)
+  }
+
+  # 2. Check if OSRM is installed, if not, install it
   osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
   if (!nzchar(Sys.which(osrm_exec))) {
     if (!quiet) {
@@ -124,11 +129,6 @@ osrm_start <- function(
     }
     osrm_install(version = "latest", path_action = "session", quiet = quiet)
     if (!quiet) message("Installation complete.")
-  }
-
-  # 2. Resolve input path and prepare graph if necessary
-  if (!file.exists(path)) {
-    stop("Input path does not exist: ", path, call. = FALSE)
   }
 
   final_graph_path <- NULL

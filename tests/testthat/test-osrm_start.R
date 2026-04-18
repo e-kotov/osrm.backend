@@ -1,9 +1,15 @@
 # Tests for osrm_start.R
 
 test_that("osrm_start errors when path doesn't exist", {
-  expect_error(
-    osrm_start(path = "/nonexistent/path/xyz123", quiet = TRUE),
-    "Input path does not exist"
+  with_mocked_bindings(
+    {
+      expect_error(
+        osrm_start(path = "/nonexistent/path/xyz123", quiet = TRUE),
+        "Input path does not exist"
+      )
+    },
+    Sys.which = function(x) "/usr/bin/osrm-routed",
+    .package = "base"
   )
 })
 
@@ -13,13 +19,15 @@ test_that("osrm_start errors with invalid file type", {
   file.create(invalid_path)
   on.exit(unlink(invalid_path), add = TRUE)
 
-  # This test requires OSRM to be installed
-  skip_on_cran()
-  skip_if(Sys.which("osrm-routed") == "", "osrm-routed not available")
-
-  expect_error(
-    osrm_start(path = invalid_path, quiet = TRUE),
-    "Invalid input path"
+  with_mocked_bindings(
+    {
+      expect_error(
+        osrm_start(path = invalid_path, quiet = TRUE),
+        "Invalid input path"
+      )
+    },
+    Sys.which = function(x) "/usr/bin/osrm-routed",
+    .package = "base"
   )
 })
 
@@ -31,13 +39,15 @@ test_that("osrm_start errors when directory has no graphs or OSM files", {
   # Create a dummy file that's not .osm.pbf or graph
   file.create(file.path(tmp_dir, "dummy.txt"))
 
-  # This test requires OSRM to be installed
-  skip_on_cran()
-  skip_if(Sys.which("osrm-routed") == "", "osrm-routed not available")
-
-  expect_error(
-    osrm_start(path = tmp_dir, quiet = TRUE),
-    "Directory contains no prepared OSRM graphs"
+  with_mocked_bindings(
+    {
+      expect_error(
+        osrm_start(path = tmp_dir, quiet = TRUE),
+        "Directory contains no prepared OSRM graphs"
+      )
+    },
+    Sys.which = function(x) "/usr/bin/osrm-routed",
+    .package = "base"
   )
 })
 
