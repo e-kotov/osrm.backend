@@ -26,6 +26,13 @@ gui_check_dependencies <- function() {
 #' Manage OSRM Server Lifecycle for GUI
 #' @noRd
 gui_setup_server <- function(input_osrm, port) {
+  if (!identical(port, "auto")) {
+    port_val <- suppressWarnings(as.integer(port))
+    if (is.na(port_val) || port_val <= 0) {
+      stop("Invalid port specified. Must be 'auto' or a positive integer.", call. = FALSE)
+    }
+  }
+
   server_process <- NULL
   kill_on_exit <- FALSE
   host <- "http://127.0.0.1"
