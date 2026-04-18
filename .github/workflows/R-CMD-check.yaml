@@ -58,7 +58,7 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck
+          extra-packages: any::rcmdcheck, any::testthat, any::tibble
           needs: check
           # Skip suggested packages on Linux for older R versions to avoid build failures in deep dependencies like RcppSimdJson
           dependencies: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"hard"' || '"all"' }}
