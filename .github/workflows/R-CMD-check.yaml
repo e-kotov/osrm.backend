@@ -50,6 +50,7 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
+          install-ghostscript: false
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
