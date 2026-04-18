@@ -350,7 +350,7 @@ osrm_start_server <- function(
         bytes_to_read <- min(file_size, n * bytes_per_line * 2)
 
         # Open file and seek to position
-        con <- file(file_path, "rb")
+        con <- suppressWarnings(file(file_path, "rb"))
         on.exit(close(con), add = TRUE)
 
         # Seek to estimated position (or beginning if file is small)

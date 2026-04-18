@@ -11,6 +11,18 @@ test_that("osrm_server class and metadata are correctly assigned", {
   file.create(osrm_path)
   on.exit(unlink(osrm_path), add = TRUE)
 
+  # Create a fake executable path so Sys.which check passes
+  fake_osrm <- file.path(tmp_dir, "osrm-routed")
+  file.create(fake_osrm)
+  if (.Platform$OS.type == "unix") Sys.chmod(fake_osrm, mode = "0755")
+  
+  old_exec <- getOption("osrm.routed.exec")
+  options(osrm.routed.exec = fake_osrm)
+  on.exit({
+    options(osrm.routed.exec = old_exec)
+    unlink(fake_osrm)
+  }, add = TRUE)
+
   # Mock processx::process
   MockProcess <- list(
     new = function(...) {

@@ -1,4 +1,4 @@
-# R/osrm_server_registry.R  — registry with tools::R_user_dir() and jsonlite JSON persistence
+# R/osrm_server_registry.R  -- registry with tools::R_user_dir() and jsonlite JSON persistence
 
 # Package-private state --------------------------------------------------------
 

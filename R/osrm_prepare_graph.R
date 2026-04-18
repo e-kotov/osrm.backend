@@ -216,7 +216,7 @@ osrm_prepare_graph <- function(
       echo_cmd = echo_cmd
     )
   } else {
-    # CH pipeline: extract → contract
+    # CH pipeline: extract -> contract
     # Each function accumulates logs from the previous step
     osrm_graph <- osrm_contract(
       input_osrm = extract_res,

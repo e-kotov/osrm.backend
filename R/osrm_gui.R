@@ -110,10 +110,10 @@ osrm_gui <- function(
         map_args$center <- view$center
         map_args$zoom <- view$zoom %||% 9
       }
-      do.call(mapgl::maplibre, map_args) |>
-        mapgl::add_navigation_control() |>
-        mapgl::add_fullscreen_control() |>
-        mapgl::add_scale_control()
+      m <- do.call(mapgl::maplibre, map_args)
+      m <- mapgl::add_navigation_control(m)
+      m <- mapgl::add_fullscreen_control(m)
+      mapgl::add_scale_control(m)
     })
 
     # State
@@ -545,7 +545,7 @@ osrm_gui <- function(
               style = sprintf("color: %s;", label_colors[i])
             ),
             shiny::span(
-              paste(round(iso_data$cum_area[i], 2), "km²"),
+              paste(round(iso_data$cum_area[i], 2), "km^2"),
               class = "stat-val"
             )
           )
@@ -1701,7 +1701,7 @@ osrm_gui <- function(
       main_code <- ""
       if (mode == "route") {
         main_code <- sprintf(
-          "# --- Calculate Route ---\nroute <- osrm::osrmRoute(\n  src = c(%.6f, %.6f),\n  dst = c(%.6f, %.6f),\n  overview = \"full\"\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_line_layer(id = \"route\", source = route, line_color = \"#3b82f6\", line_width = 5)",
+          "# --- Calculate Route ---\nroute <- osrm::osrmRoute(\n  src = c(%.6f, %.6f),\n  dst = c(%.6f, %.6f),\n  overview = \"full\"\n)\n\n# Visualize\nm <- mapgl::maplibre(style = mapgl::carto_style(\"voyager\"))\nmapgl::add_line_layer(m, id = \"route\", source = route, line_color = \"#3b82f6\", line_width = 5)",
           locations$start$lng, locations$start$lat,
           locations$end$lng, locations$end$lat
         )
@@ -1712,7 +1712,7 @@ osrm_gui <- function(
         lats <- vapply(pts_list, function(p) as.numeric(p$lat), numeric(1))
         
         main_code <- sprintf(
-          "# --- Calculate Optimized Trip ---\npoints <- data.frame(\n  lon = c(%s),\n  lat = c(%s)\n)\n\ntrip <- osrm::osrmTrip(\n  loc = points,\n  overview = \"full\"\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_line_layer(id = \"trip\", source = trip[[1]]$trip, line_color = \"#984ea3\", line_width = 5)",
+          "# --- Calculate Optimized Trip ---\npoints <- data.frame(\n  lon = c(%s),\n  lat = c(%s)\n)\n\ntrip <- osrm::osrmTrip(\n  loc = points,\n  overview = \"full\"\n)\n\n# Visualize\nm <- mapgl::maplibre(style = mapgl::carto_style(\"voyager\"))\nmapgl::add_line_layer(m, id = \"trip\", source = trip[[1]]$trip, line_color = \"#984ea3\", line_width = 5)",
           paste(sprintf("%.6f", lons), collapse = ", "),
           paste(sprintf("%.6f", lats), collapse = ", ")
         )
@@ -1722,7 +1722,7 @@ osrm_gui <- function(
         n_val <- n_vals[as.integer(input$iso_res)]
         
         main_code <- sprintf(
-          "# --- Calculate Isochrones ---\niso <- osrm::osrmIsochrone(\n  loc = c(%.6f, %.6f),\n  breaks = c(%s),\n  n = %d\n)\n\n# Visualize\nmapgl::maplibre(style = mapgl::carto_style(\"voyager\")) |>\n  mapgl::add_fill_layer(\n    id = \"iso\",\n    source = iso,\n    fill_color = mapgl::interpolate(\n      column = \"isomax\",\n      values = seq(0, %g, length.out = 5),\n      stops = viridisLite::viridis(5, direction = -1)\n    ),\n    fill_opacity = 0.5\n  )",
+          "# --- Calculate Isochrones ---\niso <- osrm::osrmIsochrone(\n  loc = c(%.6f, %.6f),\n  breaks = c(%s),\n  n = %d\n)\n\n# Visualize\nm <- mapgl::maplibre(style = mapgl::carto_style(\"voyager\"))\nmapgl::add_fill_layer(\n  m,\n  id = \"iso\",\n  source = iso,\n  fill_color = mapgl::interpolate(\n    column = \"isomax\",\n    values = seq(0, %g, length.out = 5),\n    stops = viridisLite::viridis(5, direction = -1)\n  ),\n  fill_opacity = 0.5\n)",
           locations$iso_start$lng, locations$iso_start$lat,
           paste(breaks, collapse = ", "),
           n_val,
