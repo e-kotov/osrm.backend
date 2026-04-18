@@ -373,8 +373,8 @@
 #' 3. Checks the graph filename for hints (e.g. `berlin-car.osrm`).
 #' 4. Falls back to `getOption("osrm.profile")`.
 #'
-#' @param input_osrm Optional. Can be an OSRM job process (a `process` object
-#'   from the `processx` package), a path string, or NULL.
+#' @param input_osrm Optional. Can be an OSRM job process (an `osrm_server`
+#'   object inheriting from `processx::process`), a path string, or NULL.
 #' @param port Optional integer. The port of the server.
 #' @return A character string representing the profile name (default "car").
 #' @export

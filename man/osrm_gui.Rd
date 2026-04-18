@@ -18,8 +18,8 @@ osrm_gui(
 \arguments{
 \item{input_osrm}{Optional. Can be:
 \itemize{
-\item An OSRM job process (a \code{process} object from the \code{processx} package)
-returned by \code{osrm_start()} or \code{osrm_start_server()}.
+\item An OSRM job process (an \code{osrm_server} object inheriting from
+\code{processx::process}) returned by \code{osrm_start()} or \code{osrm_start_server()}.
 When providing a process, you must also specify \code{port} explicitly.
 \item A path string to an \code{.osrm.hsgr} or \code{.osrm.mldgr} file.
 \item A path string to an \code{.osm.pbf} file (will be prepared and started).

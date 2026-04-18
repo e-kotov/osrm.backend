@@ -14,8 +14,8 @@
 #'
 #' @param input_osrm Optional. Can be:
 #'   \itemize{
-#'     \item An OSRM job process (a `process` object from the `processx` package)
-#'       returned by `osrm_start()` or `osrm_start_server()`.
+#'     \item An OSRM job process (an `osrm_server` object inheriting from
+#'       `processx::process`) returned by `osrm_start()` or `osrm_start_server()`.
 #'       When providing a process, you must also specify `port` explicitly.
 #'     \item A path string to an `.osrm.hsgr` or `.osrm.mldgr` file.
 #'     \item A path string to an `.osm.pbf` file (will be prepared and started).

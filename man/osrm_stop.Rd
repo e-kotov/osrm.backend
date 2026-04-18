@@ -14,8 +14,8 @@ osrm_stop(
 )
 }
 \arguments{
-\item{server}{Optional OSRM job process (a \code{processx::process} object)
-returned by \code{osrm_start_server()}.}
+\item{server}{Optional OSRM job process (an \code{osrm_server} object
+inheriting from \code{processx::process}) returned by \code{osrm_start_server()}.}
 
 \item{id}{Optional character id from \code{osrm_servers()}.}
 

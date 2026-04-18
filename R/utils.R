@@ -59,6 +59,42 @@ resolve_osrm_path <- function(input_path,
   input_path
 }
 
+#' Print summary for an `osrm_server` object
+#'
+#' Displays status and metadata for an OSRM job process (server) returned
+#' by [osrm_start()] or [osrm_start_server()].
+#'
+#' @param x An `osrm_server` object.
+#' @param ... Passed to methods; currently ignored.
+#'
+#' @return Invisibly returns `x`.
+#' @keywords internal
+#' @noRd
+print.osrm_server <- function(x, ...) {
+  meta <- attr(x, "osrm_metadata")
+  alive <- tryCatch(x$is_alive(), error = function(e) FALSE)
+  status <- if (alive) "Running" else "Stopped"
+
+  cat("------------------------------------------------------\n")
+  cat("OSRM Server (Job Process)\n")
+  cat("------------------------------------------------------\n")
+  cat("Status:    ", status, "\n", sep = "")
+  if (alive) {
+    cat("PID:       ", x$get_pid(), "\n", sep = "")
+  }
+  cat("Port:      ", meta$port, "\n", sep = "")
+  cat("Profile:   ", meta$profile, "\n", sep = "")
+  cat("Algorithm: ", meta$algorithm, "\n", sep = "")
+  cat("Graph:     ", basename(meta$path), "\n", sep = "")
+
+  if (!is.null(meta$log) && !is.na(meta$log)) {
+    cat("Logs:      ", meta$log, "\n", sep = "")
+  }
+
+  cat("------------------------------------------------------\n")
+  invisible(x)
+}
+
 #' Print summary for an `osrm_job` object
 #'
 #' Displays pipeline state, outputs, and next steps for an `osrm_job` returned

@@ -59,8 +59,8 @@
 #'   console for live debugging. Note: This can cause deadlocks in tight loops
 #'   if R is busy. Defaults to `FALSE`, which writes logs to a temporary file.
 #'
-#' @return An OSRM job process (a `processx::process` object) for the running
-#'   server (also registered internally).
+#' @return An OSRM job process (an `osrm_server` object inheriting from
+#'   `processx::process`) for the running server (also registered internally).
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -549,7 +549,17 @@ osrm_start_server <- function(
     silent = TRUE
   )
 
-  # Attach log path as attribute for user access
+  # Assign custom class and metadata for better UX in this session
+  class(osrm_server) <- c("osrm_server", class(osrm_server))
+  attr(osrm_server, "osrm_metadata") <- list(
+    port = port,
+    profile = profile_detected %||% getOption("osrm.profile", "car"),
+    algorithm = algorithm %||% (if (grepl("mldgr$", osrm_path)) "MLD" else "CH"),
+    path = osrm_path,
+    log = log_file_path
+  )
+
+  # Attach log path as attribute for backward compatibility
   if (!is.null(log_file_path)) {
     attr(osrm_server, "log_path") <- log_file_path
   }

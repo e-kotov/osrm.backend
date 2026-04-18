@@ -233,8 +233,8 @@ osrm_servers <- function(include_all = FALSE) {
 #' R session) by passing its PID, or by finding it via `osrm_servers(include_all = TRUE)`
 #' and passing its `id` or `port`. This requires permission to signal the process.
 #'
-#' @param server Optional OSRM job process (a `processx::process` object)
-#'   returned by `osrm_start_server()`.
+#' @param server Optional OSRM job process (an `osrm_server` object
+#'   inheriting from `processx::process`) returned by `osrm_start_server()`.
 #' @param id Optional character id from `osrm_servers()`.
 #' @param port Optional integer TCP port.
 #' @param pid Optional integer process id.
