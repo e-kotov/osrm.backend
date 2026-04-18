@@ -1,22 +1,34 @@
 #' Install OSRM Backend Binaries
 #'
-#' Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (`v5.27.1`) and `v6.0.0` were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.
+#' Downloads and installs pre-compiled binaries for the OSRM backend from the
+#' official GitHub releases. The function automatically detects the user's
+#' operating system and architecture to download the appropriate files. Only the
+#' latest v5 release (`v5.27.1`) and `v6.0.0` were manually tested and are known
+#' to work well; other releases available on GitHub can be installed but are not
+#' guranteed to function correctly.
 #'
 #' @details
 #' The function performs the following steps:
-#' 1.  Queries the GitHub API to find the specified release of `Project-OSRM/osrm-backend`.
-#' 2.  Identifies the correct binary (`.tar.gz` archive) for the user's OS (Linux, macOS, or Windows) and architecture (x64, arm64).
+#' 1.  Queries the GitHub API to find the specified release of
+#'     `Project-OSRM/osrm-backend`.
+#' 2.  Identifies the correct binary (`.tar.gz` archive) for the user's OS
+#'     (Linux, macOS, or Windows) and architecture (x64, arm64).
 #' 3.  Downloads the archive to a temporary location.
-#' 4.  Extracts the archive and locates the OSRM executables (e.g., `osrm-routed`, `osrm-extract`).
+#' 4.  Extracts the archive and locates the OSRM executables (e.g.,
+#'     `osrm-routed`, `osrm-extract`).
 #' 5.  Copies these executables to a local directory (defaults to
 #'     `file.path(tools::R_user_dir("osrm.backend", which = "cache"), <version>)`).
-#' 6.  Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
-#' 7.  Optionally modifies the `PATH` environment variable for the current session or project.
+#' 6.  Downloads the matching Lua profiles from the release tarball and installs
+#'     them alongside the binaries.
+#' 7.  Optionally modifies the `PATH` environment variable for the current
+#'     session or project.
 #'
-#' macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.
-#' `osrm_install()` automatically blocks v6 installs on older macOS releases and, when `version = "latest"`,
-#' selects the most recent v5 build instead while warning about the requirement. Warnings include both the
-#' marketing version and Darwin kernel so you'll see messages like `macOS 13 Ventura [Darwin 22.6.0]`.
+#' macOS users should note that upstream OSRM v6.x binaries are built for macOS
+#' 15.0 (Sequoia, Darwin 24.0.0) or newer. `osrm_install()` automatically blocks
+#' v6 installs on older macOS releases and, when `version = "latest"`, selects
+#' the most recent v5 build instead while warning about the requirement.
+#' Warnings include both the marketing version and Darwin kernel so you'll see
+#' messages like `macOS 13 Ventura [Darwin 22.6.0]`.
 #'
 #' When installing OSRM v6.x for Windows, the upstream release omits the Intel
 #' Threading Building Blocks (TBB) runtime and a compatible `bz2` DLL. To keep
@@ -44,16 +56,20 @@
 #'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
 #'   other than `v5.27.1` and `v6.0.0` will trigger a warning but are still
 #'   attempted if binaries are available.
-#' @param dest_dir A string specifying the directory where OSRM binaries should be installed.
-#'   If `NULL` (the default), a user-friendly, persistent location is chosen via
-#'   `tools::R_user_dir("osrm.backend", which = "cache")`, and the binaries are installed
-#'   into a subdirectory named after the OSRM version (e.g. `.../cache/v6.0.0`).
-#' @param force A logical value. If `TRUE`, reinstall OSRM even if it's already found in `dest_dir`.
-#'   If `FALSE` (default), the function will stop if an existing installation is detected.
+#' @param dest_dir A string specifying the directory where OSRM binaries should be
+#'   installed. If `NULL` (the default), a user-friendly, persistent location is
+#'   chosen via `tools::R_user_dir("osrm.backend", which = "cache")`, and the
+#'   binaries are installed into a subdirectory named after the OSRM version
+#'   (e.g. `.../cache/v6.0.0`).
+#' @param force A logical value. If `TRUE`, reinstall OSRM even if it's already
+#'   found in `dest_dir`. If `FALSE` (default), the function will stop if an
+#'   existing installation is detected.
 #' @param path_action A string specifying how to handle the system `PATH`. One of:
 #'   \itemize{
-#'     \item `"session"` (default): Adds the OSRM bin directory to the `PATH` for the current R session only.
-#'     \item `"project"`: Modifies the `.Rprofile` in the current project to set the `PATH` for all future sessions in that project.
+#'     \item `"session"` (default): Adds the OSRM bin directory to the `PATH`
+#'       for the current R session only.
+#'     \item `"project"`: Modifies the `.Rprofile` in the current project to set
+#'       the `PATH` for all future sessions in that project.
 #'     \item `"none"`: Does not modify the `PATH`.
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
@@ -161,12 +177,18 @@ osrm_install <- function(
   }
   if (!version %in% tested_versions) {
     warning_message <- sprintf(
-      "Version '%s' has not been validated by osrm.backend; only v5.27.1 and v6.0.0 are tested.",
+      paste(
+        "Version '%s' has not been validated by osrm.backend;",
+        "only v5.27.1 and v6.0.0 are tested."
+      ),
       version
     )
     if (identical(requested_version, "latest")) {
       warning_message <- sprintf(
-        "Latest available release '%s' has not been validated by osrm.backend; only v5.27.1 and v6.0.0 are tested.",
+        paste(
+          "Latest available release '%s' has not been validated by",
+          "osrm.backend; only v5.27.1 and v6.0.0 are tested."
+        ),
         version
       )
     }
@@ -183,7 +205,10 @@ osrm_install <- function(
     if (inherits(available_versions, "error")) {
       emit_warning(
         sprintf(
-          "Unable to verify requested version '%s' against available releases: %s",
+          paste(
+            "Unable to verify requested version '%s' against",
+            "available releases: %s"
+          ),
           version,
           available_versions$message
         ),
@@ -192,7 +217,11 @@ osrm_install <- function(
     } else if (!version %in% available_versions) {
       stop(
         sprintf(
-          "Version '%s' is not available for this platform. Run osrm_check_available_versions(prereleases = TRUE) to list supported tags.",
+          paste(
+            "Version '%s' is not available for this platform.",
+            "Run osrm_check_available_versions(prereleases = TRUE) to list",
+            "supported tags."
+          ),
           version
         ),
         call. = FALSE
@@ -302,7 +331,10 @@ osrm_install <- function(
 
   if (length(found_bins) == 0) {
     stop(
-      "Could not find OSRM binaries in the downloaded archive. The archive structure may have changed.",
+      paste(
+        "Could not find OSRM binaries in the downloaded archive.",
+        "The archive structure may have changed."
+      ),
       call. = FALSE
     )
   }
@@ -361,7 +393,10 @@ osrm_install <- function(
   osrm_path_check <- Sys.which("osrm-routed")
   if (path_action != "none" && !nzchar(osrm_path_check)) {
     emit_warning(
-      "Installation completed, but 'osrm-routed' was not found on the PATH immediately. You may need to restart your R session.",
+      paste(
+        "Installation completed, but 'osrm-routed' was not found on the",
+        "PATH immediately. You may need to restart your R session."
+      ),
       call. = FALSE
     )
   } else if (path_action != "none") {
@@ -418,7 +453,10 @@ find_latest_pre_v6_release <- function(platform) {
   }
 
   stop(
-    "No pre-v6 releases with compatible binaries were found for this platform. Upgrade macOS to install OSRM v6.x or later.",
+    paste(
+      "No pre-v6 releases with compatible binaries were found for this",
+      "platform. Upgrade macOS to install OSRM v6.x or later."
+    ),
     call. = FALSE
   )
 }
