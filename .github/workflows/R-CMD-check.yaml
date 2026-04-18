@@ -66,5 +66,5 @@ jobs:
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"c(\"--no-manual\", \"--no-build-vignettes\")"' || '"c(\"--no-manual\")"' }}
-          args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && '"c(\"--no-manual\", \"--as-cran\", \"--ignore-vignettes\")"' || '"c(\"--no-manual\", \"--as-cran\")"' }}
+          build_args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && 'c("--no-manual", "--no-build-vignettes")' || 'c("--no-manual")' }}
+          args: ${{ (runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4')) && 'c("--no-manual", "--as-cran", "--ignore-vignettes")' || 'c("--no-manual", "--as-cran")' }}
