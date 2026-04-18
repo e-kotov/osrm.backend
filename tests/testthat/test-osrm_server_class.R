@@ -11,36 +11,13 @@ test_that("osrm_server class and metadata are correctly assigned", {
   file.create(osrm_path)
   on.exit(unlink(osrm_path), add = TRUE)
 
-  # Create a fake executable path so Sys.which check passes
-  fake_osrm <- file.path(tmp_dir, "osrm-routed")
-  if (.Platform$OS.type == "windows") fake_osrm <- paste0(fake_osrm, ".exe")
-  file.create(fake_osrm)
-  if (.Platform$OS.type == "unix") Sys.chmod(fake_osrm, mode = "0755")
-  
-  old_exec <- getOption("osrm.routed.exec")
-  options(osrm.routed.exec = fake_osrm)
-  on.exit({
-    options(osrm.routed.exec = old_exec)
-    unlink(fake_osrm)
-  }, add = TRUE)
-
-  # Mock processx::process
-  MockProcess <- list(
-    new = function(...) {
-      structure(
-        list(
-          is_alive = function() TRUE,
-          get_pid = function() 12345,
-          kill = function() TRUE,
-          wait = function(...) TRUE
-        ),
-        class = c("process", "list")
-      )
-    }
-  )
-
+  # Mock Sys.which and reset options to bypass executable check
   with_mocked_bindings(
     {
+      # Reset option to avoid interference from setup-osrm.R
+      old_exec <- options(osrm.routed.exec = "osrm-routed")
+      on.exit(options(old_exec), add = TRUE)
+      
       with_mocked_bindings(
         {
           server <- osrm_start_server(
@@ -50,7 +27,8 @@ test_that("osrm_server class and metadata are correctly assigned", {
             quiet = TRUE
           )
         },
-        .osrm_state = new.env()
+        .osrm_state = new.env(),
+        Sys.which = function(x) "/usr/bin/osrm-routed"
       )
     },
     process = MockProcess,
