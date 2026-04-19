@@ -13,10 +13,15 @@
 #' @param include_all Logical; if `TRUE`, scans the system process table for
 #'   all `osrm-routed` processes, including those not started by this package
 #'   in the current session. Default is `FALSE`.
+#' @param output Character string specifying the return format. Either `"data.frame"`
+#'   (the default) which returns a tabular summary with a custom print method,
+#'   or `"list"` which returns a detailed list of server metadata objects.
 #'
-#' @return A data.frame of OSRM job processes with columns:
-#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`.
-#'   External servers will have `id` prefixed with `sys-` and `log` set to `<external>`.
+#' @return If `output = "data.frame"`, returns a `data.frame` (class `osrm_server_list`)
+#'   of OSRM job processes with columns:
+#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`,
+#'   `center_lon`, `center_lat`. External servers will have `id` prefixed with `sys-` and
+#'   `log` set to `<external>`. If `output = "list"`, returns a named list of server metadata.
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -48,7 +53,9 @@
 #' }
 #' }
 #' @export
-osrm_servers <- function(include_all = FALSE) {
+osrm_servers <- function(include_all = FALSE, output = c("data.frame", "list")) {
+  output <- match.arg(output)
+  
   # 1. Background Cleanup: Always scan other registries to GC dead files
   # This ensures orphaned registry files from crashed sessions are pruned.
   orphans <- tryCatch(.osrm_registry_scan_others(), error = function(e) list())
@@ -58,7 +65,7 @@ osrm_servers <- function(include_all = FALSE) {
   
   # Helper to build an empty/structured data.frame
   build_df <- function(ids, pids, ports, algos, starts, alives, handles, logs, inputs, center_lons, center_lats) {
-    data.frame(
+    df <- data.frame(
       id = as.character(ids),
       pid = as.integer(pids),
       port = as.integer(ports),
@@ -72,6 +79,8 @@ osrm_servers <- function(include_all = FALSE) {
       center_lat = as.numeric(center_lats),
       stringsAsFactors = FALSE
     )
+    class(df) <- c("osrm_server_list", "data.frame")
+    df
   }
 
   out_reg <- if (length(reg)) {
@@ -218,7 +227,53 @@ osrm_servers <- function(include_all = FALSE) {
   if (nrow(out_orph) > 0) res <- rbind(res, out_orph)
   if (!is.null(sys_rows) && nrow(sys_rows) > 0) res <- rbind(res, sys_rows)
   
+  if (output == "list") {
+    if (nrow(res) == 0) return(list())
+    out_list <- vector("list", nrow(res))
+    for (i in seq_len(nrow(res))) {
+      out_list[[i]] <- as.list(res[i, ])
+    }
+    names(out_list) <- res$id
+    return(out_list)
+  }
   res
+}
+
+#' @export
+print.osrm_server_list <- function(x, ...) {
+  n <- nrow(x)
+  if (n == 0) {
+    cat("\u2139 No OSRM servers registered.\n")
+    return(invisible(x))
+  }
+  
+  cat("\u2139 This is a standard data.frame. Access full columns with `$` (e.g., `x$log`).\n\n")
+  
+  for (i in seq_len(n)) {
+    status <- if (x$alive[i]) "RUNNING" else "DEAD (Orphaned)"
+    has_handle <- if (x$has_handle[i]) "Yes" else "No"
+    
+    center_str <- if (is.na(x$center_lon[i]) || is.na(x$center_lat[i])) {
+      "NA, NA"
+    } else {
+      sprintf("%.4f, %.4f", x$center_lon[i], x$center_lat[i])
+    }
+    
+    started <- if (is.na(x$started_at[i])) "Unknown" else format(x$started_at[i], "%Y-%m-%d %H:%M:%S")
+    
+    cat(sprintf("[%d] OSRM Server (pid: %d, port: %d)\n", i, x$pid[i], x$port[i]))
+    cat(sprintf("    Status    : %s\n", status))
+    cat(sprintf("    Algorithm : %s\n", x$algorithm[i]))
+    cat(sprintf("    Started   : %s\n", started))
+    cat(sprintf("    Input OSM : %s\n", x$input_osm[i]))
+    cat(sprintf("    Log File  : %s\n", x$log[i]))
+    cat(sprintf("    Center    : %s\n", center_str))
+    cat(sprintf("    Handle    : %s\n", has_handle))
+    
+    if (i < n) cat("\n")
+  }
+  
+  invisible(x)
 }
 
 #' Stop an OSRM Server
