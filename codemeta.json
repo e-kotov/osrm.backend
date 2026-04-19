@@ -198,6 +198,18 @@
     },
     "4": {
       "@type": "SoftwareApplication",
+      "identifier": "lifecycle",
+      "name": "lifecycle",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=lifecycle"
+    },
+    "5": {
+      "@type": "SoftwareApplication",
       "identifier": "processx",
       "name": "processx",
       "provider": {
@@ -208,7 +220,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=processx"
     },
-    "5": {
+    "6": {
       "@type": "SoftwareApplication",
       "identifier": "ps",
       "name": "ps",
@@ -220,7 +232,7 @@
       },
       "sameAs": "https://CRAN.R-project.org/package=ps"
     },
-    "6": {
+    "7": {
       "@type": "SoftwareApplication",
       "identifier": "viridisLite",
       "name": "viridisLite",
@@ -234,7 +246,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "2441.544KB",
+  "fileSize": "2451.933KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
