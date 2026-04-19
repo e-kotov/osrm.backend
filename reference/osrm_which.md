@@ -1,11 +1,11 @@
 # Locate the OSRM Installation Used by `osrm.backend`
 
-**\[stable\]** Resolves the `osrm-routed` executable available on the
-current `PATH` (or the override provided via
-`options(osrm.routed.exec)`). Runs `osrm-routed --version` to verify
-availability, then prints the directory containing the executable
-together with the backend version reported by `osrm-routed` so you know
-what will be used in the current session.
+Resolves the `osrm-routed` executable available on the current `PATH`
+(or the override provided via `options(osrm.routed.exec)`). Runs
+`osrm-routed --version` to verify availability, then prints the
+directory containing the executable together with the backend version
+reported by `osrm-routed` so you know what will be used in the current
+session.
 
 ## Usage
 

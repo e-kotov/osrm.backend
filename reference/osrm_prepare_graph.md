@@ -1,9 +1,9 @@
 # Prepare OSRM Graph for Routing (Extract + Partition/Contract)
 
-**\[stable\]** High-level wrapper that first runs `osrm-extract` on an
-OSM file to produce the base `.osrm` graph, then prepares it for routing
-via either the MLD pipeline (`osrm-partition` + `osrm-customize`) or the
-CH pipeline (`osrm-contract`).
+High-level wrapper that first runs `osrm-extract` on an OSM file to
+produce the base `.osrm` graph, then prepares it for routing via either
+the MLD pipeline (`osrm-partition` + `osrm-customize`) or the CH
+pipeline (`osrm-contract`).
 
 ## Usage
 
