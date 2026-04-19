@@ -1,4 +1,11 @@
-# Add missing tests to test-osrm_server.R
+# ROBUST SKIP: Check if OSRM is actually available before running these tests.
+osrm_exec_opt <- getOption("osrm.routed.exec", "")
+has_osrm_option <- nzchar(osrm_exec_opt) && nzchar(Sys.which(osrm_exec_opt))
+has_osrm_path <- nzchar(Sys.which("osrm-routed"))
+
+if (!has_osrm_option && !has_osrm_path) {
+  testthat::skip("OSRM binary not found (Skipping Server Additions Tests)")
+}
 
 # Shared empty state for tests that need a clean registry
 create_empty_state <- function() {
