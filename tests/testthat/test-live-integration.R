@@ -45,6 +45,9 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     if (dir.exists(test_dir)) unlink(test_dir, recursive = TRUE)
     dir.create(test_dir, recursive = TRUE)
     
+    # Ensure cleanup happens even if the test fails
+    withr::defer(unlink(test_dir, recursive = TRUE))
+    
     # We use path_action="none" to avoid messing with .Rprofile in CI
     # This MUST succeed
     install_path <- expect_silent(
@@ -67,6 +70,7 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     
     # Ensure the binaries we just installed are the ones used
     old_opt <- options(osrm.routed.exec = routed_bin)
+    withr::defer(options(old_opt))
     
     # This MUST succeed
     graph <- expect_silent(
@@ -81,6 +85,7 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     srv <- expect_silent(
       osrm_start_server(graph$osrm_job_artifact, port = port, threads = 1L)
     )
+    withr::defer(try(osrm_stop(srv, quiet = TRUE), silent = TRUE))
     
     # 5. LIVENESS CHECK
     expect_true(srv$is_alive())
@@ -91,9 +96,5 @@ test_that("Live installation and basic routing works for all supported OSRM vers
       "Terminated OSRM server"
     )
     expect_false(srv$is_alive())
-    
-    # Cleanup this version
-    options(old_opt)
-    unlink(test_dir, recursive = TRUE)
   }
 })
