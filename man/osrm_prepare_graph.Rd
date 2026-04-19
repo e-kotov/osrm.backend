@@ -87,7 +87,6 @@ An object of class \code{osrm_job} with the following elements:
 }
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 High-level wrapper that first runs \code{osrm-extract} on an OSM file
 to produce the base \code{.osrm} graph, then prepares it for routing via
 either the MLD pipeline (\code{osrm-partition} + \code{osrm-customize}) or the CH pipeline (\code{osrm-contract}).

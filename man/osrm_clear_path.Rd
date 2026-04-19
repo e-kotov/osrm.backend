@@ -33,5 +33,4 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   unlink(".Rprofile")
 }
 }
-`r lifecycle::badge("stable")`
 }

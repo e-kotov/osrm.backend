@@ -55,8 +55,6 @@ auto-detected from PBF, defaults to 9. Otherwise uses map default.}
 No return value; launches a Shiny Gadget.
 }
 \description{
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#experimental}{\figure{lifecycle-experimental.svg}{options: alt='[Experimental]'}}}{\strong{[Experimental]}}
-
 Launches a lightweight Shiny application to interactively visualize routing
 on a local OSRM server. This interface mimics the \code{r5rgui} experience,
 supporting left-click for start, right-click for end, and draggable markers.

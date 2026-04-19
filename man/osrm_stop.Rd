@@ -101,5 +101,4 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
 }
 \seealso{
 \code{\link[=osrm_start]{osrm_start()}}, \code{\link[=osrm_servers]{osrm_servers()}}, \code{\link[=osrm_stop_all]{osrm_stop_all()}}
-\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 }

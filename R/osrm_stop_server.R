@@ -3,7 +3,7 @@
 #' List OSRM servers
 #'
 #' @description
-#' \lifecycle{stable}
+#' 
 #
 #' Lists `osrm-routed` processes. By default, it returns a snapshot of servers
 #' started by the current R session (registered via [osrm_start_server()] or [osrm_start()]).
@@ -366,7 +366,7 @@ print.osrm_server_list <- function(x, ...) {
 #' }
 #' }
 #' @seealso [osrm_start()], [osrm_servers()], [osrm_stop_all()]
-#' \lifecycle{stable}
+#' 
 osrm_stop <- function(
   server = NULL,
   id = NULL,
@@ -635,7 +635,7 @@ osrm_stop <- function(
 #'   unlink(osrm_dir, recursive = TRUE)
 #' }
 #' }
-#' \lifecycle{stable}
+#' 
 osrm_stop_all <- function(include_all = FALSE) {
   # Get all servers (registry + optional external)
   srvs <- osrm_servers(include_all = include_all)

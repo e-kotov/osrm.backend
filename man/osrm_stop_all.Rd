@@ -46,5 +46,5 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   unlink(osrm_dir, recursive = TRUE)
 }
 }
-`r lifecycle::badge("stable")`
+
 }

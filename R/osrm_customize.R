@@ -1,6 +1,6 @@
 #' Customize OSRM Graph for Multi-Level Dijkstra (MLD)
 #'
-#' \lifecycle{stable}
+#' 
 #' Run the `osrm-customize` tool to customize a partitioned OSRM graph for the MLD pipeline.
 #' After running, a companion `<base>.osrm.mldgr` file must exist to confirm success.
 #'

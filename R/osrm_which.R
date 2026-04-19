@@ -1,6 +1,6 @@
 #' Locate the OSRM Installation Used by `osrm.backend`
 #'
-#' \lifecycle{stable}
+#' 
 #' Resolves the `osrm-routed` executable available on the current `PATH`
 #' (or the override provided via `options(osrm.routed.exec)`). Runs
 #' `osrm-routed --version` to verify availability, then prints the directory

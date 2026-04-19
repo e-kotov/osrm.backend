@@ -1,6 +1,6 @@
 #' Install OSRM Backend Binaries
 #'
-#' \lifecycle{stable}
+#' 
 #' Downloads and installs pre-compiled binaries for the OSRM backend from the
 #' official GitHub releases. The function automatically detects the user's
 #' operating system and architecture to download the appropriate files. Only the
@@ -473,7 +473,7 @@ find_latest_pre_v6_release <- function(platform) {
 #'   in the returned list. Defaults to `FALSE`.
 #' @return A character vector of available version tags.
 #' @export
-#' \lifecycle{stable}
+#' 
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
