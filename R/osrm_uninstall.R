@@ -1,6 +1,6 @@
 #' Uninstall OSRM Backend Binaries
 #'
-#' `r lifecycle::badge("stable")`
+#' \lifecycle{stable}
 #' Removes the OSRM backend binaries and optionally clears the `PATH`
 #' configuration from the project's `.Rprofile`.
 #'

@@ -1,6 +1,6 @@
 #' Extract OSM into OSRM Graph Files
 #'
-#' `r lifecycle::badge("stable")`
+#' \lifecycle{stable}
 #' Run the `osrm-extract` tool to preprocess an OSM file
 #' (`.osm`, `.osm.bz2`, or `.osm.pbf`) into the base `.osrm` graph files
 #' using a specified Lua profile.  After running, a companion

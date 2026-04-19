@@ -1,7 +1,6 @@
 #' Contract OSRM Graph for Contraction Hierarchies (CH)
 #'
-#' @description
-#' `r lifecycle::badge("stable")`
+#' \lifecycle{stable}
 #'
 #' Run the `osrm-contract` tool to contract an OSRM graph for the CH pipeline.
 #' After running, a companion `<base>.osrm.hsgr` file must exist to confirm success.

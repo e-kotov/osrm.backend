@@ -1,6 +1,6 @@
 #' Install OSRM Backend Binaries
 #'
-#' `r lifecycle::badge("stable")`
+#' \lifecycle{stable}
 #' Downloads and installs pre-compiled binaries for the OSRM backend from the
 #' official GitHub releases. The function automatically detects the user's
 #' operating system and architecture to download the appropriate files. Only the
@@ -425,7 +425,6 @@ osrm_install <- function(
 #'   osrm_check_latest_version()
 #' }
 #' }
-#' `r lifecycle::badge("stable")`
 osrm_check_latest_version <- function() {
   releases <- get_all_releases()
   platform <- get_platform_info()
@@ -532,7 +531,6 @@ osrm_check_available_versions <- function(prereleases = FALSE) {
 #'   unlink(".Rprofile")
 #' }
 #' }
-#' `r lifecycle::badge("stable")`
 osrm_clear_path <- function(quiet = FALSE) {
   r_profile_path <- file.path(getwd(), ".Rprofile")
 
