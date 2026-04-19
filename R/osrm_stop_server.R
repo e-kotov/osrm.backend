@@ -57,7 +57,7 @@ osrm_servers <- function(include_all = FALSE) {
   reg <- .osrm_state$registry
   
   # Helper to build an empty/structured data.frame
-  build_df <- function(ids, pids, ports, algos, starts, alives, handles, logs, inputs) {
+  build_df <- function(ids, pids, ports, algos, starts, alives, handles, logs, inputs, center_lons, center_lats) {
     data.frame(
       id = as.character(ids),
       pid = as.integer(pids),
@@ -68,6 +68,8 @@ osrm_servers <- function(include_all = FALSE) {
       has_handle = as.logical(handles),
       log = as.character(logs),
       input_osm = as.character(inputs),
+      center_lon = as.numeric(center_lons),
+      center_lat = as.numeric(center_lats),
       stringsAsFactors = FALSE
     )
   }
@@ -94,10 +96,12 @@ osrm_servers <- function(include_all = FALSE) {
       alives = alive_vec,
       handles = handle_vec,
       logs = vapply(reg, function(e) as.character(e$log %||% ""), ""),
-      inputs = vapply(reg, function(e) as.character(e$input_osm %||% ""), "")
+      inputs = vapply(reg, function(e) as.character(e$input_osm %||% ""), ""),
+      center_lons = vapply(reg, function(e) as.numeric(e$center_lon %||% NA_real_), 0.0),
+      center_lats = vapply(reg, function(e) as.numeric(e$center_lat %||% NA_real_), 0.0)
     )
   } else {
-    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character())
+    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character(), numeric(), numeric())
   }
 
   if (!isTRUE(include_all)) {
@@ -115,10 +119,12 @@ osrm_servers <- function(include_all = FALSE) {
       alives = rep(TRUE, length(orphans)),
       handles = rep(FALSE, length(orphans)),
       logs = vapply(orphans, function(e) as.character(e$log %||% ""), ""),
-      inputs = vapply(orphans, function(e) as.character(e$input_osm %||% ""), "")
+      inputs = vapply(orphans, function(e) as.character(e$input_osm %||% ""), ""),
+      center_lons = vapply(orphans, function(e) as.numeric(e$center_lon %||% NA_real_), 0.0),
+      center_lats = vapply(orphans, function(e) as.numeric(e$center_lat %||% NA_real_), 0.0)
     )
   } else {
-    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character())
+    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character(), numeric(), numeric())
   }
 
   # 3. System Process Discovery via ps
@@ -139,6 +145,8 @@ osrm_servers <- function(include_all = FALSE) {
       ext_handles <- logical()
       ext_logs <- character()
       ext_inputs <- character()
+      ext_center_lons <- numeric()
+      ext_center_lats <- numeric()
 
       # PIDs we already know about (Current + Orphans)
       known_pids <- c(out_reg$pid, out_orph$pid)
@@ -189,10 +197,12 @@ osrm_servers <- function(include_all = FALSE) {
         ext_handles <- c(ext_handles, FALSE)
         ext_logs <- c(ext_logs, "<external>")
         ext_inputs <- c(ext_inputs, if (is.na(input)) "" else input)
+        ext_center_lons <- c(ext_center_lons, NA_real_)
+        ext_center_lats <- c(ext_center_lats, NA_real_)
       }
       
       if (length(ext_pids) > 0) {
-        build_df(ext_ids, ext_pids, ext_ports, ext_algos, ext_starts, ext_alives, ext_handles, ext_logs, ext_inputs)
+        build_df(ext_ids, ext_pids, ext_ports, ext_algos, ext_starts, ext_alives, ext_handles, ext_logs, ext_inputs, ext_center_lons, ext_center_lats)
       } else {
         NULL
       }

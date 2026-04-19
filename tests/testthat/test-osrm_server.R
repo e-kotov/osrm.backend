@@ -175,9 +175,10 @@ test_that("osrm_servers returns empty data frame when no servers", {
           "alive",
           "has_handle",
           "log",
-          "input_osm"
-        )
-      )
+          "input_osm",
+          "center_lon",
+          "center_lat"
+          ))
     },
     .osrm_state = mock_state
   )

@@ -543,6 +543,13 @@ osrm_start_server <- function(
     if (!is.null(meta$profile)) profile_detected <- meta$profile
   }
 
+  # Calculate center from input OSM PBF to store in registry/metadata
+  center_calculated <- NULL
+  if (!is.null(input_osm) && file.exists(input_osm)) {
+    ext <- tryCatch(.get_pbf_extent(input_osm), error = function(e) NULL)
+    if (!is.null(ext)) center_calculated <- ext$center
+  }
+
   # Best-effort: ignore errors if registry is unavailable for any reason.
   try(
     .osrm_register(
@@ -552,7 +559,8 @@ osrm_start_server <- function(
       algorithm = algorithm,
       log = log_file_path,
       input_osm = input_osm,
-      profile = profile_detected
+      profile = profile_detected,
+      center = center_calculated
     ),
     silent = TRUE
   )
@@ -564,7 +572,8 @@ osrm_start_server <- function(
     profile = profile_detected %||% getOption("osrm.profile", "car"),
     algorithm = algorithm %||% (if (grepl("mldgr$", osrm_path)) "MLD" else "CH"),
     path = osrm_path,
-    log = log_file_path
+    log = log_file_path,
+    center = center_calculated
   )
 
   # Attach log path as attribute for backward compatibility
