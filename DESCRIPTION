@@ -19,8 +19,7 @@ Imports:
     lifecycle,
     processx,
     ps,
-    viridisLite,
-    withr
+    viridisLite
 Suggests:
     DT,
     knitr,
@@ -30,7 +29,8 @@ Suggests:
     sf,
     shiny,
     testthat (>= 3.0.0),
-    tibble
+    tibble,
+    withr
 VignetteBuilder:
     knitr
 Config/testthat/edition: 3
