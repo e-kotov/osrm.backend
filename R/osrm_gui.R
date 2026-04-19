@@ -42,7 +42,6 @@
 #' @return No return value; launches a Shiny Gadget.
 #' @export
 #' @examples
-#' \dontrun{
 #' if (interactive()) {
 #'   # 1. Auto-detect running server (errors if none running):
 #'   osrm_gui()
@@ -65,7 +64,6 @@
 #'
 #'   # 7. Enable debug mode:
 #'   # osrm_gui(debug = TRUE)
-#' }
 #' }
 osrm_gui <- function(
   input_osrm = NULL,

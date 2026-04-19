@@ -9,7 +9,7 @@
 # Small helpers ---------------------------------------------------------------
 
 `%||%` <- function(a, b) {
-  if (is.null(a) || (is.character(a) && !nzchar(a))) b else a
+  if (is.null(a) || (is.character(a) && length(a) == 1 && !nzchar(a))) b else a
 }
 
 .osrm_registry_dir <- function() {
