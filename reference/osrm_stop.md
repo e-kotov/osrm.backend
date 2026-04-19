@@ -1,5 +1,7 @@
 # Stop an OSRM Server
 
+**\[stable\]**
+
 Terminates an `osrm-routed` process launched by
 [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
 or

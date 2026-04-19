@@ -1,5 +1,7 @@
 # Install OSRM Backend Binaries
 
+**\[stable\]**
+
 Downloads and installs pre-compiled binaries for the OSRM backend from
 the official GitHub releases. The function automatically detects the
 user's operating system and architecture to download the appropriate

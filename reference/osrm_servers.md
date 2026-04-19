@@ -1,5 +1,7 @@
 # List OSRM servers
 
+**\[stable\]**
+
 Lists `osrm-routed` processes. By default, it returns a snapshot of
 servers started by the current R session (registered via
 [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md)

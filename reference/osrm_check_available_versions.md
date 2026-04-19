@@ -1,5 +1,7 @@
 # Check for Available OSRM Versions
 
+**\[stable\]**
+
 Queries the GitHub API to get a list of all available version tags for
 the OSRM backend that have binaries for the current platform.
 

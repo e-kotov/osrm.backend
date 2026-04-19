@@ -1,5 +1,7 @@
 # Retrieve the OSRM Profile for a Running Server
 
+**\[stable\]**
+
 Attempts to determine the profile (e.g., "car", "bike", "foot") used by
 an OSRM server. It follows a priority list:
 

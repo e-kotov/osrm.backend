@@ -1,5 +1,7 @@
 # Locate an OSRM Lua profile (e.g. car.lua) in a host installation
 
+**\[stable\]**
+
 By default OSRM ships profiles for "car", "bike" and "foot" in a
 `profiles/` directory alongside the binaries. This function will try to
 locate `osrm-routed` on the `PATH`, resolve symlinks, and look first for

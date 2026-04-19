@@ -1,6 +1,6 @@
 # Stop all running OSRM servers started via this package
 
-Stop all running OSRM servers started via this package
+**\[stable\]**
 
 ## Usage
 
