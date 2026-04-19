@@ -45,6 +45,7 @@ warnings. Defaults to \code{FALSE}.}
 The path to the installation directory.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 Downloads and installs pre-compiled binaries for the OSRM backend from the
 official GitHub releases. The function automatically detects the user's
 operating system and architecture to download the appropriate files. Only the

@@ -48,6 +48,7 @@ An OSRM job process (an \code{osrm_server} object inheriting from
 \code{processx::process}) for the running server.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 A high-level, "one-shot" function to start an OSRM server that automatically
 handles OSRM installation and graph preparation. This is the recommended
 function for most users to get a server running quickly with minimal steps.

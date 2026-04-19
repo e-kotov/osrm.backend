@@ -59,6 +59,7 @@ An object of class \code{osrm_job} with the following elements:
 }
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 Run the \code{osrm-partition} tool to partition an OSRM graph for the MLD pipeline.
 After running, a companion \verb{<base>.osrm.partition} file must exist to confirm success.
 }

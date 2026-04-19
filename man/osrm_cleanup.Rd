@@ -23,6 +23,7 @@ actually deleting. Default is \code{FALSE}.}
 Invisibly returns a character vector of removed file paths.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 Remove OSRM-generated files from a directory. This is useful when switching
 between algorithms (CH and MLD) or when you want to start fresh.
 }

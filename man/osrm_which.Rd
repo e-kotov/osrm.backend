@@ -16,6 +16,7 @@ vector of non-empty lines emitted by \code{osrm-routed --version}), and the raw
 \code{processx::run} result in \code{logs}.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 Resolves the \code{osrm-routed} executable available on the current \code{PATH}
 (or the override provided via \code{options(osrm.routed.exec)}). Runs
 \code{osrm-routed --version} to verify availability, then prints the directory

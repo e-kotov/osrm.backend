@@ -86,6 +86,7 @@ An object of class \code{osrm_job} with the following elements:
 }
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 Run the \code{osrm-extract} tool to preprocess an OSM file
 (\code{.osm}, \code{.osm.bz2}, or \code{.osm.pbf}) into the base \code{.osrm} graph files
 using a specified Lua profile.  After running, a companion

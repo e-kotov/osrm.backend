@@ -1,5 +1,6 @@
 #' Start an OSRM Server with Automatic Setup
 #'
+#' `r lifecycle::badge("stable")`
 #' A high-level, "one-shot" function to start an OSRM server that automatically
 #' handles OSRM installation and graph preparation. This is the recommended
 #' function for most users to get a server running quickly with minimal steps.

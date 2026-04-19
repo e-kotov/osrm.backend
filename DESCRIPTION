@@ -16,6 +16,7 @@ Imports:
     digest,
     httr2,
     jsonlite,
+    lifecycle,
     processx,
     ps,
     viridisLite
