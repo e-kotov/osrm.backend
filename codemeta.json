@@ -157,6 +157,18 @@
         "url": "https://cran.r-project.org"
       },
       "sameAs": "https://CRAN.R-project.org/package=tibble"
+    },
+    {
+      "@type": "SoftwareApplication",
+      "identifier": "withr",
+      "name": "withr",
+      "provider": {
+        "@id": "https://cran.r-project.org",
+        "@type": "Organization",
+        "name": "Comprehensive R Archive Network (CRAN)",
+        "url": "https://cran.r-project.org"
+      },
+      "sameAs": "https://CRAN.R-project.org/package=withr"
     }
   ],
   "softwareRequirements": {
@@ -246,7 +258,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0)\n    <https://github.com/Project-OSRM/osrm-backend>; package downloads\n    binaries automatically if not found"
   },
-  "fileSize": "2451.933KB",
+  "fileSize": "2452.491KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
