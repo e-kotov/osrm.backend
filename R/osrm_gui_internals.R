@@ -304,34 +304,24 @@ gui_ui_resources <- function() {
       
       @media (max-width: 768px) {
         .sidebar-panel {
-          position: absolute;
-          left: -100%;
-          top: 50px; /* Below header */
-          bottom: 0;
-          width: 80% !important;
-          z-index: 2000;
-          transition: left 0.3s ease;
-          box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+          display: none;
+          width: 250px !important;
+          flex-shrink: 0;
         }
         .sidebar-panel.show-sidebar {
-          left: 0;
+          display: block;
         }
         .main-panel {
           width: 100% !important;
+          flex: 1;
+          min-width: 0;
         }
         .hamburger-btn {
           display: inline-block;
         }
-        /* Overlay to close sidebar when clicking outside */
+        /* Hide the overlay since we are pushing the map instead */
         .sidebar-overlay {
-          display: none;
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          z-index: 1999;
-        }
-        .sidebar-overlay.show-overlay {
-          display: block;
+          display: none !important;
         }
         .route-stats-overlay {
           flex-direction: column;
@@ -343,12 +333,6 @@ gui_ui_resources <- function() {
   js <- "
     $(document).on('click', '#hamburger_btn', function() {
       $('.sidebar-panel').toggleClass('show-sidebar');
-      $('.sidebar-overlay').toggleClass('show-overlay');
-    });
-    
-    $(document).on('click', '.sidebar-overlay', function() {
-      $('.sidebar-panel').removeClass('show-sidebar');
-      $('.sidebar-overlay').removeClass('show-overlay');
     });
 
     function initializeMapListeners(mapId) {
