@@ -4,7 +4,12 @@
 \alias{osrm_stop_all}
 \title{Stop all running OSRM servers started via this package}
 \usage{
-osrm_stop_all()
+osrm_stop_all(include_all = FALSE)
+}
+\arguments{
+\item{include_all}{A logical value. If \code{TRUE}, stop all OSRM servers found
+running on the system, including those not started by the current R session.
+Requires \code{ps} and \code{jsonlite} packages. Defaults to \code{FALSE}.}
 }
 \value{
 The number of servers attempted.

@@ -59,6 +59,42 @@ resolve_osrm_path <- function(input_path,
   input_path
 }
 
+#' Print summary for an `osrm_server` object
+#'
+#' Displays status and metadata for an OSRM job process (server) returned
+#' by [osrm_start()] or [osrm_start_server()].
+#'
+#' @param x An `osrm_server` object.
+#' @param ... Passed to methods; currently ignored.
+#'
+#' @return Invisibly returns `x`.
+#' @keywords internal
+#' @noRd
+print.osrm_server <- function(x, ...) {
+  meta <- attr(x, "osrm_metadata")
+  alive <- tryCatch(x$is_alive(), error = function(e) FALSE)
+  status <- if (alive) "Running" else "Stopped"
+
+  cat("------------------------------------------------------\n")
+  cat("OSRM Server (Job Process)\n")
+  cat("------------------------------------------------------\n")
+  cat("Status:    ", status, "\n", sep = "")
+  if (alive) {
+    cat("PID:       ", x$get_pid(), "\n", sep = "")
+  }
+  cat("Port:      ", meta$port, "\n", sep = "")
+  cat("Profile:   ", meta$profile, "\n", sep = "")
+  cat("Algorithm: ", meta$algorithm, "\n", sep = "")
+  cat("Graph:     ", basename(meta$path), "\n", sep = "")
+
+  if (!is.null(meta$log) && !is.na(meta$log)) {
+    cat("Logs:      ", meta$log, "\n", sep = "")
+  }
+
+  cat("------------------------------------------------------\n")
+  invisible(x)
+}
+
 #' Print summary for an `osrm_job` object
 #'
 #' Displays pipeline state, outputs, and next steps for an `osrm_job` returned
@@ -288,6 +324,30 @@ detect_osrm_algorithm <- function(dir_path, base_name) {
   )
 }
 
+#' Normalize algorithm argument to standard uppercase
+#'
+#' @param algorithm A string. "mld", "ch", "corech" (case-insensitive)
+#' @return A string. "MLD", "CH", or "CoreCH"
+#' @noRd
+.normalize_algorithm <- function(algorithm) {
+  if (is.null(algorithm)) return(NULL)
+  
+  # Normalize input
+  algo <- toupper(algorithm)
+  
+  # Map valid values
+  if (algo == "MLD") return("MLD")
+  if (algo == "CH") return("CH")
+  if (algo == "CORECH") return("CoreCH") # Special casing for OSRM standard
+  
+  # If validation is required here, we can stop() or let match.arg handle it later
+  # For internal use, strict validation is better
+  stop(
+    "Invalid algorithm: '", algorithm, "'. Must be 'MLD', 'CH', or 'CoreCH'.", 
+    call. = FALSE
+  )
+}
+
 #' Check for algorithm conflicts and throw informative errors
 #'
 #' @param dir_path A string. Path to directory containing OSRM files
@@ -298,6 +358,12 @@ detect_osrm_algorithm <- function(dir_path, base_name) {
 #' @noRd
 check_algorithm_conflict <- function(dir_path, base_name, target_algorithm, stage) {
   detection <- detect_osrm_algorithm(dir_path, base_name)
+  
+  # Normalize target for comparison
+  # We handle NULL/missing by skipping checks (should be caught elsewhere)
+  if (missing(target_algorithm) || is.null(target_algorithm)) return(invisible(NULL))
+  
+  algo <- tryCatch(.normalize_algorithm(target_algorithm), error = function(e) "UNKNOWN")
 
   # If state is empty or extract_only, no conflict
   if (detection$state %in% c("empty", "extract_only")) {
@@ -317,7 +383,15 @@ check_algorithm_conflict <- function(dir_path, base_name, target_algorithm, stag
   }
 
   # Check for algorithm mismatch
-  if (target_algorithm == "ch" && detection$state == "mld") {
+  # detection$state returns lowercase "ch"/"mld". We compare against uppercase standard
+  # so we normalize detection state for comparison
+  detected_algo <- toupper(detection$state)
+  
+  # CoreCH acts like CH for conflict purposes
+  is_target_ch <- algo %in% c("CH", "CoreCH")
+  is_target_mld <- algo == "MLD"
+  
+  if (is_target_ch && detected_algo == "MLD") {
     stop(
       "Cannot run CH pipeline (", stage, " stage): directory contains MLD algorithm files.\n",
       "Found MLD files: ", paste(detection$mld_files, collapse = ", "), "\n\n",
@@ -330,7 +404,7 @@ check_algorithm_conflict <- function(dir_path, base_name, target_algorithm, stag
     )
   }
 
-  if (target_algorithm == "mld" && detection$state == "ch") {
+  if (is_target_mld && detected_algo == "CH") {
     stop(
       "Cannot run MLD pipeline (", stage, " stage): directory contains CH algorithm files.\n",
       "Found CH files: ", paste(detection$ch_files, collapse = ", "), "\n\n",

@@ -7,6 +7,8 @@
 osrm_start(
   path,
   algorithm = c("mld", "ch"),
+  force_rebuild = FALSE,
+  show_progress = TRUE,
   quiet = FALSE,
   verbose = FALSE,
   ...
@@ -25,6 +27,12 @@ preparation, either \code{"mld"} (Multi-Level Dijkstra, default) or \code{"ch"}
 (Contraction Hierarchies). This is only used when \code{osrm_prepare_graph} is
 automatically called.}
 
+\item{force_rebuild}{A logical value. If \code{TRUE}, force the rebuilding of the
+OSRM graph even if it already exists.}
+
+\item{show_progress}{A logical value. If \code{TRUE} (default), show a progress
+spinner during graph preparation.}
+
 \item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
 warnings. Defaults to \code{FALSE}.}
 
@@ -36,7 +44,8 @@ for debugging.}
 \code{overwrite = TRUE}) and \code{osrm_start_server()} (e.g., \code{port = 5001}).}
 }
 \value{
-A \code{processx::process} object for the running server.
+An OSRM job process (an \code{osrm_server} object inheriting from
+\code{processx::process}) for the running server.
 }
 \description{
 A high-level, "one-shot" function to start an OSRM server that automatically

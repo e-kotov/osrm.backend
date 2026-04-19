@@ -38,9 +38,11 @@ navbar:
 reference:
   - title: "Quick Start"
     desc: >
-      Automate installation, graph preparation, and server launch.
+      Quickly start/stop/list servers and launch the GUI to inspect routes
     contents:
       - osrm_start
+      - osrm_gui
+      - osrm_servers
       - osrm_stop
   - title: "Install and update OSRM binaries"
     desc: >
@@ -69,5 +71,6 @@ reference:
     contents:
       - osrm_start_server
       - osrm_servers
+      - osrm_get_server_profile
       - osrm_stop
       - osrm_stop_all

@@ -19,18 +19,22 @@ recent stable version (internally calls \code{\link[=osrm_check_latest_version]{
 other than \code{v5.27.1} and \code{v6.0.0} will trigger a warning but are still
 attempted if binaries are available.}
 
-\item{dest_dir}{A string specifying the directory where OSRM binaries should be installed.
-If \code{NULL} (the default), a user-friendly, persistent location is chosen via
-\code{tools::R_user_dir("osrm.backend", which = "cache")}, and the binaries are installed
-into a subdirectory named after the OSRM version (e.g. \code{.../cache/v6.0.0}).}
+\item{dest_dir}{A string specifying the directory where OSRM binaries should be
+installed. If \code{NULL} (the default), a user-friendly, persistent location is
+chosen via \code{tools::R_user_dir("osrm.backend", which = "cache")}, and the
+binaries are installed into a subdirectory named after the OSRM version
+(e.g. \code{.../cache/v6.0.0}).}
 
-\item{force}{A logical value. If \code{TRUE}, reinstall OSRM even if it's already found in \code{dest_dir}.
-If \code{FALSE} (default), the function will stop if an existing installation is detected.}
+\item{force}{A logical value. If \code{TRUE}, reinstall OSRM even if it's already
+found in \code{dest_dir}. If \code{FALSE} (default), the function will stop if an
+existing installation is detected.}
 
 \item{path_action}{A string specifying how to handle the system \code{PATH}. One of:
 \itemize{
-\item \code{"session"} (default): Adds the OSRM bin directory to the \code{PATH} for the current R session only.
-\item \code{"project"}: Modifies the \code{.Rprofile} in the current project to set the \code{PATH} for all future sessions in that project.
+\item \code{"session"} (default): Adds the OSRM bin directory to the \code{PATH}
+for the current R session only.
+\item \code{"project"}: Modifies the \code{.Rprofile} in the current project to set
+the \code{PATH} for all future sessions in that project.
 \item \code{"none"}: Does not modify the \code{PATH}.
 }}
 
@@ -41,25 +45,37 @@ warnings. Defaults to \code{FALSE}.}
 The path to the installation directory.
 }
 \description{
-Downloads and installs pre-compiled binaries for the OSRM backend from the official GitHub releases. The function automatically detects the user's operating system and architecture to download the appropriate files. Only the latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known to work well; other releases available on GitHub can be installed but are not guranteed to function correctly.
+Downloads and installs pre-compiled binaries for the OSRM backend from the
+official GitHub releases. The function automatically detects the user's
+operating system and architecture to download the appropriate files. Only the
+latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known
+to work well; other releases available on GitHub can be installed but are not
+guranteed to function correctly.
 }
 \details{
 The function performs the following steps:
 \enumerate{
-\item Queries the GitHub API to find the specified release of \code{Project-OSRM/osrm-backend}.
-\item Identifies the correct binary (\code{.tar.gz} archive) for the user's OS (Linux, macOS, or Windows) and architecture (x64, arm64).
+\item Queries the GitHub API to find the specified release of
+\code{Project-OSRM/osrm-backend}.
+\item Identifies the correct binary (\code{.tar.gz} archive) for the user's OS
+(Linux, macOS, or Windows) and architecture (x64, arm64).
 \item Downloads the archive to a temporary location.
-\item Extracts the archive and locates the OSRM executables (e.g., \code{osrm-routed}, \code{osrm-extract}).
+\item Extracts the archive and locates the OSRM executables (e.g.,
+\code{osrm-routed}, \code{osrm-extract}).
 \item Copies these executables to a local directory (defaults to
 \verb{file.path(tools::R_user_dir("osrm.backend", which = "cache"), <version>)}).
-\item Downloads the matching Lua profiles from the release tarball and installs them alongside the binaries.
-\item Optionally modifies the \code{PATH} environment variable for the current session or project.
+\item Downloads the matching Lua profiles from the release tarball and installs
+them alongside the binaries.
+\item Optionally modifies the \code{PATH} environment variable for the current
+session or project.
 }
 
-macOS users should note that upstream OSRM v6.x binaries are built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer.
-\code{osrm_install()} automatically blocks v6 installs on older macOS releases and, when \code{version = "latest"},
-selects the most recent v5 build instead while warning about the requirement. Warnings include both the
-marketing version and Darwin kernel so you'll see messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
+macOS users should note that upstream OSRM v6.x binaries are built for macOS
+15.0 (Sequoia, Darwin 24.0.0) or newer. \code{osrm_install()} automatically blocks
+v6 installs on older macOS releases and, when \code{version = "latest"}, selects
+the most recent v5 build instead while warning about the requirement.
+Warnings include both the marketing version and Darwin kernel so you'll see
+messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
 
 When installing OSRM v6.x for Windows, the upstream release omits the Intel
 Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL. To keep
