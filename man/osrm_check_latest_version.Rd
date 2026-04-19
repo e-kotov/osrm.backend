@@ -10,6 +10,8 @@ osrm_check_latest_version()
 A string containing the latest version tag (e.g., \code{"v26.4.1"}).
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Queries the GitHub API to find the most recent stable (non-pre-release)
 version tag for the OSRM backend that has binaries available for the current platform.
 }

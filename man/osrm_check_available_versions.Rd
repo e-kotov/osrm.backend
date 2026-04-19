@@ -14,6 +14,8 @@ in the returned list. Defaults to \code{FALSE}.}
 A character vector of available version tags.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Queries the GitHub API to get a list of all available version tags for the
 OSRM backend that have binaries for the current platform.
 }

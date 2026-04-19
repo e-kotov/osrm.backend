@@ -1,6 +1,8 @@
 #' Clean Up OSRM Files in a Directory
 #'
-#' 
+#' @description
+#' `r lifecycle::badge("stable")`
+#'
 #' Remove OSRM-generated files from a directory. This is useful when switching
 #' between algorithms (CH and MLD) or when you want to start fresh.
 #'

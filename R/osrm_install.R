@@ -1,6 +1,8 @@
 #' Install OSRM Backend Binaries
 #'
-#' 
+#' @description
+#' `r lifecycle::badge("stable")`
+#'
 #' Downloads and installs pre-compiled binaries for the OSRM backend from the
 #' official GitHub releases. The function automatically detects the user's
 #' operating system and architecture to download the appropriate files. Only the
@@ -413,6 +415,9 @@ osrm_install <- function(
 
 #' Check for the Latest Stable OSRM Version
 #'
+#' @description
+#' `r lifecycle::badge("stable")`
+#'
 #' Queries the GitHub API to find the most recent stable (non-pre-release)
 #' version tag for the OSRM backend that has binaries available for the current platform.
 #'
@@ -465,6 +470,9 @@ find_latest_pre_v6_release <- function(platform) {
 }
 
 #' Check for Available OSRM Versions
+#'
+#' @description
+#' `r lifecycle::badge("stable")`
 #'
 #' Queries the GitHub API to get a list of all available version tags for the
 #' OSRM backend that have binaries for the current platform.

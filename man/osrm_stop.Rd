@@ -31,6 +31,8 @@ inheriting from \code{processx::process}) returned by \code{osrm_start_server()}
 A list with fields \code{id}, \code{pid}, \code{port}, \code{stopped} (logical).
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Terminates an \code{osrm-routed} process launched by \code{osrm_start()} or
 \code{osrm_start_server()}. Can also stop external servers by PID or ID.
 }

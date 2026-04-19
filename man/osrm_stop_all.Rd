@@ -15,7 +15,7 @@ Requires \code{ps} and \code{jsonlite} packages. Defaults to \code{FALSE}.}
 The number of servers attempted.
 }
 \description{
-Stop all running OSRM servers started via this package
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 }
 \examples{
 \donttest{

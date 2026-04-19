@@ -3,8 +3,8 @@
 #' List OSRM servers
 #'
 #' @description
-#' 
-#
+#' `r lifecycle::badge("stable")`
+#'
 #' Lists `osrm-routed` processes. By default, it returns a snapshot of servers
 #' started by the current R session (registered via [osrm_start_server()] or [osrm_start()]).
 #' You can optionally list all `osrm-routed` processes running on the system,
@@ -287,6 +287,9 @@ print.osrm_server_list <- function(x, ...) {
 }
 
 #' Stop an OSRM Server
+#'
+#' @description
+#' `r lifecycle::badge("stable")`
 #'
 #' Terminates an `osrm-routed` process launched by `osrm_start()` or
 #' `osrm_start_server()`. Can also stop external servers by PID or ID.
@@ -600,6 +603,9 @@ osrm_stop <- function(
 }
 
 #' Stop all running OSRM servers started via this package
+#'
+#' @description
+#' `r lifecycle::badge("stable")`
 #'
 #' @param include_all A logical value. If `TRUE`, stop all OSRM servers found
 #'   running on the system, including those not started by the current R session.

@@ -14,6 +14,8 @@ osrm_find_profile(profile = "car.lua")
 The normalized filesystem path to the profile.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 By default OSRM ships profiles for "car", "bike" and "foot" in a
 \verb{profiles/} directory alongside the binaries.  This function will try to
 locate \code{osrm-routed} on the \code{PATH}, resolve symlinks, and look first for a

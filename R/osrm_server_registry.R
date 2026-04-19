@@ -373,8 +373,9 @@
 
 #' Retrieve the OSRM Profile for a Running Server
 #'
-#' 
-#
+#' @description
+#' `r lifecycle::badge("stable")`
+#'
 #' Attempts to determine the profile (e.g., "car", "bike", "foot") used by an OSRM server.
 #' It follows a priority list:
 #' 1. Checks the active server registry for the given port or ID.

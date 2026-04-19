@@ -91,6 +91,8 @@ An OSRM job process (an \code{osrm_server} object inheriting from
 \code{processx::process}) for the running server (also registered internally).
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Launches an \code{osrm-routed} process pointing at a localized OSRM graph (either
 \code{.osrm.mldgr} for MLD or \code{.osrm.hsgr} for CH/CoreCH).
 }

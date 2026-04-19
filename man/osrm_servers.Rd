@@ -23,6 +23,8 @@ of OSRM job processes with columns:
 \code{log} set to \verb{<external>}. If \code{output = "list"}, returns a named list of server metadata.
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Lists \code{osrm-routed} processes. By default, it returns a snapshot of servers
 started by the current R session (registered via \code{\link[=osrm_start_server]{osrm_start_server()}} or \code{\link[=osrm_start]{osrm_start()}}).
 You can optionally list all \code{osrm-routed} processes running on the system,

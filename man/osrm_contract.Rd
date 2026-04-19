@@ -59,6 +59,8 @@ An object of class \code{osrm_job} with the following elements:
 }
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Run the \code{osrm-contract} tool to contract an OSRM graph for the CH pipeline.
 After running, a companion \verb{<base>.osrm.hsgr} file must exist to confirm success.
 }

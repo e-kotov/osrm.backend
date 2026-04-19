@@ -16,6 +16,8 @@ object inheriting from \code{processx::process}), a path string, or NULL.}
 A character string representing the profile name (default "car").
 }
 \description{
+\ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
+
 Attempts to determine the profile (e.g., "car", "bike", "foot") used by an OSRM server.
 It follows a priority list:
 \enumerate{
