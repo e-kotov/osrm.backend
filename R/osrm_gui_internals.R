@@ -207,6 +207,13 @@ gui_ui_resources <- function() {
       #shiny-notification-panel { top: 70px; right: 10px; left: auto; bottom: auto; }
       
       .sidebar-layout { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+      
+      .sidebar-panel { 
+        padding: 15px; 
+        background: #f8f9fa; 
+        border-right: 1px solid #dee2e6; 
+        overflow-y: auto; 
+      }
       .sidebar-panel h4:first-child { margin-top: 0; }
       .sidebar-panel h4 { margin-top: 20px; }
       
