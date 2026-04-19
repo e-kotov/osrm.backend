@@ -68,13 +68,13 @@ jobs:
         uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: "--no-manual"
-          args: "--no-manual --as-cran"
+          build_args: 'c("--no-manual")'
+          args: 'c("--no-manual", "--as-cran")'
 
       - name: Check (No Vignettes for Old Linux)
         if: ${{ runner.os == 'Linux' && (matrix.config.r == 'oldrel-2' || matrix.config.r == 'oldrel-3' || matrix.config.r == 'oldrel-4') }}
         uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
-          build_args: "--no-manual --no-build-vignettes"
-          args: "--no-manual --as-cran --ignore-vignettes"
+          build_args: 'c("--no-manual", "--no-build-vignettes")'
+          args: 'c("--no-manual", "--as-cran", "--ignore-vignettes")'
