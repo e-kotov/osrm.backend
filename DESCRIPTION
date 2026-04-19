@@ -19,7 +19,8 @@ Imports:
     lifecycle,
     processx,
     ps,
-    viridisLite
+    viridisLite,
+    withr
 Suggests:
     DT,
     knitr,

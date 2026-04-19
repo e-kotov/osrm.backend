@@ -474,6 +474,7 @@ find_latest_pre_v6_release <- function(platform) {
 #'   in the returned list. Defaults to `FALSE`.
 #' @return A character vector of available version tags.
 #' @export
+#' \lifecycle{stable}
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -481,7 +482,6 @@ find_latest_pre_v6_release <- function(platform) {
 #'   osrm_check_available_versions()
 #' }
 #' }
-#' `r lifecycle::badge("stable")`
 osrm_check_available_versions <- function(prereleases = FALSE) {
   releases <- get_all_releases()
   platform <- get_platform_info()
