@@ -48,7 +48,7 @@ The goal of `osrm.backend` is to be a companion to `{osrm}` R package
 Install the latest stable release of `osrm.backend` from CRAN with:
 
 ``` r
-# soon on CRAN, watch this space!
+install.packages("osrm.backend")
 ```
 
 You can install the development version of `osrm.backend` from R
@@ -78,3 +78,14 @@ started](https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html)
 guide. For advanced control over each step of the process, see the full
 [function
 reference](https://www.ekotov.pro/osrm.backend/reference/index.html).
+
+## OSRM Graphical User Interface demo
+
+![osrm GUI demo
+1](https://github.com/user-attachments/assets/d7f4c671-10f1-4373-9786-1356a8942a94)
+
+![osrm GUI demo
+2](https://github.com/user-attachments/assets/f0bd80e8-632e-47f1-9800-2131d5002204)
+
+![osrm GUI demo
+3](https://github.com/user-attachments/assets/7b524d02-4e28-4f22-8c1b-221c2e9c7204)
