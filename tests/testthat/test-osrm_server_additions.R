@@ -7,14 +7,6 @@ if (!has_osrm_option && !has_osrm_path) {
   testthat::skip("OSRM binary not found (Skipping Server Additions Tests)")
 }
 
-# Shared empty state for tests that need a clean registry
-create_empty_state <- function() {
-  e <- new.env()
-  e$registry <- list()
-  e$session_id <- "test-session"
-  e
-}
-
 test_that("osrm_start_server triggers hint on version incompatibility", {
   skip_if_not_installed("processx")
   skip_on_cran()
@@ -52,19 +44,27 @@ test_that("osrm_start_server triggers hint on version incompatibility", {
     }
   )
 
-  with_mocked_bindings(
-    with_mocked_bindings(
-      {
-        old_opt <- options(osrm.server.log_file = mock_log_file)
-        on.exit(options(old_opt), add = TRUE)
+  state_env <- asNamespace("osrm.backend")$.osrm_state
+  orig_registry <- state_env$registry
+  orig_session_id <- state_env$session_id
+  on.exit({
+    state_env$registry <- orig_registry
+    state_env$session_id <- orig_session_id
+  }, add = TRUE)
 
-        expect_error(
-          osrm_start_server(osrm_path = osrm_path, quiet = TRUE),
-          "Hint: The OSRM graph files are incompatible"
-        )
-      },
-      .osrm_state = create_empty_state()
-    ),
+  state_env$registry <- list()
+  state_env$session_id <- "test-session"
+
+  with_mocked_bindings(
+    {
+      old_opt <- options(osrm.server.log_file = mock_log_file)
+      on.exit(options(old_opt), add = TRUE)
+
+      expect_error(
+        osrm_start_server(osrm_path = osrm_path, quiet = TRUE),
+        "Hint: The OSRM graph files are incompatible"
+      )
+    },
     process = MockProcess,
     .package = "processx"
   )
@@ -98,11 +98,11 @@ test_that("osrm_servers output='list' returns a named list of metadata", {
 
   # Store original registry and session id to restore later
   state_env <- asNamespace("osrm.backend")$.osrm_state
-  orig_reg <- state_env$registry
-  on.exit(state_env$registry <- orig_reg, add = TRUE)
+  orig_registry <- state_env$registry
+  on.exit(state_env$registry <- orig_registry, add = TRUE)
   
   # Inject mock registry
-  assign("registry", mock_reg, envir = asNamespace("osrm.backend")$.osrm_state)
+  state_env$registry <- mock_reg
 
   with_mocked_bindings(
     {
