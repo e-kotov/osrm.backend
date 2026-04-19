@@ -150,7 +150,11 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
           "Auto-centered map on PBF extent: ",
           paste(round(auto_center, 4), collapse = ", ")
         )
+      } else {
+        message("Could not auto-detect map center from PBF file. Defaulting to world view.")
       }
+    } else {
+      message("Source .osm.pbf file not found. Could not auto-detect map center. Defaulting to world view.")
     }
   }
 

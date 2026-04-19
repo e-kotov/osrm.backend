@@ -149,6 +149,15 @@ osrm_start <- function(
     
     if (length(existing_graphs) > 0 && !force_rebuild) {
       final_graph_path <- existing_graphs[1]
+      # Try to find original OSM for tracking if possible (heuristic)
+      heuristic_osm <- sub("\\.osrm\\.(mldgr|hsgr)$", ".osm.pbf", final_graph_path)
+      if (file.exists(heuristic_osm)) {
+        original_osm_path <- heuristic_osm
+      } else {
+        # Fallback: take any .osm.pbf in the same directory
+        osm_files <- list.files(path, pattern = "\\.osm(\\.pbf|\\.bz2)?$", full.names = TRUE)
+        if (length(osm_files) > 0) original_osm_path <- osm_files[1]
+      }
     } else {
       # Need to build. Find source PBF.
       osm_files <- list.files(path, pattern = "\\.osm(\\.pbf|\\.bz2)?$", full.names = TRUE)
@@ -181,7 +190,13 @@ osrm_start <- function(
     final_graph_path <- path
     # Try to find original OSM for tracking if possible (heuristic)
     heuristic_osm <- sub("\\.osrm\\.(mldgr|hsgr)$", ".osm.pbf", path)
-    if (file.exists(heuristic_osm)) original_osm_path <- heuristic_osm
+    if (file.exists(heuristic_osm)) {
+      original_osm_path <- heuristic_osm
+    } else {
+      # Fallback: take any .osm.pbf in the same directory
+      osm_files <- list.files(dirname(path), pattern = "\\.osm(\\.pbf|\\.bz2)?$", full.names = TRUE)
+      if (length(osm_files) > 0) original_osm_path <- osm_files[1]
+    }
   } else {
     stop("Invalid input path. Must be a directory, OSM source file, or OSRM graph.", call. = FALSE)
   }
