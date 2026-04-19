@@ -492,11 +492,19 @@ osrm_start_server <- function(
 
         if (length(log_content) > 0) {
           # Show the last 10 lines of the error log
+          last_lines <- utils::tail(log_content, 10)
           err_msg <- paste0(
             err_msg,
             "Last 10 log lines:\n",
-            paste(utils::tail(log_content, 10), collapse = "\n")
+            paste(last_lines, collapse = "\n")
           )
+          if (any(grepl("incompatible with this version of OSRM", last_lines, ignore.case = TRUE))) {
+            err_msg <- paste0(
+              err_msg,
+              "\n\nHint: The OSRM graph files are incompatible with the current OSRM binary version. ",
+              "Please rebuild the graph. If using `osrm_start()`, try adding `force_rebuild = TRUE`."
+            )
+          }
         } else {
           if (isTRUE(verbose) && is.null(log_file_path)) {
             err_msg <- paste0(
