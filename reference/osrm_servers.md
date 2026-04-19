@@ -14,7 +14,7 @@ You can stop a server by passing its `id`, `port`, or `pid` to
 ## Usage
 
 ``` r
-osrm_servers(include_all = FALSE)
+osrm_servers(include_all = FALSE, output = c("data.frame", "list"))
 ```
 
 ## Arguments
@@ -25,12 +25,21 @@ osrm_servers(include_all = FALSE)
   `osrm-routed` processes, including those not started by this package
   in the current session. Default is `FALSE`.
 
+- output:
+
+  Character string specifying the return format. Either `"data.frame"`
+  (the default) which returns a tabular summary with a custom print
+  method, or `"list"` which returns a detailed list of server metadata
+  objects.
+
 ## Value
 
-A data.frame of OSRM job processes with columns: `id`, `pid`, `port`,
-`algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`.
-External servers will have `id` prefixed with `sys-` and `log` set to
-`<external>`.
+If `output = "data.frame"`, returns a `data.frame` (class
+`osrm_server_list`) of OSRM job processes with columns: `id`, `pid`,
+`port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`,
+`input_osm`, `center_lon`, `center_lat`. External servers will have `id`
+prefixed with `sys-` and `log` set to `<external>`. If
+`output = "list"`, returns a named list of server metadata.
 
 ## Examples
 

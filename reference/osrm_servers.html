@@ -61,7 +61,7 @@ including those started by other sessions or manually.</p>
 
     <div class="section level2">
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">osrm_servers</span><span class="op">(</span>include_all <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">osrm_servers</span><span class="op">(</span>include_all <span class="op">=</span> <span class="cn">FALSE</span>, output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"data.frame"</span>, <span class="st">"list"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
     </div>
 
     <div class="section level2">
@@ -73,12 +73,20 @@ including those started by other sessions or manually.</p>
 all <code>osrm-routed</code> processes, including those not started by this package
 in the current session. Default is <code>FALSE</code>.</p></dd>
 
+
+<dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
+<dd><p>Character string specifying the return format. Either <code>"data.frame"</code>
+(the default) which returns a tabular summary with a custom print method,
+or <code>"list"</code> which returns a detailed list of server metadata objects.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A data.frame of OSRM job processes with columns:
-<code>id</code>, <code>pid</code>, <code>port</code>, <code>algorithm</code>, <code>started_at</code>, <code>alive</code>, <code>has_handle</code>, <code>log</code>, <code>input_osm</code>.
-External servers will have <code>id</code> prefixed with <code>sys-</code> and <code>log</code> set to <code>&lt;external&gt;</code>.</p>
+    <p>If <code>output = "data.frame"</code>, returns a <code>data.frame</code> (class <code>osrm_server_list</code>)
+of OSRM job processes with columns:
+<code>id</code>, <code>pid</code>, <code>port</code>, <code>algorithm</code>, <code>started_at</code>, <code>alive</code>, <code>has_handle</code>, <code>log</code>, <code>input_osm</code>,
+<code>center_lon</code>, <code>center_lat</code>. External servers will have <code>id</code> prefixed with <code>sys-</code> and
+<code>log</code> set to <code>&lt;external&gt;</code>. If <code>output = "list"</code>, returns a named list of server metadata.</p>
     </div>
 
     <div class="section level2">

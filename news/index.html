@@ -44,7 +44,14 @@
 
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="development version" id="osrmbackend-development-version">osrm.backend (development version)<a class="anchor" aria-label="anchor" href="#osrmbackend-development-version"></a></h2>
-</div>
+<ul><li><p>Added <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code>, an interactive Shiny web application for exploring and visualizing the loaded OSRM routing network.</p></li>
+<li><p>Improved <code><a href="../reference/osrm_servers.html">osrm_servers()</a></code> with a custom S3 print method for better interactive readability and a new <code>output</code> argument to return raw metadata as a list.</p></li>
+<li><p>Simplified server IDs in the registry to <code>osrm-{port}-{pid}</code> format for better readability and programmatic access.</p></li>
+<li><p>Enhanced <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code> auto-centering logic to reliably detect the source OSM PBF file and store the center point in the server registry for faster and more resilient launches.</p></li>
+<li><p>Added a helpful hint to <code><a href="../reference/osrm_start.html">osrm_start()</a></code> error messages when a graph is detected to be incompatible with the currently installed OSRM version.</p></li>
+<li><p>Validated and added official support for OSRM <code>v26.4.0</code> and <code>v26.4.1</code> releases, ensuring the necessary runtime libraries (TBB and BZip2) are correctly fetched and patched across all supported platforms (macOS, Windows, and Linux).</p></li>
+<li><p>Updated <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code> examples and tests to follow CRAN policies for interactive applications.</p></li>
+</ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="osrmbackend-020">osrm.backend 0.2.0<a class="anchor" aria-label="anchor" href="#osrmbackend-020"></a></h2><p class="text-muted">CRAN release: 2026-02-06</p>
 <div class="section level3">

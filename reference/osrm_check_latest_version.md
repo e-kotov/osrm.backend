@@ -12,7 +12,7 @@ osrm_check_latest_version()
 
 ## Value
 
-A string containing the latest version tag (e.g., `"v5.27.1"`).
+A string containing the latest version tag (e.g., `"v26.4.1"`).
 
 ## Examples
 

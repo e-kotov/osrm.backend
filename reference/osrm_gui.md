@@ -104,7 +104,6 @@ start a temporary server for the session.
 ## Examples
 
 ``` r
-if (FALSE) { # \dontrun{
 if (interactive()) {
   # 1. Auto-detect running server (errors if none running):
   osrm_gui()
@@ -128,5 +127,4 @@ if (interactive()) {
   # 7. Enable debug mode:
   # osrm_gui(debug = TRUE)
 }
-} # }
 ```
