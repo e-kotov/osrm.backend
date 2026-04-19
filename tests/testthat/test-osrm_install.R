@@ -210,6 +210,7 @@ test_that("find_asset_url errors when no matching asset", {
 
 # Test version comparison ----
 test_that("version_at_least correctly compares versions", {
+  expect_true(version_at_least("v26.4.1", "v6.0.0"))
   expect_true(version_at_least("v6.0.0", "v5.27.1"))
   expect_true(version_at_least("v6.0.0", "v6.0.0"))
   expect_false(version_at_least("v5.27.1", "v6.0.0"))

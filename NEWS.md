@@ -1,5 +1,9 @@
 # osrm.backend (development version)
 
+* Added `osrm_gui()`, an interactive Shiny web application for exploring and visualizing the loaded OSRM routing network.
+
+* Tested with OSRM `v26.4.0` and `v26.4.1` releases, ensuring the necessary runtime libraries (TBB and BZip2) are correctly fetched and patched across all supported platforms (macOS, Windows, and Linux).
+
 # osrm.backend 0.2.0
 
 ## Breaking Changes

@@ -16,14 +16,14 @@ osrm_install(
 \item{version}{A string specifying the OSRM version tag to install.
 Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
 recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
-other than \code{v5.27.1} and \code{v6.0.0} will trigger a warning but are still
-attempted if binaries are available.}
+other than \code{v5.27.1}, \code{v6.0.0}, \code{v26.4.0} and \code{v26.4.1} will trigger a
+warning but are still attempted if binaries are available.}
 
 \item{dest_dir}{A string specifying the directory where OSRM binaries should be
 installed. If \code{NULL} (the default), a user-friendly, persistent location is
 chosen via \code{tools::R_user_dir("osrm.backend", which = "cache")}, and the
 binaries are installed into a subdirectory named after the OSRM version
-(e.g. \code{.../cache/v6.0.0}).}
+(e.g. \code{.../cache/v26.4.1}).}
 
 \item{force}{A logical value. If \code{TRUE}, reinstall OSRM even if it's already
 found in \code{dest_dir}. If \code{FALSE} (default), the function will stop if an
@@ -48,9 +48,9 @@ The path to the installation directory.
 Downloads and installs pre-compiled binaries for the OSRM backend from the
 official GitHub releases. The function automatically detects the user's
 operating system and architecture to download the appropriate files. Only the
-latest v5 release (\code{v5.27.1}) and \code{v6.0.0} were manually tested and are known
-to work well; other releases available on GitHub can be installed but are not
-guranteed to function correctly.
+latest v5 release (\code{v5.27.1}), \code{v6.0.0}, \code{v26.4.0} and \code{v26.4.1} were manually
+tested and are known to work well; other releases available on GitHub can be
+installed but are not guranteed to function correctly.
 }
 \details{
 The function performs the following steps:
@@ -70,26 +70,26 @@ them alongside the binaries.
 session or project.
 }
 
-macOS users should note that upstream OSRM v6.x binaries are built for macOS
-15.0 (Sequoia, Darwin 24.0.0) or newer. \code{osrm_install()} automatically blocks
-v6 installs on older macOS releases and, when \code{version = "latest"}, selects
-the most recent v5 build instead while warning about the requirement.
-Warnings include both the marketing version and Darwin kernel so you'll see
-messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
+macOS users should note that upstream OSRM v6.x (and newer) binaries are
+built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer. \code{osrm_install()}
+automatically blocks v6+ installs on older macOS releases and, when
+\code{version = "latest"}, selects the most recent v5 build instead while warning
+about the requirement. Warnings include both the marketing version and Darwin
+kernel so you'll see messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
 
-When installing OSRM v6.x for Windows, the upstream release omits the Intel
-Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL. To keep
-the executables runnable out of the box, \code{osrm_install()} fetches TBB from
-\href{https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0}{oneTBB
+When installing OSRM v6.x or newer for Windows, the upstream release omits
+the Intel Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL.
+To keep the executables runnable out of the box, \code{osrm_install()} fetches TBB
+from \href{https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0}{oneTBB
 v2022.3.0} and the BZip2 runtime from
 \href{https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0}{bzip2-windows
 v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
-extra libraries, the OSRM v6 binaries shipped for Windows cannot start.
+extra libraries, the OSRM v6+ binaries shipped for Windows cannot start.
 
-On macOS, OSRM v6.x binaries also miss the bundled TBB runtime. The installer
-reuses the libraries from release \code{v5.27.1} to keep the binaries functional
-and patches their \code{libbz2} linkage using \code{install_name_tool} so that they load
-the system-provided BZip2 runtime.
+On macOS, OSRM v6.x and newer binaries also miss the bundled TBB runtime.
+The installer reuses the libraries from release \code{v5.27.1} to keep the
+binaries functional and patches their \code{libbz2} linkage using
+\code{install_name_tool} so that they load the system-provided BZip2 runtime.
 
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options
