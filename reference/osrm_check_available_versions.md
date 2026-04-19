@@ -29,4 +29,6 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   osrm_check_available_versions()
 }
 # }
+`r lifecycle::badge("stable")`
+#> Error: object 'r lifecycle::badge("stable")' not found
 ```

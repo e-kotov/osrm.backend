@@ -1,7 +1,7 @@
 # Start an OSRM MLD/CH server with `osrm-routed`
 
-Launches an `osrm-routed` process pointing at a localized OSRM graph
-(either `.osrm.mldgr` for MLD or `.osrm.hsgr` for CH/CoreCH).
+**\[stable\]** Launches an `osrm-routed` process pointing at a localized
+OSRM graph (either `.osrm.mldgr` for MLD or `.osrm.hsgr` for CH/CoreCH).
 
 ## Usage
 

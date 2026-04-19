@@ -1,8 +1,8 @@
 # Partition OSRM Graph for Multi-Level Dijkstra (MLD)
 
-Run the `osrm-partition` tool to partition an OSRM graph for the MLD
-pipeline. After running, a companion `<base>.osrm.partition` file must
-exist to confirm success.
+**\[stable\]** Run the `osrm-partition` tool to partition an OSRM graph
+for the MLD pipeline. After running, a companion `<base>.osrm.partition`
+file must exist to confirm success.
 
 ## Usage
 

@@ -1,7 +1,7 @@
 # Uninstall OSRM Backend Binaries
 
-Removes the OSRM backend binaries and optionally clears the `PATH`
-configuration from the project's `.Rprofile`.
+**\[stable\]** Removes the OSRM backend binaries and optionally clears
+the `PATH` configuration from the project's `.Rprofile`.
 
 ## Usage
 

@@ -82,6 +82,7 @@ it via `osrm_servers(include_all = TRUE)` and passing its `id` or
 [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md),
 [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md),
 [`osrm_stop_all()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop_all.md)
+**\[stable\]**
 
 ## Examples
 

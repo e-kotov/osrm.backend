@@ -40,4 +40,6 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   unlink(".Rprofile")
 }
 # }
+`r lifecycle::badge("stable")`
+#> Error: object 'r lifecycle::badge("stable")' not found
 ```

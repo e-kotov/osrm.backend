@@ -1,5 +1,7 @@
 # Launch a GUI to View and Debug OSRM Routing
 
+**\[experimental\]**
+
 Launches a lightweight Shiny application to interactively visualize
 routing on a local OSRM server. This interface mimics the `r5rgui`
 experience, supporting left-click for start, right-click for end, and
