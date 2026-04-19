@@ -269,10 +269,9 @@
   }
 
   id <- sprintf(
-    "osrm-%s-%s-%s",
-    if (!is.na(pid)) pid else "na",
+    "osrm-%s-%s",
     if (!is.na(prt)) prt else "na",
-    format(Sys.time(), "%Y%m%d%H%M%OS3")
+    if (!is.na(pid)) pid else "na"
   )
 
   # Validate center is numeric length 2 or NA
