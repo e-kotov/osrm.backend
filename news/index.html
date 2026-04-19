@@ -16,7 +16,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -43,15 +43,21 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="osrmbackend-development-version">osrm.backend (development version)<a class="anchor" aria-label="anchor" href="#osrmbackend-development-version"></a></h2>
-<ul><li><p>Added <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code>, an interactive Shiny web application for exploring and visualizing the loaded OSRM routing network.</p></li>
-<li><p>Improved <code><a href="../reference/osrm_servers.html">osrm_servers()</a></code> with a custom S3 print method for better interactive readability and a new <code>output</code> argument to return raw metadata as a list.</p></li>
+<h2 class="pkg-version" data-toc-text="0.3.0" id="osrmbackend-030">osrm.backend 0.3.0<a class="anchor" aria-label="anchor" href="#osrmbackend-030"></a></h2>
+<div class="section level3">
+<h3 id="new-features-0-3-0">New features<a class="anchor" aria-label="anchor" href="#new-features-0-3-0"></a></h3>
+<ul><li>Added <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code>, an interactive Shiny web application for exploring and visualizing the loaded OSRM routing network. It comes with auto-centering logic to reliably detect the source OSM PBF file or retrieve the extent from the server registry or server object for auto extent.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="improvements-0-3-0">Improvements<a class="anchor" aria-label="anchor" href="#improvements-0-3-0"></a></h3>
+<ul><li><p>Improved <code><a href="../reference/osrm_servers.html">osrm_servers()</a></code> with a custom S3 print method for better interactive readability and a new <code>output</code> argument to return raw metadata as a list.</p></li>
 <li><p>Simplified server IDs in the registry to <code>osrm-{port}-{pid}</code> format for better readability and programmatic access.</p></li>
-<li><p>Enhanced <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code> auto-centering logic to reliably detect the source OSM PBF file and store the center point in the server registry for faster and more resilient launches.</p></li>
+<li><p>OSRM servers and running OSRM servers registry maintained by the package pre-save the extent info for <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code> to use it for auto-centering.</p></li>
 <li><p>Added a helpful hint to <code><a href="../reference/osrm_start.html">osrm_start()</a></code> error messages when a graph is detected to be incompatible with the currently installed OSRM version.</p></li>
 <li><p>Validated and added official support for OSRM <code>v26.4.0</code> and <code>v26.4.1</code> releases, ensuring the necessary runtime libraries (TBB and BZip2) are correctly fetched and patched across all supported platforms (macOS, Windows, and Linux).</p></li>
-<li><p>Updated <code><a href="../reference/osrm_gui.html">osrm_gui()</a></code> examples and tests to follow CRAN policies for interactive applications.</p></li>
+<li><p>Weekly live tests to check for potential regressions, successful OSRM binaries installation and possible issues when new versions of OSRM backend binaries.</p></li>
 </ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.2.0" id="osrmbackend-020">osrm.backend 0.2.0<a class="anchor" aria-label="anchor" href="#osrmbackend-020"></a></h2><p class="text-muted">CRAN release: 2026-02-06</p>
 <div class="section level3">

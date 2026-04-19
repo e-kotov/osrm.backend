@@ -1,11 +1,17 @@
 # Changelog
 
-## osrm.backend (development version)
+## osrm.backend 0.3.0
+
+### New features
 
 - Added
   [`osrm_gui()`](https://www.ekotov.pro/osrm.backend/reference/osrm_gui.md),
   an interactive Shiny web application for exploring and visualizing the
-  loaded OSRM routing network.
+  loaded OSRM routing network. It comes with auto-centering logic to
+  reliably detect the source OSM PBF file or retrieve the extent from
+  the server registry or server object for auto extent.
+
+### Improvements
 
 - Improved
   [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md)
@@ -15,11 +21,10 @@
 - Simplified server IDs in the registry to `osrm-{port}-{pid}` format
   for better readability and programmatic access.
 
-- Enhanced
+- OSRM servers and running OSRM servers registry maintained by the
+  package pre-save the extent info for
   [`osrm_gui()`](https://www.ekotov.pro/osrm.backend/reference/osrm_gui.md)
-  auto-centering logic to reliably detect the source OSM PBF file and
-  store the center point in the server registry for faster and more
-  resilient launches.
+  to use it for auto-centering.
 
 - Added a helpful hint to
   [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
@@ -31,10 +36,9 @@
   correctly fetched and patched across all supported platforms (macOS,
   Windows, and Linux).
 
-- Updated
-  [`osrm_gui()`](https://www.ekotov.pro/osrm.backend/reference/osrm_gui.md)
-  examples and tests to follow CRAN policies for interactive
-  applications.
+- Weekly live tests to check for potential regressions, successful OSRM
+  binaries installation and possible issues when new versions of OSRM
+  backend binaries.
 
 ## osrm.backend 0.2.0
 

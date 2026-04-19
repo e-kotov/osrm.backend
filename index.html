@@ -37,7 +37,7 @@
 
     <a class="navbar-brand me-2" href="index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -81,7 +81,7 @@
 </h2>
 <p>Install the latest stable release of <code>osrm.backend</code> from CRAN with:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># soon on CRAN, watch this space!</span></span></code></pre></div>
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">"osrm.backend"</span><span class="op">)</span></span></code></pre></div>
 <p>You can install the development version of <code>osrm.backend</code> from R Universe with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/utils/install.packages.html" class="external-link">install.packages</a></span><span class="op">(</span><span class="st">'osrm.backend'</span>,</span>
@@ -92,6 +92,19 @@
 <code class="sourceCode R"><span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"e-kotov/osrm.backend"</span><span class="op">)</span></span></code></pre></div>
 <p>You can prepare the OpenStreetMap data for routing with one function <code>osrm_start(&lt;path_to_osm_file_or_folder_with_osm_file&gt;)</code>, set the <code>osrm.server</code> option to <code>http://localhost:5001/</code> and use all the <a href="https://github.com/riatelab/osrm" class="external-link">osrm</a> functions as usual. You do not need to have <code>osrm-backend</code> installed or have <code>Docker</code> to run <code>osrm-backend</code> from a container, everything is handled automatically an all major operating systems. Just follow the <a href="https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html">Get started</a> guide. For advanced control over each step of the process, see the full <a href="https://www.ekotov.pro/osrm.backend/reference/index.html">function reference</a>.</p>
+</div>
+<div class="section level2">
+<h2 id="osrm-graphical-user-interface-demo">OSRM Graphical User Interface demo<a class="anchor" aria-label="anchor" href="#osrm-graphical-user-interface-demo"></a>
+</h2>
+<div class="float">
+<img src="https://github.com/user-attachments/assets/d7f4c671-10f1-4373-9786-1356a8942a94" alt="osrm GUI demo 1"><div class="figcaption">osrm GUI demo 1</div>
+</div>
+<div class="float">
+<img src="https://github.com/user-attachments/assets/f0bd80e8-632e-47f1-9800-2131d5002204" alt="osrm GUI demo 2"><div class="figcaption">osrm GUI demo 2</div>
+</div>
+<div class="float">
+<img src="https://github.com/user-attachments/assets/7b524d02-4e28-4f22-8c1b-221c2e9c7204" alt="osrm GUI demo 3"><div class="figcaption">osrm GUI demo 3</div>
+</div>
 </div>
 </div>
   </main><aside class="col-md-3"><div class="links">
