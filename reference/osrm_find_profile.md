@@ -7,9 +7,9 @@ a `profiles/` directory next to the binary (as placed there by
 [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)).
 If that fails, it looks for sibling directories `share/osrm/profiles`
 and `share/osrm-backend/profiles`. IF that fails, it will try to fall
-back on
-`/usr/local/share/osrm/profiles`,`/usr/local/share/osrm-backend/profiles`,
-`/usr/share/osrm/profiles`, and `/usr/share/osrm-backend/profiles`.
+back on `/usr/local/share/osrm/profiles`,
+`/usr/local/share/osrm-backend/profiles`, `/usr/share/osrm/profiles`,
+and `/usr/share/osrm-backend/profiles`.
 
 ## Usage
 

@@ -11,6 +11,8 @@ with minimal steps.
 osrm_start(
   path,
   algorithm = c("mld", "ch"),
+  force_rebuild = FALSE,
+  show_progress = TRUE,
   quiet = FALSE,
   verbose = FALSE,
   ...
@@ -36,6 +38,16 @@ osrm_start(
   (Contraction Hierarchies). This is only used when `osrm_prepare_graph`
   is automatically called.
 
+- force_rebuild:
+
+  A logical value. If `TRUE`, force the rebuilding of the OSRM graph
+  even if it already exists.
+
+- show_progress:
+
+  A logical value. If `TRUE` (default), show a progress spinner during
+  graph preparation.
+
 - quiet:
 
   A logical value. If `TRUE`, suppresses installer messages and
@@ -57,8 +69,9 @@ osrm_start(
 
 ## Value
 
-A [`processx::process`](http://processx.r-lib.org/reference/process.md)
-object for the running server.
+An OSRM job process (an `osrm_server` object inheriting from
+[`processx::process`](http://processx.r-lib.org/reference/process.md))
+for the running server.
 
 ## Details
 

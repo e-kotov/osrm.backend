@@ -4,6 +4,8 @@
 
 ## osrm.backend 0.2.0
 
+CRAN release: 2026-02-06
+
 ### Breaking Changes
 
 - The `osrm.server.log_file` option no longer accepts a list for

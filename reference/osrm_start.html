@@ -58,6 +58,8 @@ function for most users to get a server running quickly with minimal steps.</p>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">osrm_start</span><span class="op">(</span></span>
 <span>  <span class="va">path</span>,</span>
 <span>  algorithm <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"mld"</span>, <span class="st">"ch"</span><span class="op">)</span>,</span>
+<span>  force_rebuild <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  show_progress <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  <span class="va">...</span></span>
@@ -82,6 +84,16 @@ preparation, either <code>"mld"</code> (Multi-Level Dijkstra, default) or <code>
 automatically called.</p></dd>
 
 
+<dt id="arg-force-rebuild">force_rebuild<a class="anchor" aria-label="anchor" href="#arg-force-rebuild"></a></dt>
+<dd><p>A logical value. If <code>TRUE</code>, force the rebuilding of the
+OSRM graph even if it already exists.</p></dd>
+
+
+<dt id="arg-show-progress">show_progress<a class="anchor" aria-label="anchor" href="#arg-show-progress"></a></dt>
+<dd><p>A logical value. If <code>TRUE</code> (default), show a progress
+spinner during graph preparation.</p></dd>
+
+
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
 <dd><p>A logical value. If <code>TRUE</code>, suppresses installer messages and
 warnings. Defaults to <code>FALSE</code>.</p></dd>
@@ -100,7 +112,8 @@ for debugging.</p></dd>
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code> object for the running server.</p>
+    <p>An OSRM job process (an <code>osrm_server</code> object inheriting from
+<code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code>) for the running server.</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

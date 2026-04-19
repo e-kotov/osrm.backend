@@ -29,7 +29,8 @@ osrm_start_server(
   max_matching_radius = -1L,
   quiet = FALSE,
   verbose = FALSE,
-  echo_cmd = FALSE
+  echo_cmd = FALSE,
+  input_osm = NULL
 )
 ```
 
@@ -62,7 +63,10 @@ osrm_start_server(
 
 - port:
 
-  Integer; TCP port to listen on (default: `5001`)
+  Integer; TCP port to listen on (default: `5001`). The function checks
+  if this port is already in use by another running OSRM server (even
+  from another session) and will stop with an error if a conflict is
+  detected.
 
 - threads:
 
@@ -86,8 +90,9 @@ osrm_start_server(
 
 - algorithm:
 
-  Character or NULL; one of `"CH","CoreCH","MLD"`. If `NULL` (default),
-  auto-selected based on file extension
+  Character or NULL; one of `"MLD"`, `"CH"`, or `"CoreCH"`
+  (case-insensitive). If `NULL` (default), auto-selected based on file
+  extension.
 
 - max_viaroute_size:
 
@@ -131,10 +136,18 @@ osrm_start_server(
 
   Logical; echo command line to console before launch (default: `FALSE`)
 
+- input_osm:
+
+  Character or NULL; path to the original OSM input file (for tracking
+  purposes). This parameter is typically used internally by
+  [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
+  to record the source data.
+
 ## Value
 
-A [`processx::process`](http://processx.r-lib.org/reference/process.md)
-object for the running server (also registered internally).
+An OSRM job process (an `osrm_server` object inheriting from
+[`processx::process`](http://processx.r-lib.org/reference/process.md))
+for the running server (also registered internally).
 
 ## Details
 

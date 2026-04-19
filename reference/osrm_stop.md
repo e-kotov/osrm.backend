@@ -4,6 +4,7 @@ Terminates an `osrm-routed` process launched by
 [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
 or
 [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md).
+Can also stop external servers by PID or ID.
 
 ## Usage
 
@@ -22,9 +23,9 @@ osrm_stop(
 
 - server:
 
-  Optional
-  [`processx::process`](http://processx.r-lib.org/reference/process.md)
-  object returned by
+  Optional OSRM job process (an `osrm_server` object inheriting from
+  [`processx::process`](http://processx.r-lib.org/reference/process.md))
+  returned by
   [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md).
 
 - id:
@@ -56,13 +57,13 @@ A list with fields `id`, `pid`, `port`, `stopped` (logical).
 
 This function provides a flexible way to stop a running OSRM process. If
 no arguments are specified, it defaults to stopping the most recently
-started server that is still alive.
+started server that is still alive in the current session.
 
 You can also stop a specific server by providing:
 
-- The
+- The OSRM job process (a
   [`processx::process`](http://processx.r-lib.org/reference/process.md)
-  object returned by
+  object) returned by
   [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
   or
   [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md).
@@ -70,6 +71,11 @@ You can also stop a specific server by providing:
 - The server's `id`, `port`, or `pid` (use
   [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md)
   to find these).
+
+**Advanced Use:** You can stop an external `osrm-routed` process (one
+not started by the current R session) by passing its PID, or by finding
+it via `osrm_servers(include_all = TRUE)` and passing its `id` or
+`port`. This requires permission to signal the process.
 
 ## See also
 
@@ -112,5 +118,18 @@ if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
   )
   unlink(osrm_dir, recursive = TRUE)
 }
+
+if (FALSE) { # \dontrun{
+  # Advanced: Stop an external server by PID
+  # 1. Find the PID of an external server
+  srvs <- osrm_servers(include_all = TRUE)
+  # 2. Stop it by PID
+  if (nrow(srvs) > 0) {
+    osrm_stop(pid = srvs$pid[1])
+  }
+  
+  # Or stop by its external ID (e.g., "sys-12345")
+  osrm_stop(id = "sys-12345")
+} # }
 # }
 ```

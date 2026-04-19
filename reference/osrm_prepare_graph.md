@@ -92,7 +92,7 @@ osrm_prepare_graph(
 
 - algorithm:
 
-  A string. One of `"mld"` (default) or `"ch"`.
+  A string. One of `"MLD"` (default) or `"CH"` (case-insensitive).
 
 - balance:
 

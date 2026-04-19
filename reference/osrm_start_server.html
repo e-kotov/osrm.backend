@@ -75,7 +75,8 @@
 <span>  max_matching_radius <span class="op">=</span> <span class="op">-</span><span class="fl">1L</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  echo_cmd <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  echo_cmd <span class="op">=</span> <span class="cn">FALSE</span>,</span>
+<span>  input_osm <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -108,7 +109,9 @@
 
 
 <dt id="arg-port">port<a class="anchor" aria-label="anchor" href="#arg-port"></a></dt>
-<dd><p>Integer; TCP port to listen on (default: <code>5001</code>)</p></dd>
+<dd><p>Integer; TCP port to listen on (default: <code>5001</code>). The function checks
+if this port is already in use by another running OSRM server (even from
+another session) and will stop with an error if a conflict is detected.</p></dd>
 
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
@@ -132,7 +135,8 @@
 
 
 <dt id="arg-algorithm">algorithm<a class="anchor" aria-label="anchor" href="#arg-algorithm"></a></dt>
-<dd><p>Character or NULL; one of <code>"CH","CoreCH","MLD"</code>. If <code>NULL</code> (default), auto-selected based on file extension</p></dd>
+<dd><p>Character or NULL; one of <code>"MLD"</code>, <code>"CH"</code>, or <code>"CoreCH"</code> (case-insensitive).
+If <code>NULL</code> (default), auto-selected based on file extension.</p></dd>
 
 
 <dt id="arg-max-viaroute-size">max_viaroute_size<a class="anchor" aria-label="anchor" href="#arg-max-viaroute-size"></a></dt>
@@ -176,10 +180,16 @@ if R is busy. Defaults to <code>FALSE</code>, which writes logs to a temporary f
 <dt id="arg-echo-cmd">echo_cmd<a class="anchor" aria-label="anchor" href="#arg-echo-cmd"></a></dt>
 <dd><p>Logical; echo command line to console before launch (default: <code>FALSE</code>)</p></dd>
 
+
+<dt id="arg-input-osm">input_osm<a class="anchor" aria-label="anchor" href="#arg-input-osm"></a></dt>
+<dd><p>Character or NULL; path to the original OSM input file (for tracking purposes).
+This parameter is typically used internally by <code><a href="osrm_start.html">osrm_start()</a></code> to record the source data.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
-    <p>A <code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code> object for the running server (also registered internally).</p>
+    <p>An OSRM job process (an <code>osrm_server</code> object inheriting from
+<code><a href="http://processx.r-lib.org/reference/process.html" class="external-link">processx::process</a></code>) for the running server (also registered internally).</p>
     </div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>

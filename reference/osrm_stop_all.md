@@ -5,8 +5,16 @@ Stop all running OSRM servers started via this package
 ## Usage
 
 ``` r
-osrm_stop_all()
+osrm_stop_all(include_all = FALSE)
 ```
+
+## Arguments
+
+- include_all:
+
+  A logical value. If `TRUE`, stop all OSRM servers found running on the
+  system, including those not started by the current R session. Requires
+  `ps` and `jsonlite` packages. Defaults to `FALSE`.
 
 ## Value
 

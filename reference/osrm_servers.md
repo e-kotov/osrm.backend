@@ -1,22 +1,36 @@
-# List OSRM servers started via this package
+# List OSRM servers
 
-Returns a snapshot of servers registered by
+Lists `osrm-routed` processes. By default, it returns a snapshot of
+servers started by the current R session (registered via
 [`osrm_start_server()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start_server.md)
 or
-[`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md).
-You can stop one by passing its `id`, `port`, or `pid` to
+[`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)).
+You can optionally list all `osrm-routed` processes running on the
+system, including those started by other sessions or manually.
+
+You can stop a server by passing its `id`, `port`, or `pid` to
 [`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md).
 
 ## Usage
 
 ``` r
-osrm_servers()
+osrm_servers(include_all = FALSE)
 ```
+
+## Arguments
+
+- include_all:
+
+  Logical; if `TRUE`, scans the system process table for all
+  `osrm-routed` processes, including those not started by this package
+  in the current session. Default is `FALSE`.
 
 ## Value
 
-A data.frame with columns: `id`, `pid`, `port`, `algorithm`,
-`started_at`, `alive`, `has_handle`, `log`.
+A data.frame of OSRM job processes with columns: `id`, `pid`, `port`,
+`algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`.
+External servers will have `id` prefixed with `sys-` and `log` set to
+`<external>`.
 
 ## Examples
 

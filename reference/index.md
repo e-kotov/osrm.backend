@@ -2,10 +2,14 @@
 
 ## Quick Start
 
-Automate installation, graph preparation, and server launch.
+Quickly start/stop/list servers and launch the GUI to inspect routes
 
 - [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
   : Start an OSRM Server with Automatic Setup
+- [`osrm_gui()`](https://www.ekotov.pro/osrm.backend/reference/osrm_gui.md)
+  : Launch a GUI to View and Debug OSRM Routing
+- [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md)
+  : List OSRM servers
 - [`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md)
   : Stop an OSRM Server
 
@@ -65,7 +69,10 @@ them cleanly.
   Start an OSRM MLD/CH server with `osrm-routed`
 
 - [`osrm_servers()`](https://www.ekotov.pro/osrm.backend/reference/osrm_servers.md)
-  : List OSRM servers started via this package
+  : List OSRM servers
+
+- [`osrm_get_server_profile()`](https://www.ekotov.pro/osrm.backend/reference/osrm_get_server_profile.md)
+  : Retrieve the OSRM Profile for a Running Server
 
 - [`osrm_stop()`](https://www.ekotov.pro/osrm.backend/reference/osrm_stop.md)
   : Stop an OSRM Server
