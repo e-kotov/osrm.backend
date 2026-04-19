@@ -7,7 +7,7 @@
 osrm_check_latest_version()
 }
 \value{
-A string containing the latest version tag (e.g., \code{"v5.27.1"}).
+A string containing the latest version tag (e.g., \code{"v26.4.1"}).
 }
 \description{
 Queries the GitHub API to find the most recent stable (non-pre-release)

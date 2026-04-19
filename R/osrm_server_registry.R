@@ -9,7 +9,7 @@
 # Small helpers ---------------------------------------------------------------
 
 `%||%` <- function(a, b) {
-  if (is.null(a) || (is.character(a) && !nzchar(a))) b else a
+  if (is.null(a) || (is.character(a) && length(a) == 1 && !nzchar(a))) b else a
 }
 
 .osrm_registry_dir <- function() {
@@ -257,7 +257,7 @@
 
 # Registration API used by osrm_start_server() --------------------------------
 
-.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL, profile = NULL) {
+.osrm_register <- function(proc, port, prefix, algorithm, log = NULL, input_osm = NULL, profile = NULL, center = NULL) {
   ts <- format(Sys.time(), "%Y-%m-%dT%H:%M:%OS3Z", tz = "UTC", usetz = FALSE)
   pid <- tryCatch(
     if (!is.null(proc)) proc$get_pid() else NA_integer_,
@@ -269,11 +269,17 @@
   }
 
   id <- sprintf(
-    "osrm-%s-%s-%s",
-    if (!is.na(pid)) pid else "na",
+    "osrm-%s-%s",
     if (!is.na(prt)) prt else "na",
-    format(Sys.time(), "%Y%m%d%H%M%OS3")
+    if (!is.na(pid)) pid else "na"
   )
+
+  # Validate center is numeric length 2 or NA
+  center_val <- if (!is.null(center) && length(center) == 2 && all(is.numeric(center))) {
+    as.numeric(center)
+  } else {
+    c(NA_real_, NA_real_)
+  }
 
   .osrm_state$registry[[id]] <- list(
     id = id,
@@ -285,6 +291,8 @@
     log = as.character(log %||% ""),
     input_osm = as.character(input_osm %||% ""),
     profile = as.character(profile %||% ""),
+    center_lon = center_val[1],
+    center_lat = center_val[2],
     proc = proc
   )
 

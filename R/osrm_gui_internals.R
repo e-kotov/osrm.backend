@@ -126,31 +126,74 @@ gui_resolve_map_view <- function(center, zoom, input_osrm) {
   auto_zoom <- NULL
 
   if (is.null(center)) {
-    pbf_path <- NULL
-    if (
-      is.character(input_osrm) &&
-        grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)
-    ) {
-      pbf_path <- input_osrm
-    } else if (is.null(input_osrm) || inherits(input_osrm, "process")) {
+    # 1. Try to extract from osrm_server object metadata directly
+    if (inherits(input_osrm, "osrm_server")) {
+      meta <- attr(input_osrm, "osrm_metadata")
+      if (!is.null(meta$center) && length(meta$center) == 2 && !any(is.na(meta$center))) {
+        auto_center <- meta$center
+      }
+    }
+    
+    # 2. Try to extract from registry
+    if (is.null(auto_center)) {
       srv_info <- osrm_servers()
       alive_srv <- srv_info[srv_info$alive, ]
+      
+      # Match by port if input is a process or "auto"
       if (nrow(alive_srv) > 0) {
-        selected <- alive_srv[which.max(alive_srv$started_at), ]
-        if (nzchar(selected$input_osm)) pbf_path <- selected$input_osm
+        selected <- NULL
+        
+        # If input_osrm is an object with a specific port, match it
+        if (inherits(input_osrm, "osrm_server")) {
+          target_port <- attr(input_osrm, "osrm_metadata")$port
+          if (!is.null(target_port)) {
+            selected <- alive_srv[alive_srv$port == target_port, ]
+          }
+        }
+        
+        # Otherwise take the most recent
+        if (is.null(selected) || nrow(selected) == 0) {
+          selected <- alive_srv[which.max(alive_srv$started_at), ]
+        }
+        
+        # Check if the registry actually stored the center
+        if (!is.null(selected$center_lon) && !is.null(selected$center_lat) &&
+            !is.na(selected$center_lon[1]) && !is.na(selected$center_lat[1])) {
+          auto_center <- c(selected$center_lon[1], selected$center_lat[1])
+        }
       }
     }
 
-    if (!is.null(pbf_path) && file.exists(pbf_path)) {
-      pbf_info <- .get_pbf_extent(pbf_path)
-      if (!is.null(pbf_info)) {
-        auto_center <- pbf_info$center
-        auto_zoom <- if (is.null(zoom)) 9 else zoom
-        message(
-          "Auto-centered map on PBF extent: ",
-          paste(round(auto_center, 4), collapse = ", ")
-        )
+    # 3. Fallback: PBF Parsing
+    if (is.null(auto_center)) {
+      pbf_path <- NULL
+      if (
+        is.character(input_osrm) &&
+          grepl("\\.osm\\.pbf$", input_osrm, ignore.case = TRUE)
+      ) {
+        pbf_path <- input_osrm
+      } else if (exists("selected") && !is.null(selected) && nrow(selected) > 0) {
+        if (nzchar(selected$input_osm[1])) pbf_path <- selected$input_osm[1]
       }
+
+      if (!is.null(pbf_path) && file.exists(pbf_path)) {
+        pbf_info <- .get_pbf_extent(pbf_path)
+        if (!is.null(pbf_info)) {
+          auto_center <- pbf_info$center
+        } else {
+          message("Could not auto-detect map center from PBF file. Defaulting to world view.")
+        }
+      } else {
+        message("Source .osm.pbf file not found. Could not auto-detect map center. Defaulting to world view.")
+      }
+    }
+    
+    if (!is.null(auto_center)) {
+      auto_zoom <- if (is.null(zoom)) 9 else zoom
+      message(
+        "Auto-centered map on bounding box center: ",
+        paste(round(auto_center, 4), collapse = ", ")
+      )
     }
   }
 
@@ -207,6 +250,13 @@ gui_ui_resources <- function() {
       #shiny-notification-panel { top: 70px; right: 10px; left: auto; bottom: auto; }
       
       .sidebar-layout { flex: 1; display: flex; overflow: hidden; min-height: 0; }
+      
+      .sidebar-panel { 
+        padding: 15px; 
+        background: #f8f9fa; 
+        border-right: 1px solid #dee2e6; 
+        overflow-y: auto; 
+      }
       .sidebar-panel h4:first-child { margin-top: 0; }
       .sidebar-panel h4 { margin-top: 20px; }
       
@@ -297,34 +347,24 @@ gui_ui_resources <- function() {
       
       @media (max-width: 768px) {
         .sidebar-panel {
-          position: absolute;
-          left: -100%;
-          top: 50px; /* Below header */
-          bottom: 0;
-          width: 80% !important;
-          z-index: 2000;
-          transition: left 0.3s ease;
-          box-shadow: 2px 0 5px rgba(0,0,0,0.2);
+          display: none;
+          width: 250px !important;
+          flex-shrink: 0;
         }
         .sidebar-panel.show-sidebar {
-          left: 0;
+          display: block;
         }
         .main-panel {
           width: 100% !important;
+          flex: 1;
+          min-width: 0;
         }
         .hamburger-btn {
           display: inline-block;
         }
-        /* Overlay to close sidebar when clicking outside */
+        /* Hide the overlay since we are pushing the map instead */
         .sidebar-overlay {
-          display: none;
-          position: fixed;
-          top: 0; left: 0; right: 0; bottom: 0;
-          background: rgba(0,0,0,0.5);
-          z-index: 1999;
-        }
-        .sidebar-overlay.show-overlay {
-          display: block;
+          display: none !important;
         }
         .route-stats-overlay {
           flex-direction: column;
@@ -336,12 +376,6 @@ gui_ui_resources <- function() {
   js <- "
     $(document).on('click', '#hamburger_btn', function() {
       $('.sidebar-panel').toggleClass('show-sidebar');
-      $('.sidebar-overlay').toggleClass('show-overlay');
-    });
-    
-    $(document).on('click', '.sidebar-overlay', function() {
-      $('.sidebar-panel').removeClass('show-sidebar');
-      $('.sidebar-overlay').removeClass('show-overlay');
     });
 
     function initializeMapListeners(mapId) {

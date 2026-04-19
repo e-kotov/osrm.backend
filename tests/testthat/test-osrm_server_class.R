@@ -39,18 +39,18 @@ test_that("osrm_server class and metadata are correctly assigned", {
     }
   )
 
+  state_env <- asNamespace("osrm.backend")$.osrm_state
+  orig_reg <- state_env$registry
+  on.exit(state_env$registry <- orig_reg, add = TRUE)
+  state_env$registry <- list()
+
   with_mocked_bindings(
     {
-      with_mocked_bindings(
-        {
-          server <- osrm_start_server(
-            osrm_path = osrm_path,
-            algorithm = "MLD",
-            port = 5002L,
-            quiet = TRUE
-          )
-        },
-        .osrm_state = new.env()
+      server <- osrm_start_server(
+        osrm_path = osrm_path,
+        algorithm = "MLD",
+        port = 5002L,
+        quiet = TRUE
       )
     },
     process = MockProcess,
@@ -111,19 +111,16 @@ test_that("osrm_stop works with osrm_server object", {
     class = c("osrm_server", "process", "list")
   )
   
-  # Mock the registry state so osrm_stop can find it if needed, 
-  # though it usually prefers the object directly if passed as 'server'
-  mock_state <- new.env()
-  mock_state$registry <- list(
+  # Mock the registry state so osrm_stop can find it if needed
+  state_env <- asNamespace("osrm.backend")$.osrm_state
+  orig_reg <- state_env$registry
+  on.exit(state_env$registry <- orig_reg, add = TRUE)
+  
+  state_env$registry <- list(
     "test" = list(id = "test", pid = 12345, port = 5001, proc = server)
   )
   
-  with_mocked_bindings(
-    {
-      osrm_stop(server = server, quiet = TRUE)
-    },
-    .osrm_state = mock_state
-  )
+  osrm_stop(server = server, quiet = TRUE)
   
   expect_true(killed)
 })

@@ -4,17 +4,23 @@
 \alias{osrm_servers}
 \title{List OSRM servers}
 \usage{
-osrm_servers(include_all = FALSE)
+osrm_servers(include_all = FALSE, output = c("data.frame", "list"))
 }
 \arguments{
 \item{include_all}{Logical; if \code{TRUE}, scans the system process table for
 all \code{osrm-routed} processes, including those not started by this package
 in the current session. Default is \code{FALSE}.}
+
+\item{output}{Character string specifying the return format. Either \code{"data.frame"}
+(the default) which returns a tabular summary with a custom print method,
+or \code{"list"} which returns a detailed list of server metadata objects.}
 }
 \value{
-A data.frame of OSRM job processes with columns:
-\code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}, \code{log}, \code{input_osm}.
-External servers will have \code{id} prefixed with \verb{sys-} and \code{log} set to \verb{<external>}.
+If \code{output = "data.frame"}, returns a \code{data.frame} (class \code{osrm_server_list})
+of OSRM job processes with columns:
+\code{id}, \code{pid}, \code{port}, \code{algorithm}, \code{started_at}, \code{alive}, \code{has_handle}, \code{log}, \code{input_osm},
+\code{center_lon}, \code{center_lat}. External servers will have \code{id} prefixed with \verb{sys-} and
+\code{log} set to \verb{<external>}. If \code{output = "list"}, returns a named list of server metadata.
 }
 \description{
 Lists \code{osrm-routed} processes. By default, it returns a snapshot of servers

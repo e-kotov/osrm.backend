@@ -68,7 +68,6 @@ It attempts to detect an active OSRM server. If an OSRM job process (from
 it will start a temporary server for the session.
 }
 \examples{
-\dontrun{
 if (interactive()) {
   # 1. Auto-detect running server (errors if none running):
   osrm_gui()
@@ -91,6 +90,5 @@ if (interactive()) {
 
   # 7. Enable debug mode:
   # osrm_gui(debug = TRUE)
-}
 }
 }

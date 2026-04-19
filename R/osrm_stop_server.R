@@ -13,10 +13,15 @@
 #' @param include_all Logical; if `TRUE`, scans the system process table for
 #'   all `osrm-routed` processes, including those not started by this package
 #'   in the current session. Default is `FALSE`.
+#' @param output Character string specifying the return format. Either `"data.frame"`
+#'   (the default) which returns a tabular summary with a custom print method,
+#'   or `"list"` which returns a detailed list of server metadata objects.
 #'
-#' @return A data.frame of OSRM job processes with columns:
-#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`.
-#'   External servers will have `id` prefixed with `sys-` and `log` set to `<external>`.
+#' @return If `output = "data.frame"`, returns a `data.frame` (class `osrm_server_list`)
+#'   of OSRM job processes with columns:
+#'   `id`, `pid`, `port`, `algorithm`, `started_at`, `alive`, `has_handle`, `log`, `input_osm`,
+#'   `center_lon`, `center_lat`. External servers will have `id` prefixed with `sys-` and
+#'   `log` set to `<external>`. If `output = "list"`, returns a named list of server metadata.
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -48,7 +53,9 @@
 #' }
 #' }
 #' @export
-osrm_servers <- function(include_all = FALSE) {
+osrm_servers <- function(include_all = FALSE, output = c("data.frame", "list")) {
+  output <- match.arg(output)
+  
   # 1. Background Cleanup: Always scan other registries to GC dead files
   # This ensures orphaned registry files from crashed sessions are pruned.
   orphans <- tryCatch(.osrm_registry_scan_others(), error = function(e) list())
@@ -57,8 +64,8 @@ osrm_servers <- function(include_all = FALSE) {
   reg <- .osrm_state$registry
   
   # Helper to build an empty/structured data.frame
-  build_df <- function(ids, pids, ports, algos, starts, alives, handles, logs, inputs) {
-    data.frame(
+  build_df <- function(ids, pids, ports, algos, starts, alives, handles, logs, inputs, center_lons, center_lats) {
+    df <- data.frame(
       id = as.character(ids),
       pid = as.integer(pids),
       port = as.integer(ports),
@@ -68,8 +75,12 @@ osrm_servers <- function(include_all = FALSE) {
       has_handle = as.logical(handles),
       log = as.character(logs),
       input_osm = as.character(inputs),
+      center_lon = as.numeric(center_lons),
+      center_lat = as.numeric(center_lats),
       stringsAsFactors = FALSE
     )
+    class(df) <- c("osrm_server_list", "data.frame")
+    df
   }
 
   out_reg <- if (length(reg)) {
@@ -94,121 +105,183 @@ osrm_servers <- function(include_all = FALSE) {
       alives = alive_vec,
       handles = handle_vec,
       logs = vapply(reg, function(e) as.character(e$log %||% ""), ""),
-      inputs = vapply(reg, function(e) as.character(e$input_osm %||% ""), "")
+      inputs = vapply(reg, function(e) as.character(e$input_osm %||% ""), ""),
+      center_lons = vapply(reg, function(e) as.numeric(e$center_lon %||% NA_real_), 0.0),
+      center_lats = vapply(reg, function(e) as.numeric(e$center_lat %||% NA_real_), 0.0)
     )
   } else {
-    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character())
+    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character(), numeric(), numeric())
   }
 
-  if (!isTRUE(include_all)) {
-    return(out_reg)
-  }
-  
-  # 3. Process Orphans/Foreign (already scanned in Step 1)
-  out_orph <- if (length(orphans)) {
-    build_df(
-      ids = vapply(orphans, `[[`, "", "id"),
-      pids = vapply(orphans, `[[`, 0L, "pid"),
-      ports = vapply(orphans, `[[`, 0L, "port"),
-      algos = vapply(orphans, function(e) as.character(e$algorithm %||% ""), ""),
-      starts = vapply(orphans, function(e) as.character(e$started_at %||% NA_character_), ""),
-      alives = rep(TRUE, length(orphans)),
-      handles = rep(FALSE, length(orphans)),
-      logs = vapply(orphans, function(e) as.character(e$log %||% ""), ""),
-      inputs = vapply(orphans, function(e) as.character(e$input_osm %||% ""), "")
-    )
-  } else {
-    build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character())
-  }
+  # Merge: Current + Orphans + System
+  res <- out_reg
+  if (isTRUE(include_all)) {
+    # 3. Process Orphans/Foreign (already scanned in Step 1)
+    out_orph <- if (length(orphans)) {
+      build_df(
+        ids = vapply(orphans, `[[`, "", "id"),
+        pids = vapply(orphans, `[[`, 0L, "pid"),
+        ports = vapply(orphans, `[[`, 0L, "port"),
+        algos = vapply(orphans, function(e) as.character(e$algorithm %||% ""), ""),
+        starts = vapply(orphans, function(e) as.character(e$started_at %||% NA_character_), ""),
+        alives = rep(TRUE, length(orphans)),
+        handles = rep(FALSE, length(orphans)),
+        logs = vapply(orphans, function(e) as.character(e$log %||% ""), ""),
+        inputs = vapply(orphans, function(e) as.character(e$input_osm %||% ""), ""),
+        center_lons = vapply(orphans, function(e) as.numeric(e$center_lon %||% NA_real_), 0.0),
+        center_lats = vapply(orphans, function(e) as.numeric(e$center_lat %||% NA_real_), 0.0)
+      )
+    } else {
+      build_df(character(), integer(), integer(), character(), character(), logical(), logical(), character(), character(), numeric(), numeric())
+    }
 
-  # 3. System Process Discovery via ps
-  sys_procs <- tryCatch(ps::ps(), error = function(e) NULL)
-  
-  sys_rows <- if (!is.null(sys_procs)) {
-    # Filter for osrm-routed
-    is_osrm <- grepl("osrm-routed", sys_procs$name, ignore.case = TRUE)
-    sys_osrm <- sys_procs[is_osrm, ]
-    
-    if (nrow(sys_osrm) > 0) {
-      ext_ids <- character()
-      ext_pids <- integer()
-      ext_ports <- integer()
-      ext_algos <- character()
-      ext_starts <- as.POSIXct(character())
-      ext_alives <- logical()
-      ext_handles <- logical()
-      ext_logs <- character()
-      ext_inputs <- character()
+    # 3. System Process Discovery via ps
+    sys_procs <- tryCatch(ps::ps(), error = function(e) NULL)
 
-      # PIDs we already know about (Current + Orphans)
-      known_pids <- c(out_reg$pid, out_orph$pid)
+    sys_rows <- if (!is.null(sys_procs)) {
+      # Filter for osrm-routed
+      is_osrm <- grepl("osrm-routed", sys_procs$name, ignore.case = TRUE)
+      sys_osrm <- sys_procs[is_osrm, ]
 
-      for (i in seq_len(nrow(sys_osrm))) {
-        p <- sys_osrm[i, ]
-        this_pid <- p$pid
-        
-        if (this_pid %in% known_pids) next
+      if (nrow(sys_osrm) > 0) {
+        ext_ids <- character()
+        ext_pids <- integer()
+        ext_ports <- integer()
+        ext_algos <- character()
+        ext_starts <- as.POSIXct(character())
+        ext_alives <- logical()
+        ext_handles <- logical()
+        ext_logs <- character()
+        ext_inputs <- character()
+        ext_center_lons <- numeric()
+        ext_center_lats <- numeric()
 
-        # Parse command line
-        cmd <- tryCatch(ps::ps_cmdline(p), error = function(e) character())
-        
-        # Defaults
-        port <- 5000L
-        algo <- "CH"
-        input <- NA_character_
-        
-        # Simple parsing logic
-        if (length(cmd) > 1) {
-          # Port
-          idx_p <- which(cmd %in% c("-p", "--port"))
-          if (length(idx_p) && (idx_p[1] + 1 <= length(cmd))) {
-            val <- suppressWarnings(as.integer(cmd[idx_p[1] + 1]))
-            if (!is.na(val)) port <- val
+        # PIDs we already know about (Current + Orphans)
+        known_pids <- c(out_reg$pid, out_orph$pid)
+
+        for (i in seq_len(nrow(sys_osrm))) {
+          p <- sys_osrm[i, ]
+          this_pid <- p$pid
+
+          if (this_pid %in% known_pids) next
+
+          # Parse command line
+          cmd <- tryCatch(ps::ps_cmdline(p), error = function(e) character())
+
+          # Defaults
+          port <- 5000L
+          algo <- "CH"
+          input <- NA_character_
+
+          # Simple parsing logic
+          if (length(cmd) > 1) {
+            # Port
+            idx_p <- which(cmd %in% c("-p", "--port"))
+            if (length(idx_p) && (idx_p[1] + 1 <= length(cmd))) {
+              val <- suppressWarnings(as.integer(cmd[idx_p[1] + 1]))
+              if (!is.na(val)) port <- val
+            }
+
+            # Algorithm
+            idx_a <- which(cmd %in% c("-a", "--algorithm"))
+            if (length(idx_a) && (idx_a[1] + 1 <= length(cmd))) {
+              algo <- cmd[idx_a[1] + 1]
+            }
+
+            # Input: heuristic - last arg that doesn't start with "-"
+            args <- cmd[-1]
+            non_flag <- args[!startsWith(args, "-")]
+            if (length(non_flag) > 0) {
+              input <- utils::tail(non_flag, 1)
+            }
           }
-          
-          # Algorithm
-          idx_a <- which(cmd %in% c("-a", "--algorithm"))
-          if (length(idx_a) && (idx_a[1] + 1 <= length(cmd))) {
-            algo <- cmd[idx_a[1] + 1]
-          }
-          
-          # Input: heuristic - last arg that doesn't start with "-"
-          args <- cmd[-1]
-          non_flag <- args[!startsWith(args, "-")]
-          if (length(non_flag) > 0) {
-            input <- utils::tail(non_flag, 1)
-          }
+
+          ext_ids <- c(ext_ids, paste0("sys-", this_pid))
+          ext_pids <- c(ext_pids, this_pid)
+          ext_ports <- c(ext_ports, port)
+          ext_algos <- c(ext_algos, algo)
+          ext_starts <- c(ext_starts, NA)
+          ext_alives <- c(ext_alives, TRUE)
+          ext_handles <- c(ext_handles, FALSE)
+          ext_logs <- c(ext_logs, "<external>")
+          ext_inputs <- c(ext_inputs, if (is.na(input)) "" else input)
+          ext_center_lons <- c(ext_center_lons, NA_real_)
+          ext_center_lats <- c(ext_center_lats, NA_real_)
         }
 
-        ext_ids <- c(ext_ids, paste0("sys-", this_pid))
-        ext_pids <- c(ext_pids, this_pid)
-        ext_ports <- c(ext_ports, port)
-        ext_algos <- c(ext_algos, algo)
-        ext_starts <- c(ext_starts, NA) 
-        ext_alives <- c(ext_alives, TRUE)
-        ext_handles <- c(ext_handles, FALSE)
-        ext_logs <- c(ext_logs, "<external>")
-        ext_inputs <- c(ext_inputs, if (is.na(input)) "" else input)
-      }
-      
-      if (length(ext_pids) > 0) {
-        build_df(ext_ids, ext_pids, ext_ports, ext_algos, ext_starts, ext_alives, ext_handles, ext_logs, ext_inputs)
+        if (length(ext_pids) > 0) {
+          build_df(ext_ids, ext_pids, ext_ports, ext_algos, ext_starts, ext_alives, ext_handles, ext_logs, ext_inputs, ext_center_lons, ext_center_lats)
+        } else {
+          NULL
+        }
       } else {
         NULL
       }
     } else {
       NULL
     }
-  } else {
-    NULL
-  }
 
-  # Merge: Current + Orphans + System
-  res <- out_reg
-  if (nrow(out_orph) > 0) res <- rbind(res, out_orph)
-  if (!is.null(sys_rows) && nrow(sys_rows) > 0) res <- rbind(res, sys_rows)
+    if (nrow(out_orph) > 0) res <- rbind(res, out_orph)
+    if (!is.null(sys_rows) && nrow(sys_rows) > 0) res <- rbind(res, sys_rows)
+  }
   
+  if (output == "list") {
+    if (nrow(res) == 0) return(list())
+    
+    # Strip the custom class so split/as.list behave like a plain data.frame
+    df_raw <- res
+    class(df_raw) <- "data.frame"
+    
+    # We must explicitly convert the data.frame to a list of lists.
+    # split() on plain data.frame creates a list of 1-row dataframes.
+    row_dfs <- split(df_raw, seq_len(nrow(df_raw)))
+    out_list <- lapply(row_dfs, function(df) {
+      lst <- as.list(df)
+      # Flatten 1-element vectors to scalars to match 'metadata list' expectation
+      lapply(lst, function(x) x[[1]])
+    })
+    
+    names(out_list) <- res$id
+    return(out_list)
+  }
   res
+}
+
+#' @export
+print.osrm_server_list <- function(x, ...) {
+  n <- nrow(x)
+  if (n == 0) {
+    cat("\u2139 No OSRM servers registered.\n")
+    return(invisible(x))
+  }
+  
+  cat("\u2139 This is a standard data.frame. Access full columns with `$` (e.g., `x$log`).\n\n")
+  
+  for (i in seq_len(n)) {
+    status <- if (x$alive[i]) "RUNNING" else "DEAD (Orphaned)"
+    has_handle <- if (x$has_handle[i]) "Yes" else "No"
+    
+    center_str <- if (is.na(x$center_lon[i]) || is.na(x$center_lat[i])) {
+      "NA, NA"
+    } else {
+      sprintf("%.4f, %.4f", x$center_lon[i], x$center_lat[i])
+    }
+    
+    started <- if (is.na(x$started_at[i])) "Unknown" else format(x$started_at[i], "%Y-%m-%d %H:%M:%S")
+    
+    cat(sprintf("[%d] OSRM Server (pid: %d, port: %d)\n", i, x$pid[i], x$port[i]))
+    cat(sprintf("    Status    : %s\n", status))
+    cat(sprintf("    Algorithm : %s\n", x$algorithm[i]))
+    cat(sprintf("    Started   : %s\n", started))
+    cat(sprintf("    Input OSM : %s\n", x$input_osm[i]))
+    cat(sprintf("    Log File  : %s\n", x$log[i]))
+    cat(sprintf("    Center    : %s\n", center_str))
+    cat(sprintf("    Handle    : %s\n", has_handle))
+    
+    if (i < n) cat("\n")
+  }
+  
+  invisible(x)
 }
 
 #' Stop an OSRM Server
