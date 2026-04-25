@@ -35,8 +35,19 @@
 #' }
 #' }
 osrm_which <- function(quiet = FALSE) {
-  osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
+  osrm_exec <- resolve_osrm_bin("osrm-routed")
+  
+  # Resolve to full path if it's just a name on PATH
   resolved <- Sys.which(osrm_exec)
+  if (!nzchar(resolved)) {
+    # If Sys.which failed, check if osrm_exec itself is a valid path
+    if (file.exists(osrm_exec)) {
+      resolved <- normalizePath(osrm_exec, mustWork = TRUE)
+    } else {
+      # Still nothing found
+      resolved <- ""
+    }
+  }
 
   if (!nzchar(resolved)) {
     stop(

@@ -12,7 +12,7 @@ test_that("osrm_contract runs osrm-contract with expected arguments", {
   captured <- list()
   mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
     captured <<- list(
-      command = command,
+      command = basename(command),
       args = args,
       echo = echo,
       spinner = spinner,

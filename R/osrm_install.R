@@ -1189,8 +1189,7 @@ maybe_install_windows_v6_runtime <- function(
     return(invisible(NULL))
   }
 
-  version_tag <- tolower(as.character(version)[1])
-  if (is.na(version_tag) || !startsWith(version_tag, "v6")) {
+  if (!version_at_least(version, "v6.0.0")) {
     return(invisible(NULL))
   }
 

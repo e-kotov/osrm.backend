@@ -151,7 +151,7 @@ osrm_partition <- function(
   show_echo_cmd <- !quiet && echo_cmd
 
   logs <- processx::run(
-    "osrm-partition",
+    resolve_osrm_bin("osrm-partition"),
     args = arguments,
     echo = show_echo,
     spinner = show_spinner,

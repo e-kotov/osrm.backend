@@ -419,3 +419,48 @@ check_algorithm_conflict <- function(dir_path, base_name, target_algorithm, stag
 
   invisible(NULL)
 }
+
+#' Resolve OSRM Binary Path
+#'
+#' Internal helper that resolves the path to an OSRM binary (e.g., `osrm-extract`).
+#' It first checks if a full path to `osrm-routed` is provided in options. If so,
+#' it looks for the target binary in the same directory. Otherwise, it falls
+#' back to `Sys.which()`.
+#'
+#' @param bin_name A string. Name of the binary (e.g., "osrm-extract").
+#' @return A string. The resolved full path to the binary, or `bin_name` if not found.
+#' @keywords internal
+#' @noRd
+resolve_osrm_bin <- function(bin_name) {
+  osrm_exec <- getOption("osrm.routed.exec")
+
+  if (!is.null(osrm_exec) && nzchar(osrm_exec)) {
+    # If osrm.routed.exec is a full path, try to find the binary in the same directory
+    if (grepl("[/\\\\]", osrm_exec)) {
+      if (bin_name == "osrm-routed") {
+        return(osrm_exec)
+      }
+
+      bin_dir <- dirname(osrm_exec)
+      ext <- if (.Platform$OS.type == "windows") ".exe" else ""
+      target_bin <- file.path(bin_dir, paste0(bin_name, ext))
+      if (file.exists(target_bin)) {
+        return(normalizePath(target_bin, mustWork = TRUE))
+      }
+    } else {
+      # It's just a name, maybe on PATH but we use the option
+      if (bin_name == "osrm-routed") {
+        return(osrm_exec)
+      }
+    }
+  }
+
+  # Fallback to Sys.which
+  resolved <- Sys.which(bin_name)
+  if (nzchar(resolved)) {
+    return(resolved)
+  }
+
+  # Return original name as a last resort (processx will throw if not on PATH)
+  bin_name
+}
