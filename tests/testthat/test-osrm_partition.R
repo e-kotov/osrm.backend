@@ -12,7 +12,7 @@ test_that("osrm_partition runs osrm-partition with expected arguments", {
   captured <- list()
   mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
     captured <<- list(
-      command = tools::file_path_sans_ext(basename(command)),
+      command = command,
       args = args,
       echo = echo,
       spinner = spinner,
@@ -43,7 +43,7 @@ test_that("osrm_partition runs osrm-partition with expected arguments", {
     .package = "processx"
   )
 
-  expect_equal(captured$command, "osrm-partition")
+  expect_equal(tools::file_path_sans_ext(basename(captured$command)), "osrm-partition")
   expect_true("-t" %in% captured$args && "6" %in% captured$args)
   expect_true("-l" %in% captured$args && "ERROR" %in% captured$args)
   expect_true("--balance" %in% captured$args && "1.5" %in% captured$args)

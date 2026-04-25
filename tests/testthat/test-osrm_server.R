@@ -14,10 +14,10 @@ create_mock_process <- function(captured_env) {
   list(
     new = function(command, args, ..., stdout, stderr) {
       captured_env$captured <- list(
-        command = tools::file_path_sans_ext(basename(command)),
+        command = command,
         args = args,
-        stdout = if (is.character(stdout)) normalizePath(stdout, mustWork = FALSE, winslash = "/") else stdout,
-        stderr = if (is.character(stderr)) normalizePath(stderr, mustWork = FALSE, winslash = "/") else stderr
+        stdout = stdout,
+        stderr = stderr
       )
       structure(
         list(
@@ -90,7 +90,7 @@ test_that("osrm_start_server launches osrm-routed with correct arguments", {
     .package = "processx"
   )
 
-  expect_equal(captured$command, "osrm-routed")
+  expect_equal(tools::file_path_sans_ext(basename(captured$command)), "osrm-routed")
   expect_true("-a" %in% captured$args && "MLD" %in% captured$args)
   expect_true("-p" %in% captured$args && "5002" %in% captured$args)
   expect_true("-t" %in% captured$args && "4" %in% captured$args)
@@ -604,8 +604,14 @@ test_that("osrm_start_server uses osrm.server.log_file option when set (characte
       on.exit(try(server$kill(), silent = TRUE), add = TRUE)
 
       # Should use the custom log path
-      expect_equal(captured_env$captured$stdout, custom_log)
-      expect_equal(captured_env$captured$stderr, custom_log)
+      expect_equal(
+        normalizePath(captured_env$captured$stdout, mustWork = FALSE, winslash = "/"),
+        normalizePath(custom_log, mustWork = FALSE, winslash = "/")
+      )
+      expect_equal(
+        normalizePath(captured_env$captured$stderr, mustWork = FALSE, winslash = "/"),
+        normalizePath(custom_log, mustWork = FALSE, winslash = "/")
+      )
     },
     process = MockProcess,
     .package = "processx"

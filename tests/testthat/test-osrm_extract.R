@@ -30,7 +30,7 @@ test_that("osrm_extract runs osrm-extract with expected arguments", {
   captured <- list()
   mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
     captured <<- list(
-      command = tools::file_path_sans_ext(basename(command)),
+      command = command,
       args = args,
       echo = echo,
       spinner = spinner,
@@ -55,7 +55,7 @@ test_that("osrm_extract runs osrm-extract with expected arguments", {
     .package = "processx"
   )
 
-  expect_equal(captured$command, "osrm-extract")
+  expect_equal(tools::file_path_sans_ext(basename(captured$command)), "osrm-extract")
   expect_true(all(c("-p", "car.lua") %in% captured$args))
   expect_true("--dump-nbg-graph" %in% captured$args)
   expect_true("-d" %in% captured$args && "2024-01" %in% captured$args)
