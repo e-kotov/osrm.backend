@@ -11,7 +11,7 @@ Source:
 [`inst/CITATION`](https://github.com/e-kotov/osrm.backend/blob/main/inst/CITATION)
 
 Kotov E (2025). *Bindings for 'Open Source Routing Machine'*.
-[doi:10.32614/CRAN.package.osrm.backend](https://doi.org/10.32614/CRAN.package.osrm.backend),
+[doi:10.32614/CRAN.package.osrm.backend](https://doi.org/10.32614/CRAN.package.osrm.backend).
 <https://github.com/e-kotov/osrm.backend>.
 
     @Manual{osrm.backend,

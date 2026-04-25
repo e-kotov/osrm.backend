@@ -2,6 +2,8 @@
 
 ## osrm.backend 0.3.0
 
+CRAN release: 2026-04-19
+
 ### New features
 
 - Added
