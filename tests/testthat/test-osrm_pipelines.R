@@ -63,7 +63,7 @@ test_that("MLD pipeline: extract -> partition -> customize works correctly", {
 
   mock_run <- function(command, args, ...) {
     input_path <- args[1]
-    cmd <- basename(command)
+    cmd <- tools::file_path_sans_ext(basename(command))
 
     if (cmd == "osrm-extract") {
       base <- sub("\\.osm\\.pbf$", "", input_osm_path)
@@ -72,6 +72,10 @@ test_that("MLD pipeline: extract -> partition -> customize works correctly", {
     } else if (cmd == "osrm-partition") {
       partition_file <- paste0(input_path, ".partition")
       file.create(partition_file)
+    } else if (cmd == "osrm-contract") {
+      # Input is test.osrm (without extension), create test.osrm.hsgr
+      hsgr_file <- paste0(input_path, ".hsgr")
+      file.create(hsgr_file)
     } else if (cmd == "osrm-customize") {
       mldgr_file <- paste0(input_path, ".mldgr")
       file.create(mldgr_file)
@@ -112,7 +116,7 @@ test_that("Mixed pipelines fail with helpful errors: extract -> partition -> con
 
   mock_run <- function(command, args, ...) {
     input_path <- args[1]
-    cmd <- basename(command)
+    cmd <- tools::file_path_sans_ext(basename(command))
 
     if (cmd == "osrm-extract") {
       base <- sub("\\.osm\\.pbf$", "", input_osm_path)
