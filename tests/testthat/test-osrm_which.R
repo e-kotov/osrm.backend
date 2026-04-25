@@ -41,7 +41,7 @@ test_that("osrm_which errors when osrm-routed not found", {
 
   expect_error(
     osrm_which(),
-    "Cannot find 'definitely-not-a-real-osrm-executable-xyz123'"
+    "Cannot find '.*definitely-not-a-real-osrm-executable-xyz123'"
   )
 })
 
@@ -56,6 +56,6 @@ test_that("osrm_which respects osrm.routed.exec option", {
 
   expect_error(
     osrm_which(),
-    "Cannot find '/custom/path/osrm-routed-fake'"
+    "Cannot find '.*osrm-routed-fake'"
   )
 })

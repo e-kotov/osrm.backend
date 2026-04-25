@@ -12,7 +12,7 @@ test_that("osrm_partition runs osrm-partition with expected arguments", {
   captured <- list()
   mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
     captured <<- list(
-      command = basename(command),
+      command = tools::file_path_sans_ext(basename(command)),
       args = args,
       echo = echo,
       spinner = spinner,

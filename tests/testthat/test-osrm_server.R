@@ -14,10 +14,10 @@ create_mock_process <- function(captured_env) {
   list(
     new = function(command, args, ..., stdout, stderr) {
       captured_env$captured <- list(
-        command = basename(command),
+        command = tools::file_path_sans_ext(basename(command)),
         args = args,
-        stdout = stdout,
-        stderr = stderr
+        stdout = if (is.character(stdout)) normalizePath(stdout, mustWork = FALSE, winslash = "/") else stdout,
+        stderr = if (is.character(stderr)) normalizePath(stderr, mustWork = FALSE, winslash = "/") else stderr
       )
       structure(
         list(
@@ -51,7 +51,7 @@ test_that("osrm_start_server launches osrm-routed with correct arguments", {
   # Mock processx::process without R6 dependency
   MockProcess <- list(
     new = function(command, args, ...) {
-      captured <<- list(command = basename(command), args = args)
+      captured <<- list(command = tools::file_path_sans_ext(basename(command)), args = args)
       structure(
         list(
           is_alive = function() TRUE,
@@ -367,7 +367,7 @@ test_that("osrm_start_server accepts dataset_name parameter", {
 
   MockProcess <- list(
     new = function(command, args, ...) {
-      captured <<- list(command = basename(command), args = args)
+      captured <<- list(command = tools::file_path_sans_ext(basename(command)), args = args)
       structure(
         list(
           is_alive = function() TRUE,
@@ -424,7 +424,7 @@ test_that("osrm_start_server handles max size parameters", {
 
   MockProcess <- list(
     new = function(command, args, ...) {
-      captured <<- list(command = basename(command), args = args)
+      captured <<- list(command = tools::file_path_sans_ext(basename(command)), args = args)
       structure(
         list(
           is_alive = function() TRUE,

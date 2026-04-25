@@ -435,11 +435,10 @@ resolve_osrm_bin <- function(bin_name) {
   osrm_exec <- getOption("osrm.routed.exec")
 
   if (!is.null(osrm_exec) && nzchar(osrm_exec)) {
-    # Normalize with forward slashes for internal path manipulation
-    osrm_exec <- normalizePath(osrm_exec, mustWork = FALSE, winslash = "/")
+    # If it looks like a path (contains slashes), normalize it
+    if (grepl("[/\\\\]", osrm_exec)) {
+      osrm_exec <- normalizePath(osrm_exec, mustWork = FALSE, winslash = "/")
 
-    # If osrm.routed.exec is a full path, try to find the binary in the same directory
-    if (grepl("/", osrm_exec)) {
       if (bin_name == "osrm-routed") {
         return(osrm_exec)
       }
@@ -451,7 +450,7 @@ resolve_osrm_bin <- function(bin_name) {
         return(normalizePath(target_bin, mustWork = TRUE, winslash = "/"))
       }
     } else {
-      # It's just a name, maybe on PATH but we use the option
+      # It's just a name, return as is
       if (bin_name == "osrm-routed") {
         return(osrm_exec)
       }
