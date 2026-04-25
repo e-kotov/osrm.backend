@@ -1,3 +1,9 @@
+# osrm.backend 0.3.1
+
+## Bug fixes
+
+* Fixes for install process of OSRM binaries v26+ on Windows.
+
 # osrm.backend 0.3.0
 
 ## New features
