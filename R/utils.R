@@ -435,8 +435,11 @@ resolve_osrm_bin <- function(bin_name) {
   osrm_exec <- getOption("osrm.routed.exec")
 
   if (!is.null(osrm_exec) && nzchar(osrm_exec)) {
+    # Normalize with forward slashes for internal path manipulation
+    osrm_exec <- normalizePath(osrm_exec, mustWork = FALSE, winslash = "/")
+
     # If osrm.routed.exec is a full path, try to find the binary in the same directory
-    if (grepl("[/\\\\]", osrm_exec)) {
+    if (grepl("/", osrm_exec)) {
       if (bin_name == "osrm-routed") {
         return(osrm_exec)
       }
@@ -445,7 +448,7 @@ resolve_osrm_bin <- function(bin_name) {
       ext <- if (.Platform$OS.type == "windows") ".exe" else ""
       target_bin <- file.path(bin_dir, paste0(bin_name, ext))
       if (file.exists(target_bin)) {
-        return(normalizePath(target_bin, mustWork = TRUE))
+        return(normalizePath(target_bin, mustWork = TRUE, winslash = "/"))
       }
     } else {
       # It's just a name, maybe on PATH but we use the option
@@ -458,7 +461,10 @@ resolve_osrm_bin <- function(bin_name) {
   # Fallback to Sys.which
   resolved <- Sys.which(bin_name)
   if (nzchar(resolved)) {
-    return(resolved)
+    if (file.exists(resolved)) {
+      return(normalizePath(resolved, mustWork = TRUE, winslash = "/"))
+    }
+    return(gsub("\\\\", "/", resolved))
   }
 
   # Return original name as a last resort (processx will throw if not on PATH)
