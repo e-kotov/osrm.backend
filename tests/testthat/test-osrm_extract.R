@@ -30,9 +30,9 @@ test_that("osrm_extract runs osrm-extract with expected arguments", {
   captured <- list()
   mock_run <- function(command, args, echo, spinner, echo_cmd, ...) {
     captured <<- list(
-      command = command,
+      command = basename(command),
       args = args,
-      quiet = !isTRUE(echo),
+      echo = echo,
       spinner = spinner,
       echo_cmd = echo_cmd
     )
