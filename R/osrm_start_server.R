@@ -417,9 +417,9 @@ osrm_start_server <- function(
     stderr_dest <- log_file_path
   }
 
-  # Resolve osrm-routed executable (optionally override via option)
-  osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
-  if (!nzchar(Sys.which(osrm_exec))) {
+  # Resolve osrm-routed executable
+  osrm_exec <- resolve_osrm_bin("osrm-routed")
+  if (!nzchar(Sys.which(osrm_exec)) && !file.exists(osrm_exec)) {
     stop(
       "Cannot find '",
       osrm_exec,

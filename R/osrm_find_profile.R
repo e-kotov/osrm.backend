@@ -40,8 +40,8 @@ osrm_find_profile <- function(
   profile = "car.lua"
 ) {
   # locate and resolve osrm-routed
-  osrm_bin <- Sys.which("osrm-routed")
-  if (!nzchar(osrm_bin)) {
+  osrm_bin <- resolve_osrm_bin("osrm-routed")
+  if (!nzchar(osrm_bin) || (!file.exists(osrm_bin) && !nzchar(Sys.which(osrm_bin)))) {
     stop(
       "`osrm-routed` not found in PATH; please install OSRM backend",
       call. = FALSE

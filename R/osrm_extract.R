@@ -207,7 +207,7 @@ osrm_extract <- function(
 
   # run extraction
   logs <- processx::run(
-    "osrm-extract",
+    resolve_osrm_bin("osrm-extract"),
     args = arguments,
     echo = show_echo,
     spinner = show_spinner,

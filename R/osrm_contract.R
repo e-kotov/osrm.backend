@@ -183,7 +183,7 @@ osrm_contract <- function(
   show_echo_cmd <- !quiet && echo_cmd
 
   logs <- processx::run(
-    "osrm-contract",
+    resolve_osrm_bin("osrm-contract"),
     args = arguments,
     echo = show_echo,
     spinner = show_spinner,

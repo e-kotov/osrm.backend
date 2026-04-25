@@ -38,7 +38,10 @@ if (length(bin_path) > 0) {
 }
 
 # Helper functions to check for required binaries and profiles
-has_osrm_binary <- function() nzchar(Sys.which("osrm-extract")) || !is.null(getOption("osrm.routed.exec"))
+has_osrm_binary <- function() {
+  extract <- resolve_osrm_bin("osrm-extract")
+  nzchar(extract) && (file.exists(extract) || nzchar(Sys.which(extract)))
+}
 
 has_osrm_profile <- function() {
   prof <- try(osrm_find_profile("car.lua"), silent = TRUE)

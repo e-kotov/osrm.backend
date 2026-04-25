@@ -50,9 +50,7 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     
     # We use path_action="none" to avoid messing with .Rprofile in CI
     # This MUST succeed
-    install_path <- expect_silent(
-      osrm_install(version = ver, dest_dir = test_dir, path_action = "none", quiet = FALSE)
-    )
+    install_path <- osrm_install(version = ver, dest_dir = test_dir, path_action = "none", quiet = FALSE)
     
     # 2. VERIFY BINARIES
     routed_bin <- list.files(install_path, pattern = "^osrm-routed(\\.exe)?$", full.names = TRUE)
@@ -73,18 +71,14 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     withr::defer(options(old_opt))
     
     # This MUST succeed
-    graph <- expect_silent(
-      osrm_prepare_graph(tmp_pbf, threads = 1L, quiet = FALSE)
-    )
+    graph <- osrm_prepare_graph(tmp_pbf, threads = 1L, quiet = FALSE)
     
     # 4. START SERVER
     # Use a random high port to avoid conflicts
     port <- 10000 + sample(1:1000, 1)
     
     # This MUST succeed
-    srv <- expect_silent(
-      osrm_start_server(graph$osrm_job_artifact, port = port, threads = 1L)
-    )
+    srv <- osrm_start_server(graph$osrm_job_artifact, port = port, threads = 1L)
     withr::defer(try(osrm_stop(srv, quiet = TRUE), silent = TRUE))
     
     # 5. LIVENESS CHECK
@@ -93,7 +87,7 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     # 6. STOP SERVER
     expect_message(
       stopped <- osrm_stop(srv),
-      "Terminated OSRM server"
+      "Stopped OSRM server"
     )
     expect_false(srv$is_alive())
   }

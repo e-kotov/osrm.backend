@@ -35,10 +35,11 @@
 #' }
 #' }
 osrm_which <- function(quiet = FALSE) {
-  osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
+  osrm_exec <- resolve_osrm_bin("osrm-routed")
   resolved <- Sys.which(osrm_exec)
-
-  if (!nzchar(resolved)) {
+  if (!nzchar(resolved)) resolved <- osrm_exec # Fallback for full paths not on PATH
+  
+  if (!nzchar(resolved) || !file.exists(resolved)) {
     stop(
       "Cannot find '",
       osrm_exec,

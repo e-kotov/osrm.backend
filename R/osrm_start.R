@@ -129,8 +129,8 @@ osrm_start <- function(
   }
 
   # 2. Check if OSRM is installed, if not, install it
-  osrm_exec <- getOption("osrm.routed.exec", "osrm-routed")
-  if (!nzchar(Sys.which(osrm_exec))) {
+  osrm_exec <- resolve_osrm_bin("osrm-routed")
+  if (!nzchar(Sys.which(osrm_exec)) && !file.exists(osrm_exec)) {
     if (!quiet) {
       message("OSRM backend not found. Installing latest version...")
     }

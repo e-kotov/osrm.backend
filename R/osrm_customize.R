@@ -178,7 +178,7 @@ osrm_customize <- function(
   show_echo_cmd <- !quiet && echo_cmd
 
   logs <- processx::run(
-    "osrm-customize",
+    resolve_osrm_bin("osrm-customize"),
     args = arguments,
     echo = show_echo,
     spinner = show_spinner,
