@@ -90,6 +90,41 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     # 5. LIVENESS CHECK
     expect_true(srv$is_alive())
     
+    # 5.1 ROUTING TEST (API level)
+    # This uses httr2 (an Import) to verify the server is actually responding to requests.
+    url <- sprintf("http://localhost:%d/route/v1/car/-49.28,-25.44;-49.26,-25.42?overview=false", port)
+    resp <- httr2::request(url) %>% httr2::req_perform()
+    expect_equal(httr2::resp_status(resp), 200)
+    
+    body <- httr2::resp_body_json(resp)
+    expect_equal(body$code, "Ok")
+    expect_gt(length(body$routes), 0)
+    
+    # 5.2 ROUTING TEST (osrm package level)
+    if (requireNamespace("osrm", quietly = TRUE)) {
+      withr::with_options(
+        list(
+          osrm.server = sprintf("http://localhost:%d/", port),
+          osrm.profile = "car"
+        ),
+        {
+          # Run a simple route
+          # Points in Curitiba (cur.osm.pbf)
+          route <- osrm::osrmRoute(
+            src = c(-49.28, -25.44),
+            dst = c(-49.26, -25.42),
+            overview = "full"
+          )
+          
+          # Basic validation of routing response
+          expect_s3_class(route, "sf")
+          expect_gt(nrow(route), 0)
+          expect_gt(route$distance, 0)
+          expect_gt(route$duration, 0)
+        }
+      )
+    }
+    
     # 6. STOP SERVER
     expect_message(
       stopped <- osrm_stop(srv),
