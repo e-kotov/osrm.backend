@@ -50,7 +50,13 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     
     # We use path_action="none" to avoid messing with .Rprofile in CI
     # This MUST succeed
-    install_path <- osrm_install(version = ver, dest_dir = test_dir, path_action = "none", quiet = FALSE)
+    install_path <- osrm_install(
+      version = ver,
+      dest_dir = test_dir,
+      path_action = "none",
+      quiet = FALSE,
+      check_tested = FALSE
+    )
     
     # 2. VERIFY BINARIES
     routed_bin <- list.files(install_path, pattern = "^osrm-routed(\\.exe)?$", full.names = TRUE)

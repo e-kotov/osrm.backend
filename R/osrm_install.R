@@ -57,8 +57,8 @@
 #' @param version A string specifying the OSRM version tag to install.
 #'   Defaults to `"latest"`. Use `"latest"` to automatically find the most
 #'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
-#'   other than `v5.27.1`, `v6.0.0`, `v26.4.0` and `v26.4.1` will trigger a
-#'   warning but are still attempted if binaries are available.
+#'   other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and `v26.5.0` will
+#'   trigger a warning but are still attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be
 #'   installed. If `NULL` (the default), a user-friendly, persistent location is
 #'   chosen via `tools::R_user_dir("osrm.backend", which = "cache")`, and the
@@ -77,6 +77,9 @@
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
 #'   warnings. Defaults to `FALSE`.
+#' @param check_tested A logical value. If `TRUE` (default), the function issues
+#'   a warning if the requested OSRM version has not been explicitly validated
+#'   by the package maintainers. If `FALSE`, it issues a status message instead.
 #' @return The path to the installation directory.
 #' @export
 #' @examples
@@ -106,7 +109,8 @@ osrm_install <- function(
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
-  quiet = FALSE
+  quiet = FALSE,
+  check_tested = TRUE
 ) {
   quiet <- isTRUE(quiet)
   emit_message <- function(...) {
@@ -133,7 +137,7 @@ osrm_install <- function(
   }
 
   # --- 2. Determine version and get release info ---
-  tested_versions <- c("v5.27.1", "v6.0.0", "v26.4.0", "v26.4.1")
+  tested_versions <- c("v5.27.1", "v6.0.0", "v26.4.0", "v26.4.1", "v26.5.0")
   requested_version <- version
   mac_release_display <- mac_release_info$display_name
   if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
@@ -197,7 +201,11 @@ osrm_install <- function(
         paste(tested_versions, collapse = ", ")
       )
     }
-    emit_warning(warning_message, call. = FALSE)
+    if (isTRUE(check_tested)) {
+      emit_warning(warning_message, call. = FALSE)
+    } else {
+      emit_message(warning_message)
+    }
   }
 
   # Validate requested tag exists for this platform before hitting the API.

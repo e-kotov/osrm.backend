@@ -755,3 +755,35 @@ test_that("set_path_project replaces old cached version with new one", {
 
 # Integration tests with mocking would go here if we had a mocking framework
 # For now, the actual osrm_install function is tested in the setup-osrm.R
+
+# Test version validation logic ----
+test_that("osrm_install handles check_tested correctly", {
+  # We use a dummy dest_dir to avoid actual installation and bypass API checks if possible
+  # but here we just want to see if the message/warning is emitted.
+  # We'll need to mock/catch the execution before it hits the network if possible, 
+  # or just use expect_warning/expect_message and let it try (and fail) or stop early.
+  
+  dummy_dest <- tempfile()
+  dir.create(dummy_dest)
+  on.exit(unlink(dummy_dest, recursive = TRUE))
+
+  # Test 1: Validated version (v26.5.0) should be silent
+  # We use force = TRUE to ensure it doesn't stop because it already exists
+  # We use quiet = TRUE to suppress other messages
+  expect_silent(
+    try(osrm_install(version = "v26.5.0", dest_dir = dummy_dest, force = TRUE, quiet = TRUE), silent = TRUE)
+  )
+
+  # Test 2: Untested version should warn by default
+  # It will likely fail later on GitHub API check, but the warning happens early
+  expect_warning(
+    try(osrm_install(version = "v99.9.9", dest_dir = dummy_dest, force = TRUE, quiet = FALSE), silent = TRUE),
+    "has not been validated"
+  )
+
+  # Test 3: Untested version with check_tested = FALSE should message
+  expect_message(
+    try(osrm_install(version = "v99.9.9", dest_dir = dummy_dest, check_tested = FALSE, force = TRUE, quiet = FALSE), silent = TRUE),
+    "has not been validated"
+  )
+})
