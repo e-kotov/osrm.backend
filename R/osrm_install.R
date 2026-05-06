@@ -312,7 +312,7 @@ osrm_install <- function(
   dir.create(tmp_extract_dir)
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
   emit_message("Extracting binaries...")
-  tryCatch(
+  status <- tryCatch(
     {
       if (quiet) {
         suppressWarnings(utils::untar(tmp_file, exdir = tmp_extract_dir))
@@ -324,6 +324,10 @@ osrm_install <- function(
       stop("Failed to extract archive: ", e$message, call. = FALSE)
     }
   )
+
+  if (!is.null(status) && status != 0) {
+    stop("Failed to extract archive: tar returned exit code ", status, call. = FALSE)
+  }
 
   # --- 8. Locate and install binaries ---
   bin_regex <- "osrm-(routed|extract|contract|partition|customize|datastore)"
@@ -1050,7 +1054,17 @@ install_profiles_for_release <- function(
   last_list_error <- NULL
   for (args in list_attempts) {
     tar_members <- tryCatch(
-      run_untar(args),
+      {
+        res <- run_untar(args)
+        if (is.character(res)) {
+          res
+        } else {
+          last_list_error <<- list(
+            message = paste0("tar returned exit code ", res)
+          )
+          NULL
+        }
+      },
       error = function(e) {
         last_list_error <<- e
         NULL
@@ -1062,38 +1076,37 @@ install_profiles_for_release <- function(
   }
 
   if (is.null(tar_members)) {
+    msg <- if (is.list(last_list_error)) {
+      last_list_error$message
+    } else if (inherits(last_list_error, "error")) {
+      conditionMessage(last_list_error)
+    } else {
+      "Unknown error"
+    }
+
     stop(
       "Failed to inspect source tarball for profiles: ",
-      last_list_error$message,
+      msg,
       call. = FALSE
     )
   }
 
-  # Identify all members that belong to a 'profiles' directory.
-  # We look for 'profiles/' anywhere in the path, as GitHub tarballs
-  # usually have a repo-version/ prefix.
-  profile_mask <- grepl("(^|/)profiles(/|$)", tar_members)
-  profile_members <- tar_members[profile_mask]
+  # We verify that a 'profiles' directory exists in the members list
+  # before attempting full extraction.
+  profile_exists <- any(grepl("(^|/)profiles(/|$)", tar_members))
 
-  if (length(profile_members) == 0) {
+  if (!profile_exists) {
     stop(
       "The release tarball did not contain a 'profiles' directory.",
       call. = FALSE
     )
   }
 
-  # Clean up member names for extraction (remove leading/trailing whitespace if any)
-  extract_members <- unique(trimws(profile_members))
-  extract_members <- extract_members[nzchar(extract_members)]
-  # Remove entries with control characters (safety)
-  extract_members <- extract_members[!grepl("[[:cntrl:]]", extract_members)]
-
   if (!quiet) {
     message("Extracting profiles...")
   }
   untar_args <- list(
     tarfile = tmp_tarball,
-    files = extract_members,
     exdir = tmp_profiles_extract
   )
   untar_attempts <- list(untar_args)
@@ -1105,21 +1118,20 @@ install_profiles_for_release <- function(
   last_extract_error <- NULL
   extracted <- FALSE
   for (args in untar_attempts) {
-    # On some systems untar returns the exit status. We treat 0 as success.
-    # On others it might return NULL or throw an error.
-    status <- tryCatch(
+    tryCatch(
       {
-        res <- run_untar(args)
-        if (is.null(res) || identical(res, 0L)) {
+        status <- run_untar(args)
+        # untar returns 0 for success, non-zero for failure
+        if (is.null(status) || status == 0) {
           extracted <- TRUE
         } else {
-          last_extract_error <<- list(message = paste("tar exit status", res))
+          last_extract_error <<- list(
+            message = paste0("tar returned exit code ", status)
+          )
         }
-        TRUE
       },
       error = function(e) {
         last_extract_error <<- e
-        FALSE
       }
     )
     if (isTRUE(extracted)) {
@@ -1128,9 +1140,17 @@ install_profiles_for_release <- function(
   }
 
   if (!isTRUE(extracted)) {
+    msg <- if (is.list(last_extract_error)) {
+      last_extract_error$message
+    } else if (inherits(last_extract_error, "error")) {
+      conditionMessage(last_extract_error)
+    } else {
+      "Unknown error"
+    }
+
     stop(
       "Failed to extract profiles archive: ",
-      last_extract_error$message,
+      msg,
       call. = FALSE
     )
   }
@@ -1143,14 +1163,18 @@ install_profiles_for_release <- function(
   profile_dirs_found <- profile_dirs_found[
     basename(profile_dirs_found) == "profiles"
   ]
+
   if (length(profile_dirs_found) == 0) {
     stop(
-      "The profiles directory was not correctly extracted from the tarball.",
+      "The release tarball did not contain a 'profiles' directory.",
       call. = FALSE
     )
   }
-  # Pick the shallowest 'profiles' directory
-  profile_source <- profile_dirs_found[[which.min(nchar(profile_dirs_found))]]
+
+  # Pick the profiles directory closest to the root (fewest segments)
+  # This correctly handles cases where nested 'profiles' directories exist (e.g. in tests)
+  path_depths <- nchar(gsub("[^/]", "", profile_dirs_found))
+  profile_source <- profile_dirs_found[[which.min(path_depths)]]
 
   dest_profiles_dir <- file.path(dest_dir, "profiles")
   if (dir.exists(dest_profiles_dir)) {
@@ -1341,7 +1365,7 @@ ensure_linux_tbb_runtime <- function(
   dir.create(tmp_extract_dir)
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
 
-  tryCatch(
+  status <- tryCatch(
     {
       if (quiet) {
         suppressWarnings(utils::untar(tmp_tar, exdir = tmp_extract_dir))
@@ -1359,6 +1383,16 @@ ensure_linux_tbb_runtime <- function(
       )
     }
   )
+
+  if (!is.null(status) && status != 0) {
+    stop(
+      "Failed to extract OSRM release ",
+      reference_version,
+      " while retrieving Linux TBB runtime: tar returned exit code ",
+      status,
+      call. = FALSE
+    )
+  }
 
   extracted_files <- list.files(
     tmp_extract_dir,
@@ -1481,7 +1515,7 @@ ensure_macos_tbb_runtime <- function(
   dir.create(tmp_extract_dir)
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
 
-  tryCatch(
+  status <- tryCatch(
     {
       if (quiet) {
         suppressWarnings(utils::untar(tmp_tar, exdir = tmp_extract_dir))
@@ -1499,6 +1533,16 @@ ensure_macos_tbb_runtime <- function(
       )
     }
   )
+
+  if (!is.null(status) && status != 0) {
+    stop(
+      "Failed to extract OSRM release ",
+      reference_version,
+      " while retrieving macOS TBB runtime: tar returned exit code ",
+      status,
+      call. = FALSE
+    )
+  }
 
   extracted_files <- list.files(
     tmp_extract_dir,
