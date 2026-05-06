@@ -24,6 +24,7 @@ The goal of `osrm.backend` is to be a companion to
 Install the latest stable release of `osrm.backend` from CRAN with:
 
 ``` r
+
 install.packages("osrm.backend")
 ```
 
@@ -31,6 +32,7 @@ You can install the development version of `osrm.backend` from R
 Universe with:
 
 ``` r
+
 install.packages('osrm.backend',
  repos = c('https://e-kotov.r-universe.dev', 'https://cloud.r-project.org')
 )
@@ -39,6 +41,7 @@ install.packages('osrm.backend',
 or from [GitHub repo](https://github.com/e-kotov/osrm.backend) with:
 
 ``` r
+
 # install.packages("pak")
 pak::pak("e-kotov/osrm.backend")
 ```

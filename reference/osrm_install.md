@@ -18,7 +18,8 @@ osrm_install(
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
-  quiet = FALSE
+  quiet = FALSE,
+  check_tested = TRUE
 )
 ```
 
@@ -30,8 +31,9 @@ osrm_install(
   `"latest"`. Use `"latest"` to automatically find the most recent
   stable version (internally calls
   [`osrm_check_latest_version()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_latest_version.md)).
-  Versions other than `v5.27.1`, `v6.0.0`, `v26.4.0` and `v26.4.1` will
-  trigger a warning but are still attempted if binaries are available.
+  Versions other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and
+  `v26.5.0` will trigger a warning but are still attempted if binaries
+  are available.
 
 - dest_dir:
 
@@ -64,6 +66,12 @@ osrm_install(
 
   A logical value. If `TRUE`, suppresses installer messages and
   warnings. Defaults to `FALSE`.
+
+- check_tested:
+
+  A logical value. If `TRUE` (default), the function issues a warning if
+  the requested OSRM version has not been explicitly validated by the
+  package maintainers. If `FALSE`, it issues a status message instead.
 
 ## Value
 

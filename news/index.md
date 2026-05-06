@@ -2,6 +2,8 @@
 
 ## osrm.backend 0.3.1
 
+CRAN release: 2026-04-26
+
 ### Bug fixes
 
 - Fixes for install process of OSRM binaries v26+ on Windows.
