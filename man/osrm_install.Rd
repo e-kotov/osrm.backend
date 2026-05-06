@@ -9,15 +9,16 @@ osrm_install(
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
-  quiet = FALSE
+  quiet = FALSE,
+  check_tested = TRUE
 )
 }
 \arguments{
 \item{version}{A string specifying the OSRM version tag to install.
 Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
 recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
-other than \code{v5.27.1}, \code{v6.0.0}, \code{v26.4.0} and \code{v26.4.1} will trigger a
-warning but are still attempted if binaries are available.}
+other than \code{v5.27.1}, \code{v6.0.0}, \code{v26.4.0}, \code{v26.4.1}, and \code{v26.5.0} will
+trigger a warning but are still attempted if binaries are available.}
 
 \item{dest_dir}{A string specifying the directory where OSRM binaries should be
 installed. If \code{NULL} (the default), a user-friendly, persistent location is
@@ -40,6 +41,10 @@ the \code{PATH} for all future sessions in that project.
 
 \item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
 warnings. Defaults to \code{FALSE}.}
+
+\item{check_tested}{A logical value. If \code{TRUE} (default), the function issues
+a warning if the requested OSRM version has not been explicitly validated
+by the package maintainers. If \code{FALSE}, it issues a status message instead.}
 }
 \value{
 The path to the installation directory.

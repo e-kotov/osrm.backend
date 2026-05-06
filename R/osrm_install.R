@@ -57,8 +57,8 @@
 #' @param version A string specifying the OSRM version tag to install.
 #'   Defaults to `"latest"`. Use `"latest"` to automatically find the most
 #'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
-#'   other than `v5.27.1`, `v6.0.0`, `v26.4.0` and `v26.4.1` will trigger a
-#'   warning but are still attempted if binaries are available.
+#'   other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and `v26.5.0` will
+#'   trigger a warning but are still attempted if binaries are available.
 #' @param dest_dir A string specifying the directory where OSRM binaries should be
 #'   installed. If `NULL` (the default), a user-friendly, persistent location is
 #'   chosen via `tools::R_user_dir("osrm.backend", which = "cache")`, and the
@@ -77,6 +77,9 @@
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
 #'   warnings. Defaults to `FALSE`.
+#' @param check_tested A logical value. If `TRUE` (default), the function issues
+#'   a warning if the requested OSRM version has not been explicitly validated
+#'   by the package maintainers. If `FALSE`, it issues a status message instead.
 #' @return The path to the installation directory.
 #' @export
 #' @examples
@@ -106,7 +109,8 @@ osrm_install <- function(
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
-  quiet = FALSE
+  quiet = FALSE,
+  check_tested = TRUE
 ) {
   quiet <- isTRUE(quiet)
   emit_message <- function(...) {
@@ -133,7 +137,7 @@ osrm_install <- function(
   }
 
   # --- 2. Determine version and get release info ---
-  tested_versions <- c("v5.27.1", "v6.0.0", "v26.4.0", "v26.4.1")
+  tested_versions <- c("v5.27.1", "v6.0.0", "v26.4.0", "v26.4.1", "v26.5.0")
   requested_version <- version
   mac_release_display <- mac_release_info$display_name
   if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
@@ -197,7 +201,11 @@ osrm_install <- function(
         paste(tested_versions, collapse = ", ")
       )
     }
-    emit_warning(warning_message, call. = FALSE)
+    if (isTRUE(check_tested)) {
+      emit_warning(warning_message, call. = FALSE)
+    } else {
+      emit_message(warning_message)
+    }
   }
 
   # Validate requested tag exists for this platform before hitting the API.
@@ -305,7 +313,13 @@ osrm_install <- function(
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
   emit_message("Extracting binaries...")
   tryCatch(
-    utils::untar(tmp_file, exdir = tmp_extract_dir),
+    {
+      if (quiet) {
+        suppressWarnings(utils::untar(tmp_file, exdir = tmp_extract_dir))
+      } else {
+        utils::untar(tmp_file, exdir = tmp_extract_dir)
+      }
+    },
     error = function(e) {
       stop("Failed to extract archive: ", e$message, call. = FALSE)
     }
@@ -1018,7 +1032,7 @@ install_profiles_for_release <- function(
   ))
   suppress_tar_warnings <- !allow_tar_warnings_env %in% c("1", "true", "yes")
   run_untar <- function(arg_list) {
-    if (suppress_tar_warnings) {
+    if (quiet || suppress_tar_warnings) {
       suppressWarnings(do.call(utils::untar, arg_list))
     } else {
       do.call(utils::untar, arg_list)
@@ -1055,23 +1069,10 @@ install_profiles_for_release <- function(
     )
   }
 
-  # Extract only the top-level 'profiles' subtree shipped with the release.
-  top_level_dirs <- unique(sub("/.*$", "", tar_members))
-  top_level_dirs <- top_level_dirs[nzchar(top_level_dirs)]
-  top_level_dir <- top_level_dirs[[1]]
-
-  prefix <- paste0(top_level_dir, "/")
-  relative_members <- tar_members
-  matches_prefix <- startsWith(relative_members, prefix)
-  relative_members[matches_prefix] <- substr(
-    relative_members[matches_prefix],
-    nchar(prefix) + 1,
-    nchar(relative_members[matches_prefix])
-  )
-
-  profile_mask <- startsWith(relative_members, "profiles/") |
-    relative_members %in% c("profiles", "profiles/")
-
+  # Identify all members that belong to a 'profiles' directory.
+  # We look for 'profiles/' anywhere in the path, as GitHub tarballs
+  # usually have a repo-version/ prefix.
+  profile_mask <- grepl("(^|/)profiles(/|$)", tar_members)
   profile_members <- tar_members[profile_mask]
 
   if (length(profile_members) == 0) {
@@ -1081,18 +1082,11 @@ install_profiles_for_release <- function(
     )
   }
 
-  profile_dirs <- unique(
-    sub("^(.*?/profiles)(?:/.*)?$", "\\1", profile_members, perl = TRUE)
-  )
-  profile_dirs <- profile_dirs[
-    nzchar(profile_dirs) &
-      !grepl("[[:cntrl:]]", profile_dirs, perl = TRUE)
-  ]
-  extract_members <- profile_members
-  extract_members <- extract_members[
-    nzchar(extract_members) &
-      !grepl("[[:cntrl:]]", extract_members, perl = TRUE)
-  ]
+  # Clean up member names for extraction (remove leading/trailing whitespace if any)
+  extract_members <- unique(trimws(profile_members))
+  extract_members <- extract_members[nzchar(extract_members)]
+  # Remove entries with control characters (safety)
+  extract_members <- extract_members[!grepl("[[:cntrl:]]", extract_members)]
 
   if (!quiet) {
     message("Extracting profiles...")
@@ -1111,13 +1105,21 @@ install_profiles_for_release <- function(
   last_extract_error <- NULL
   extracted <- FALSE
   for (args in untar_attempts) {
-    tryCatch(
+    # On some systems untar returns the exit status. We treat 0 as success.
+    # On others it might return NULL or throw an error.
+    status <- tryCatch(
       {
-        run_untar(args)
-        extracted <- TRUE
+        res <- run_untar(args)
+        if (is.null(res) || identical(res, 0L)) {
+          extracted <- TRUE
+        } else {
+          last_extract_error <<- list(message = paste("tar exit status", res))
+        }
+        TRUE
       },
       error = function(e) {
         last_extract_error <<- e
+        FALSE
       }
     )
     if (isTRUE(extracted)) {
@@ -1143,10 +1145,11 @@ install_profiles_for_release <- function(
   ]
   if (length(profile_dirs_found) == 0) {
     stop(
-      "The release tarball did not contain a 'profiles' directory.",
+      "The profiles directory was not correctly extracted from the tarball.",
       call. = FALSE
     )
   }
+  # Pick the shallowest 'profiles' directory
   profile_source <- profile_dirs_found[[which.min(nchar(profile_dirs_found))]]
 
   dest_profiles_dir <- file.path(dest_dir, "profiles")
@@ -1228,7 +1231,8 @@ install_windows_v6_runtime <- function(dest_dir, quiet = FALSE) {
     url = tbb_url,
     member_path = "oneapi-tbb-2022.3.0/redist/intel64/vc14/tbb12.dll",
     dest_path = file.path(dest_dir, "tbb12.dll"),
-    sha256 = "e1b2373f25558bf47d16b4c89cf0a31e6689aaf7221400d209e8527afc7c9eee"
+    sha256 = "e1b2373f25558bf47d16b4c89cf0a31e6689aaf7221400d209e8527afc7c9eee",
+    quiet = quiet
   )
   if (!quiet) {
     message("  - Installed tbb12.dll")
@@ -1242,7 +1246,8 @@ install_windows_v6_runtime <- function(dest_dir, quiet = FALSE) {
     url = bzip_url,
     member_path = "libbz2.dll",
     dest_path = file.path(dest_dir, "bz2.dll"),
-    sha256 = "50340fece047960f49cf869034c778ff9f6af27dde2f1ea9773cd89ddb326254"
+    sha256 = "50340fece047960f49cf869034c778ff9f6af27dde2f1ea9773cd89ddb326254",
+    quiet = quiet
   )
   if (!quiet) {
     message("  - Installed bz2.dll")
@@ -1337,7 +1342,13 @@ ensure_linux_tbb_runtime <- function(
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
 
   tryCatch(
-    utils::untar(tmp_tar, exdir = tmp_extract_dir),
+    {
+      if (quiet) {
+        suppressWarnings(utils::untar(tmp_tar, exdir = tmp_extract_dir))
+      } else {
+        utils::untar(tmp_tar, exdir = tmp_extract_dir)
+      }
+    },
     error = function(e) {
       stop(
         "Failed to extract OSRM release ",
@@ -1471,7 +1482,13 @@ ensure_macos_tbb_runtime <- function(
   on.exit(unlink(tmp_extract_dir, recursive = TRUE), add = TRUE)
 
   tryCatch(
-    utils::untar(tmp_tar, exdir = tmp_extract_dir),
+    {
+      if (quiet) {
+        suppressWarnings(utils::untar(tmp_tar, exdir = tmp_extract_dir))
+      } else {
+        utils::untar(tmp_tar, exdir = tmp_extract_dir)
+      }
+    },
     error = function(e) {
       stop(
         "Failed to extract OSRM release ",
@@ -1639,7 +1656,7 @@ version_at_least <- function(version, minimum) {
 
 #' @noRd
 # Download a zip archive, verify its checksum, and extract a single file.
-download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
+download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL, quiet = FALSE) {
   member_path <- gsub("^/+", "", member_path)
   normalized_member <- gsub("\\\\", "/", member_path)
 
@@ -1679,7 +1696,12 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
     }
   }
 
-  contents <- utils::unzip(tmp_zip, list = TRUE)
+  contents <- if (quiet) {
+    suppressWarnings(utils::unzip(tmp_zip, list = TRUE))
+  } else {
+    utils::unzip(tmp_zip, list = TRUE)
+  }
+
   if (is.null(contents) || nrow(contents) == 0) {
     stop(
       sprintf("Archive '%s' did not contain any files.", basename(url)),
@@ -1706,7 +1728,13 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL) {
   on.exit(unlink(tmp_extract, recursive = TRUE), add = TRUE)
 
   tryCatch(
-    utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract),
+    {
+      if (quiet) {
+        suppressWarnings(utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract))
+      } else {
+        utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract)
+      }
+    },
     error = function(e) {
       stop(
         sprintf(
