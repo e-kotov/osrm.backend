@@ -27,7 +27,7 @@ file.copy(from = internal_pbf, to = osrm_temp_dir)
 
 # Start local OSRM server
 
-Start the server with `osrm_start()` function pointing to the temporary directory created above. It will automatically check if OSRM Backend binaries are installed, and if not, it will install the latest version, it will also automatically prepare the routing graph from the OSM PBF file if not already done and start the server. If any of the steps are unnecessary, it will skip them, so running this funciton will not lead to re-downloading of OSRM binaries or re-processing of the OSM PBF file if already done.
+Start the server with `osrm_start()` function pointing to the temporary directory created above. It will automatically check if OSRM Backend binaries are installed, and if not, it will install the latest version, it will also automatically prepare the routing graph from the OSM PBF file if not already done and start the server. If any of the steps are unnecessary, it will skip them, so running this function will not lead to re-downloading of OSRM binaries or re-processing of the OSM PBF file if already done.
 
 ```{r}
 #| label: start-osrm-server
