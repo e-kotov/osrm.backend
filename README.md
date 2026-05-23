@@ -2,7 +2,7 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# osrm.backend
+# osrm.backend <a href="https://www.ekotov.pro/osrm.backend/"><img src="man/figures/logo.png" align="right" width="200" alt="r5rgui website" /></a>
 
 <!-- badges: start -->
 
