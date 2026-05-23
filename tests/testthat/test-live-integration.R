@@ -20,6 +20,22 @@ test_that("Live installation and basic routing works for all supported OSRM vers
   
   versions_to_test <- unique(c(latest_v5, v6_plus_tags))
   
+  # Collect results for the badge
+  # Read existing results if they exist (initialized by GHA)
+  # Standard test_check() sets WD to tests/testthat
+  results_file <- "test_results.rds"
+  if (!file.exists(results_file) && file.exists("../../test_results.rds")) {
+    results_file <- "../../test_results.rds"
+  }
+  
+  test_results <- if (file.exists(results_file)) {
+    readRDS(results_file)
+  } else {
+    structure(rep(FALSE, length(versions_to_test)), names = versions_to_test)
+  }
+  
+  on.exit(if (file.exists(results_file)) saveRDS(test_results, results_file), add = TRUE)
+  
   # For Mac, we can only test v6+ if we are on Sequoia (Darwin 24)
   is_macos <- identical(tolower(Sys.info()[["sysname"]]), "darwin")
   darwin_version <- NA_integer_
@@ -131,5 +147,8 @@ test_that("Live installation and basic routing works for all supported OSRM vers
       "Stopped OSRM server"
     )
     expect_false(srv$is_alive())
+    
+    # All steps passed for this version
+    test_results[ver] <- TRUE
   }
 })

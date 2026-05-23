@@ -21,3 +21,6 @@
 ^inst/schemaorg.json$
 ^cran-cookbook$
 ^CRAN-SUBMISSION$
+^tools$
+^test_results\.rds$
+^osrm_versions\.json$

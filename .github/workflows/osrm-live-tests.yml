@@ -21,6 +21,9 @@ jobs:
 
     name: ${{ matrix.config.os }} (${{ matrix.config.r }})
 
+    permissions:
+      contents: write
+
     strategy:
       fail-fast: false
       matrix:
@@ -53,11 +56,56 @@ jobs:
 
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::rcmdcheck, any::testthat, any::tibble
+          extra-packages: any::rcmdcheck, any::testthat, any::tibble, any::pkgload
           needs: check
+
+      - name: Initialize Test Results
+        if: matrix.config.os == 'ubuntu-latest'
+        shell: Rscript {0}
+        run: |
+          if (file.exists("tools/init_test_results.R")) {
+            source("tools/init_test_results.R")
+          } else {
+            cat("tools/init_test_results.R not found. Skipping.\n")
+          }
 
       - uses: r-lib/actions/check-r-package@v2
         with:
           upload-snapshots: true
           build_args: 'c("--no-manual")'
           args: 'c("--no-manual", "--as-cran")'
+
+      - name: Generate Badge JSON
+        if: always() && matrix.config.os == 'ubuntu-latest'
+        shell: Rscript {0}
+        run: |
+          if (file.exists("tools/generate_badge.R")) {
+            source("tools/generate_badge.R")
+          } else {
+            cat("tools/generate_badge.R not found. Skipping.\n")
+          }
+
+      - name: Deploy Badge
+        if: always() && matrix.config.os == 'ubuntu-latest'
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Try to switch to existing badges branch, or create new orphan one
+          if git fetch origin badges; then
+            git checkout badges
+            git pull origin badges
+          else
+            git checkout --orphan badges
+            git rm -rf .
+          fi
+          
+          # The JSON was saved to workspace by the previous step
+          if [ -f "osrm_versions.json" ]; then
+            git add osrm_versions.json
+            git commit -m "Update passing OSRM versions badge" || echo "No changes to commit"
+            git push origin badges --force
+          else
+            echo "osrm_versions.json not found, skipping badge deploy."
+            exit 1
+          fi
