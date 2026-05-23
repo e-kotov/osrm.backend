@@ -20,7 +20,9 @@ if (length(versions_to_test) == 0) {
   cat("No OSRM versions found to test. Skipping initialization.\n")
 } else {
   # Initialize with FALSE
+  results_file <- Sys.getenv("OSRM_TEST_RESULTS_FILE", "test_results.rds")
   test_results <- structure(rep(FALSE, length(versions_to_test)), names = versions_to_test)
-  saveRDS(test_results, "test_results.rds")
-  cat("Initialized test_results.rds with", length(versions_to_test), "versions.\n")
+  saveRDS(test_results, results_file)
+  cat("Initialized", results_file, "with", length(versions_to_test), "versions.\n")
+
 }

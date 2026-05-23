@@ -15,7 +15,7 @@ if (length(target_versions) == 0) {
 }
 
 # 2. Determine which versions actually passed
-results_file <- "test_results.rds"
+results_file <- Sys.getenv("OSRM_TEST_RESULTS_FILE", "test_results.rds")
 
 # Helper to parse versions for comparison
 parse_v <- function(v) {

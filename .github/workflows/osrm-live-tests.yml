@@ -38,6 +38,7 @@ jobs:
       RUN_OSRM_LIVE_TESTS: "true"
       NOT_CRAN: "true"
       PKG_PREFER_BINARIES: true
+      OSRM_TEST_RESULTS_FILE: ${{ github.workspace }}/test_results.rds
 
     steps:
       - uses: actions/checkout@v4
