@@ -75,6 +75,18 @@ jobs:
           build_args: 'c("--no-manual")'
           args: 'c("--no-manual", "--as-cran")'
 
+      - name: Generate Badge JSON
+        if: always() && matrix.config.os == 'ubuntu-latest'
+        shell: Rscript {0}
+        run: |
+          if (file.exists("tools/generate_badge.R")) {
+            source("tools/generate_badge.R")
+            # Move to a safe location outside the repo so it survives branch checkout
+            file.copy("osrm_versions.json", "/tmp/osrm_versions.json", overwrite = TRUE)
+          } else {
+            cat("tools/generate_badge.R not found. Skipping.\n")
+          }
+
       - name: Deploy Badge
         if: always() && matrix.config.os == 'ubuntu-latest'
         run: |
@@ -90,17 +102,14 @@ jobs:
             git rm -rf .
           fi
           
-          # GENERATE THE BADGE NOW (after checkout)
-          # We must use the absolute path to the tool since we might have moved
-          Rscript -e 'source("${{ github.workspace }}/tools/generate_badge.R")'
-          
-          # The JSON was saved to workspace by the script
-          if [ -f "osrm_versions.json" ]; then
+          # Restore the JSON from the safe location
+          if [ -f "/tmp/osrm_versions.json" ]; then
+            cp /tmp/osrm_versions.json osrm_versions.json
             cat osrm_versions.json
             git add --force osrm_versions.json
             git commit -m "Update passing OSRM versions badge" || echo "No changes to commit"
             git push origin badges --force
           else
-            echo "osrm_versions.json not found, skipping badge deploy."
+            echo "Badge JSON not found in /tmp, skipping deploy."
             exit 1
           fi
