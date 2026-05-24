@@ -60,7 +60,6 @@ jobs:
           needs: check
 
       - name: Initialize Test Results
-        if: matrix.config.os == 'ubuntu-latest'
         shell: Rscript {0}
         run: |
           if (file.exists("tools/init_test_results.R")) {
@@ -76,19 +75,44 @@ jobs:
           args: 'c("--no-manual", "--as-cran")'
 
       - name: Generate Badge JSON
-        if: always() && matrix.config.os == 'ubuntu-latest'
+        if: always()
         shell: Rscript {0}
         run: |
+          os_name <- "${{ matrix.config.os }}"
+          label <- if (grepl("ubuntu", os_name)) "OSRM (Linux)" else if (grepl("macos", os_name)) "OSRM (macOS)" else "OSRM (Windows)"
+          fname <- if (grepl("ubuntu", os_name)) "osrm_versions_ubuntu.json" else if (grepl("macos", os_name)) "osrm_versions_macos.json" else "osrm_versions_windows.json"
+          
           if (file.exists("tools/generate_badge.R")) {
-            source("tools/generate_badge.R")
-            # Move to a safe location outside the repo so it survives branch checkout
-            file.copy("osrm_versions.json", "/tmp/osrm_versions.json", overwrite = TRUE)
+            # Pass label and filename as args
+            system2("Rscript", c("tools/generate_badge.R", shQuote(label), fname))
           } else {
             cat("tools/generate_badge.R not found. Skipping.\n")
           }
 
-      - name: Deploy Badge
-        if: always() && matrix.config.os == 'ubuntu-latest'
+      - name: Upload Badge Artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: badge-${{ matrix.config.os }}
+          path: osrm_versions_*.json
+
+  Deploy-Badges:
+    needs: R-CMD-check
+    if: always()
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all badge artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: badges-tmp
+          pattern: badge-*
+          merge-multiple: true
+
+      - name: Deploy Badges
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
@@ -102,14 +126,14 @@ jobs:
             git rm -rf .
           fi
           
-          # Restore the JSON from the safe location
-          if [ -f "/tmp/osrm_versions.json" ]; then
-            cp /tmp/osrm_versions.json osrm_versions.json
-            cat osrm_versions.json
-            git add --force osrm_versions.json
-            git commit -m "Update passing OSRM versions badge" || echo "No changes to commit"
+          # Restore all JSON files from the artifacts
+          if ls badges-tmp/osrm_versions_*.json 1> /dev/null 2>&1; then
+            cp badges-tmp/osrm_versions_*.json .
+            cat osrm_versions_*.json
+            git add --force osrm_versions_*.json
+            git commit -m "Update per-OS OSRM versions badges" || echo "No changes to commit"
             git push origin badges --force
           else
-            echo "Badge JSON not found in /tmp, skipping deploy."
+            echo "No badge JSON files found in artifacts, skipping deploy."
             exit 1
           fi

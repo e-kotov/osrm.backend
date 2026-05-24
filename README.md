@@ -20,7 +20,11 @@ src="https://cranlogs.r-pkg.org/badges/osrm.backend?color=blue"
 alt="CRAN/METACRAN Downloads per month" /></a> [![osrm.backend status
 badge](https://e-kotov.r-universe.dev/osrm.backend/badges/version)](https://e-kotov.r-universe.dev/osrm.backend)
 [![OSRM tested
-versions](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/e-kotov/osrm.backend/badges/osrm_versions.json)](https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml)
+(Linux)](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/e-kotov/osrm.backend/badges/osrm_versions_ubuntu.json)](https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml)
+[![OSRM tested
+(macOS)](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/e-kotov/osrm.backend/badges/osrm_versions_macos.json)](https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml)
+[![OSRM tested
+(Windows)](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/e-kotov/osrm.backend/badges/osrm_versions_windows.json)](https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml)
 [![R-CMD-check](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/e-kotov/osrm.backend/actions/workflows/R-CMD-check.yaml)
 [![pkgcheck](https://github.com/e-kotov/osrm.backend/workflows/pkgcheck/badge.svg)](https://github.com/e-kotov/osrm.backend/actions?query=workflow%3Apkgcheck)
 [![Codecov test

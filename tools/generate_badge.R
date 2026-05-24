@@ -1,6 +1,10 @@
 # This script generates a badge JSON for Shields.io based on OSRM version tests.
 # It identifies passing versions and handles partial failures with color coding.
 
+args <- commandArgs(trailingOnly = TRUE)
+os_label <- if (length(args) > 0) args[1] else "OSRM tested"
+output_file <- if (length(args) > 1) args[2] else "osrm_versions.json"
+
 pkgload::load_all(".")
 
 # 1. Discover all versions that SHOULD be tested
@@ -33,7 +37,7 @@ if (!file.exists(results_file)) {
   # Catastrophic failure: tests didn't even run or crashed before saving
   badge_data <- list(
     schemaVersion = 1,
-    label = "OSRM (Linux)",
+    label = os_label,
     message = "test suite failed",
     color = "critical"
   )
@@ -47,7 +51,7 @@ if (!file.exists(results_file)) {
   if (length(passing_versions) == 0) {
     badge_data <- list(
       schemaVersion = 1,
-      label = "OSRM (Linux)",
+      label = os_label,
       message = "all failing",
       color = "critical"
     )
@@ -78,12 +82,12 @@ if (!file.exists(results_file)) {
     
     badge_data <- list(
       schemaVersion = 1,
-      label = "OSRM (Linux)",
+      label = os_label,
       message = message,
       color = color
     )
   }
 }
 
-jsonlite::write_json(badge_data, "osrm_versions.json", auto_unbox = TRUE)
+jsonlite::write_json(badge_data, output_file, auto_unbox = TRUE)
 cat("Generated badge with message:", badge_data$message, "and color:", badge_data$color, "\n")
