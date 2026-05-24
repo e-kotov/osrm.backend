@@ -50,7 +50,6 @@ jobs:
           r-version: ${{ matrix.config.r }}
           http-user-agent: ${{ matrix.config.http-user-agent }}
           use-public-rspm: true
-          install-ghostscript: false
 
       - name: Setup Quarto
         uses: quarto-dev/quarto-actions/setup@v2
@@ -76,16 +75,6 @@ jobs:
           build_args: 'c("--no-manual")'
           args: 'c("--no-manual", "--as-cran")'
 
-      - name: Generate Badge JSON
-        if: always() && matrix.config.os == 'ubuntu-latest'
-        shell: Rscript {0}
-        run: |
-          if (file.exists("tools/generate_badge.R")) {
-            source("tools/generate_badge.R")
-          } else {
-            cat("tools/generate_badge.R not found. Skipping.\n")
-          }
-
       - name: Deploy Badge
         if: always() && matrix.config.os == 'ubuntu-latest'
         run: |
@@ -101,7 +90,11 @@ jobs:
             git rm -rf .
           fi
           
-          # The JSON was saved to workspace by the previous step
+          # GENERATE THE BADGE NOW (after checkout)
+          # We must use the absolute path to the tool since we might have moved
+          Rscript -e 'source("${{ github.workspace }}/tools/generate_badge.R")'
+          
+          # The JSON was saved to workspace by the script
           if [ -f "osrm_versions.json" ]; then
             cat osrm_versions.json
             git add --force osrm_versions.json
