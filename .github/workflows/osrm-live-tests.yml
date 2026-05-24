@@ -103,7 +103,8 @@ jobs:
           
           # The JSON was saved to workspace by the previous step
           if [ -f "osrm_versions.json" ]; then
-            git add osrm_versions.json
+            cat osrm_versions.json
+            git add --force osrm_versions.json
             git commit -m "Update passing OSRM versions badge" || echo "No changes to commit"
             git push origin badges --force
           else
