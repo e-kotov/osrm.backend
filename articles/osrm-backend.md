@@ -37,7 +37,7 @@ automatically check if OSRM Backend binaries are installed, and if not,
 it will install the latest version, it will also automatically prepare
 the routing graph from the OSM PBF file if not already done and start
 the server. If any of the steps are unnecessary, it will skip them, so
-running this funciton will not lead to re-downloading of OSRM binaries
+running this function will not lead to re-downloading of OSRM binaries
 or re-processing of the OSM PBF file if already done.
 
 ``` r
