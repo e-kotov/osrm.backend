@@ -6,11 +6,14 @@
 \usage{
 osrm_install(
   version = "latest",
+  osrm_binaries_provider = c("default", "official"),
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
   quiet = FALSE,
-  check_tested = TRUE
+  check_tested = TRUE,
+  download_url = NULL,
+  file_path = NULL
 )
 }
 \arguments{
@@ -19,6 +22,14 @@ Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
 recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
 other than \code{v5.27.1}, \code{v6.0.0}, \code{v26.4.0}, \code{v26.4.1}, and \code{v26.5.0} will
 trigger a warning but are still attempted if binaries are available.}
+
+\item{osrm_binaries_provider}{A string specifying the provider to download binaries from.
+Defaults to \code{"default"}, which pulls from \code{"e-kotov/osrm-binaries"} providing custom immutable builds
+(statically linked) that fix glibc compatibility issues and bundle necessary libraries.
+Set to \code{"official"} to download the upstream binaries from \code{"Project-OSRM/osrm-backend"}
+(which will automatically trigger legacy runtime hacks for macOS and Windows).
+Advanced users can override the provider completely by setting the R option
+\code{osrm.backend.custom_repository} to a custom GitHub repository (e.g. \code{"my-user/my-repo"}).}
 
 \item{dest_dir}{A string specifying the directory where OSRM binaries should be
 installed. If \code{NULL} (the default), a user-friendly, persistent location is
@@ -45,6 +56,12 @@ warnings. Defaults to \code{FALSE}.}
 \item{check_tested}{A logical value. If \code{TRUE} (default), the function issues
 a warning if the requested OSRM version has not been explicitly validated
 by the package maintainers. If \code{FALSE}, it issues a status message instead.}
+
+\item{download_url}{\strong{Advanced usage only.} A direct URL to a \code{.tar.gz} archive containing OSRM binaries.
+If provided, \code{version} and \code{osrm_binaries_provider} are ignored.}
+
+\item{file_path}{\strong{Advanced usage only.} A local file path to a \code{.tar.gz} archive containing OSRM binaries.
+If provided, skips downloading entirely.}
 }
 \value{
 The path to the installation directory.
@@ -63,7 +80,7 @@ installed but are not guranteed to function correctly.
 The function performs the following steps:
 \enumerate{
 \item Queries the GitHub API to find the specified release of
-\code{Project-OSRM/osrm-backend}.
+\code{e-kotov/osrm-binaries}.
 \item Identifies the correct binary (\code{.tar.gz} archive) for the user's OS
 (Linux, macOS, or Windows) and architecture (x64, arm64).
 \item Downloads the archive to a temporary location.
@@ -77,26 +94,22 @@ them alongside the binaries.
 session or project.
 }
 
-macOS users should note that upstream OSRM v6.x (and newer) binaries are
-built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer. \code{osrm_install()}
-automatically blocks v6+ installs on older macOS releases and, when
-\code{version = "latest"}, selects the most recent v5 build instead while warning
-about the requirement. Warnings include both the marketing version and Darwin
-kernel so you'll see messages like \verb{macOS 13 Ventura [Darwin 22.6.0]}.
-
-When installing OSRM v6.x or newer for Windows, the upstream release omits
-the Intel Threading Building Blocks (TBB) runtime and a compatible \code{bz2} DLL.
-To keep the executables runnable out of the box, \code{osrm_install()} fetches TBB
-from \href{https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0}{oneTBB
-v2022.3.0} and the BZip2 runtime from
-\href{https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0}{bzip2-windows
-v1.0.8.0}, verifying their SHA-256 checksums before extraction. Without these
-extra libraries, the OSRM v6+ binaries shipped for Windows cannot start.
-
-On macOS, OSRM v6.x and newer binaries also miss the bundled TBB runtime.
-The installer reuses the libraries from release \code{v5.27.1} to keep the
-binaries functional and patches their \code{libbz2} linkage using
-\code{install_name_tool} so that they load the system-provided BZip2 runtime.
+\subsection{Binary Providers}{
+The \code{osrm_binaries_provider} argument allows choosing between two release sources:
+\itemize{
+\item \strong{\code{"default"} (e-kotov/osrm-binaries)}: This provider is highly recommended. It offers standalone,
+immutable C++ binaries that are statically linked and patched during the build process to guarantee
+maximum compatibility across older and newer operating systems. It explicitly bundles required
+libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for \code{linux-arm64}
+(e.g., AWS Graviton, Raspberry Pi) and modern Apple Silicon Macs.
+\item \strong{\code{"official"} (Project-OSRM/osrm-backend)}: The upstream releases provided by the core
+OSRM team. These binaries are wrapped inside \code{node_osrm} NodeJS tarballs and lack \code{linux-arm64}
+builds. When installing v6.x or newer via the \code{"official"} provider on Windows or macOS, upstream
+releases omit the Intel TBB runtime. In these cases, \code{osrm_install()} will automatically attempt
+legacy runtime hacks (e.g. downloading oneTBB, patching \code{libbz2} linkage via \code{install_name_tool})
+to keep the binaries functional out-of-the-box.
+}
+}
 
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options
