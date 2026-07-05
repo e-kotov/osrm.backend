@@ -58,3 +58,7 @@ cran-cookbook
 # CI artifacts
 osrm_versions.json
 test_results.rds
+
+# OSRM generated index files and metadata
+*.osrm.*
+dataset.meta.json

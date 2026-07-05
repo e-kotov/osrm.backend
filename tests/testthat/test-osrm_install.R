@@ -771,7 +771,7 @@ test_that("osrm_install handles check_tested correctly", {
   # We use force = TRUE to ensure it doesn't stop because it already exists
   # We use quiet = TRUE to suppress other messages
   expect_silent(
-    try(osrm_install(version = "v26.5.0", dest_dir = dummy_dest, force = TRUE, quiet = TRUE), silent = TRUE)
+    suppressWarnings(try(osrm_install(version = "v26.5.0", dest_dir = dummy_dest, force = TRUE, quiet = TRUE), silent = TRUE))
   )
 
   # Test 2: Untested version should warn by default
@@ -785,5 +785,23 @@ test_that("osrm_install handles check_tested correctly", {
   expect_message(
     try(osrm_install(version = "v99.9.9", dest_dir = dummy_dest, check_tested = FALSE, force = TRUE, quiet = FALSE), silent = TRUE),
     "has not been validated"
+  )
+})
+
+test_that("osrm_install manual installation options work", {
+  dummy_dest <- tempfile()
+  dir.create(dummy_dest)
+  on.exit(unlink(dummy_dest, recursive = TRUE))
+
+  # Test file_path error handling
+  expect_error(
+    osrm_install(dest_dir = dummy_dest, file_path = "nonexistent_file_path.tar.gz", quiet = TRUE),
+    "Provided file_path does not exist"
+  )
+
+  # Test download_url error handling
+  expect_error(
+    osrm_install(dest_dir = dummy_dest, download_url = "http://localhost:9999/fake.tar.gz", quiet = TRUE),
+    "Failed to download file"
   )
 })
