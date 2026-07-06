@@ -318,11 +318,7 @@ osrm_install <- function(
     # --- 4. Fetch release metadata or construct directly ---
     if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
       emit_message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
-      if (identical(platform$os, "win32")) {
-        asset_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/osrm-%s-%s-%s-Release.zip", version, version, platform$os, platform$arch)
-      } else {
-        asset_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/osrm-%s-%s-%s-Release.tar.gz", version, version, platform$os, platform$arch)
-      }
+      asset_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/osrm-%s-%s-%s-Release.tar.gz", version, version, platform$os, platform$arch)
       emit_message("Found matching binary: ", basename(asset_url))
     } else {
       release_info <- get_release_by_tag(version)
