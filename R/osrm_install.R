@@ -2094,11 +2094,11 @@ get_expected_hash <- function(version, platform) {
   
   # A hardcoded list of known-good SHA-256 hashes for immutable releases.
   KNOWN_HASHES <- list(
-    "v26.7.2_darwin-arm64" = "fafd48153b5d1f1c4de2866f27a7ec30db540b1d70eff614672019eee44c37a2",
-    "v26.7.2_darwin-x64" = "62e5985bb684343fdfa97e6a4187895248f8084ef3177ea2d76ef9e7011afae4",
-    "v26.7.2_linux-arm64" = "95ff6eb3c84dfcb253d372673e7e93015b673339b3088750335815150cfa864d",
-    "v26.7.2_linux-x64" = "419eecdbb6ed6b04913dfc14cf13c4b6433cc95d45adef0bd874051815f67347",
-    "v26.7.2_win32-x64" = "56d87ae85d59241caa84f0a382f6f99b927920840efc8e01e34bfb64b5379515",
+    "v26.7.2_darwin-arm64" = "df0ec132631fe27b8e45b340a8f27271b538ba5d7e967cd559c6f36935cccc8e",
+    "v26.7.2_darwin-x64" = "fda763d4111bcc10c283e73473aa5a58759e31467f7f1614d3ec5d183380a0fd",
+    "v26.7.2_linux-arm64" = "1c5779faa0fba5e109c8e2bc326a3d5ee61189b529a105b399912bcc737a1b65",
+    "v26.7.2_linux-x64" = "4bc1305ba03288aa8af416782794d835cce09eaac46b3e569f25cdfa016fe729",
+    "v26.7.2_win32-x64" = "82b841fcad1c9c87fea76438320eae01ed60b4b61fa75930bb393fed9fb69a2e",
     "v26.7.1_darwin-arm64" = "aa8ba4a5968f635f968579d616ed84a974828b9233e198c5e0279049227d1b87",
     "v26.7.1_darwin-x64" = "24f98904c57dd3da6990a37d339696aa2ced62198ae29bde0fec485c649e603d",
     "v26.7.1_linux-arm64" = "9bbf7fa7aa2f7b845dd60a82610f4c441facbac72c7dbe5e05fe32d6fd43edb9",
