@@ -352,7 +352,13 @@ osrm_install <- function(
     )
   }
 
-  if (!manual_install && identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+  # Check if expert user has explicitly opted out
+  skip_validation <- isTRUE(getOption("osrm.backend.skip_validation", FALSE))
+  is_official_repo <- identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+
+  if (skip_validation) {
+    emit_message("Bypassing SHA-256 checksum validation as requested by user option.")
+  } else if (!manual_install && is_official_repo) {
     expected_hash <- get_expected_hash(version, platform)
     if (!is.na(expected_hash)) {
       actual_hash <- digest::digest(tmp_file, algo = "sha256", file = TRUE)
@@ -361,7 +367,8 @@ osrm_install <- function(
           "SECURITY ERROR: The downloaded binary checksum does not match the known-good hash!\n",
           "Expected: ", expected_hash, "\n",
           "Actual:   ", actual_hash, "\n",
-          "This could indicate a tampered release or a corrupted download. Aborting installation.",
+          "This could indicate a tampered release or a corrupted download. Aborting installation.\n",
+          "To override this check, set options(osrm.backend.skip_validation = TRUE).",
           call. = FALSE
         )
       }
