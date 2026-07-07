@@ -2090,85 +2090,9 @@ set_path_project <- function(dir, quiet = FALSE) {
 
 #' @noRd
 get_expected_hash <- function(version, platform) {
-  key <- paste0(version, "_", platform$os, "-", platform$arch)
-  
-  # A hardcoded list of known-good SHA-256 hashes for immutable releases.
-  KNOWN_HASHES <- list(
-    "v26.7.2_darwin-arm64" = "e5bdb15d1bec0d8cf7f5bf8916dd943e211492c648896603f35b74f78fd63fa9",
-    "v26.7.2_darwin-x64" = "a0f92f7112642e6b8746d00f3d6e786462972df5b934b26ae562040af895d47b",
-    "v26.7.2_linux-arm64" = "83d89bf2d30dbdda459c3a57e877c9456705911d1b3afcf442d6484b50ef2345",
-    "v26.7.2_linux-x64" = "17593eb763f3a82019765bc84c7b6f98771fd19d3d6a8300d900137bc0fefe85",
-    "v26.7.2_win32-x64" = "7293435c0587b68054439f7c60f52cfcc1d385299ac074f8117985bfb4cb9167",
-    "v26.7.1_darwin-arm64" = "aa8ba4a5968f635f968579d616ed84a974828b9233e198c5e0279049227d1b87",
-    "v26.7.1_darwin-x64" = "24f98904c57dd3da6990a37d339696aa2ced62198ae29bde0fec485c649e603d",
-    "v26.7.1_linux-arm64" = "9bbf7fa7aa2f7b845dd60a82610f4c441facbac72c7dbe5e05fe32d6fd43edb9",
-    "v26.7.1_linux-x64" = "eb8649e84ccfe37cd5603237fda4415b8ec1b2fb759e1e6b4e8aed7af95f81a5",
-    "v26.7.1_win32-x64" = "80e4e0860893ccc4288642524a70f4455883cc978f5bb37f9de7daad255e7fdd",
-    "v26.7.0_darwin-arm64" = "054673b52388e2f056458934ac2f63234ce02e20689c4916621bc1062601ce01",
-    "v26.7.0_darwin-x64" = "6087e4409735dfefaaa6c5e1660230cab1653b4d206cf471c06a5a95ac20cc80",
-    "v26.7.0_linux-arm64" = "9c0e548c8e42020612858c80c4378ec5344ba417983fba2cfb2baa4908ba258d",
-    "v26.7.0_linux-x64" = "5aed8af06947fe73cd2f17f9f0c5adcfce8151d54a8ceb9c701b4d398c3add0e",
-    "v26.7.0_win32-x64" = "8d8dca94bccc6b7e5ca6e45be43736e636f3326a6f7d012c8dd75150179a2096",
-    "v26.6.5_darwin-arm64" = "3e204e46bc6913276b9fc6669ab0757dd4b9e94854f605ad19873ef5a3865b41",
-    "v26.6.5_darwin-x64" = "344bf12dbc18e20673e7014b67a3e6e4b61b37cc1a4da03496e8c3d02d355339",
-    "v26.6.5_linux-arm64" = "e6d96d4d0253c2c332750e81c8700ff16dcf610540e9ae6c7949b88d87fcaf66",
-    "v26.6.5_linux-x64" = "7ec062b4e579a4c3a5dbddbbe5080af185b3a288ca53bb37175595dcc1b8ebcb",
-    "v26.6.5_win32-x64" = "01d80998bc41c66aad59df9198c9efd71bf2ed672398f92562d270e9d41f096c",
-    "v26.6.4_darwin-arm64" = "9dc7d6cdb9d053bcb6215ce0670b97204e9ba5f4211a99d02411397c6a28c95e",
-    "v26.6.4_darwin-x64" = "0800941aa632738c99d05ffebb08a0fd667109bc3ffb6f7e12a99957347e1660",
-    "v26.6.4_linux-arm64" = "375ce78b7aa0831b1baeb0ed9b245226baa6748564dff4e67673fea125dce317",
-    "v26.6.4_linux-x64" = "bbb8cc5b2ce29ec2688045ee0586a0cde99dacbe8eb8beaca7958103ca7a19c2",
-    "v26.6.4_win32-x64" = "ca01d2039d56aa04511565c7fd205296fd9b6fc12821ee54b4df3fb153a1810a",
-    "v26.6.3_darwin-arm64" = "22d66e4ca58f914cf1dc082422974c0fb22192b18035f4acfda9ddddf6ae2e48",
-    "v26.6.3_darwin-x64" = "58cc538ea18ef84712fceb457298d7aa6dee602742beb8adbdbca4d5367cd592",
-    "v26.6.3_linux-arm64" = "a8ed0f307bdab1e12aba4d653954aa2a3d8942835c54a781a7ae48ae9af1d8e3",
-    "v26.6.3_linux-x64" = "80e0f0ee08c0a51c54b5fcd9ee0f5f5e258d4d0ada4165622ccfe0e36369410a",
-    "v26.6.3_win32-x64" = "572d73bb48aff33a162fcb940f481c30f39b8a8e1050312a2769476367eafff1",
-    "v26.6.2_darwin-arm64" = "f352bdb27db28d42c7d15d9d2363478dc2e83344357e4c96b06726a20136f885",
-    "v26.6.2_darwin-x64" = "8ebc41a15cb124d817e781b1c29b9b8fe8481c263fbf042e3746b16a627637be",
-    "v26.6.2_linux-arm64" = "36b7c033c33f05763c71f3137a881163a095d13fdca1bcb9e5e743c2c056cad0",
-    "v26.6.2_linux-x64" = "7767b91ff81bb1034be54e93cb78e09b1dfebea12549a248610cf17ebf4c0c8c",
-    "v26.6.2_win32-x64" = "d37344e6b15c4302e392d63206a5f271c0792097a9b5216c4da843971c2780e6",
-    "v26.6.1_darwin-arm64" = "5e2a64e921c249ea4c52a70500441b796d6a6bb39986435d50c1f6c5b8083339",
-    "v26.6.1_darwin-x64" = "ece966dc65d4cb4a1102a082c36afb8075de434dbd3034d2f9e05ac17ef9b7c1",
-    "v26.6.1_linux-arm64" = "fe39fe5d7a72bffc1b5e188315875f70245ea98c1c1b835225a549508e8db299",
-    "v26.6.1_linux-x64" = "88916ef8e9ebd6529299b03b11c8bb124301350b8ef6b53a86d9621c2b5155fb",
-    "v26.6.1_win32-x64" = "aefb8c905b8cf7d80403f3a04994d34985548570fd6b5ca7c872c05f2401a278",
-    "v26.6.0_darwin-arm64" = "c78e32c466c009dee1c60b1a0791231d4b7e5e29178da988596bbd79f4c98f72",
-    "v26.6.0_darwin-x64" = "f4d63a46f4c1417a43765988bba0be21e10aba9a74bc0f9b3498f70be717f944",
-    "v26.6.0_linux-arm64" = "c59f5354fd877dd119eb58ea672ef8c81bf3dbda18731765f8c9e632728bd92c",
-    "v26.6.0_linux-x64" = "b9d5732800e8e0132793e9133c57aace76dfd0fed78bb35bedbde81999af09a7",
-    "v26.6.0_win32-x64" = "d8624cfd2dad0e6d85607e91b0815d3d9f84b6c5089acd1ce6945ec5677844b5",
-    "v26.5.0_darwin-arm64" = "16b6a10bf7f3d7a884468933a6ec2aecab7c02e2a7af0590044f6ff3ae7a2955",
-    "v26.5.0_darwin-x64" = "35555724647cb2921768a84de7215032c17a0c0a17d6aff6ad245ee002921bbb",
-    "v26.5.0_linux-arm64" = "069e9ab25cac4f2b305036bc53ea29972f5e8da6678a8fa3ea26027895468bad",
-    "v26.5.0_linux-x64" = "fd629f45fd452e71a78cffa69cc164621919b838c8549dffac88ab9dc1afd589",
-    "v26.5.0_win32-x64" = "28c4574932af01fbe64e1ec6dbfbe967686563da38b1a9d7189082c0d48cc7b4",
-    "v26.4.1_darwin-arm64" = "089a826616bd103485801ee57535c9ecfcddd1b553d95d54158fcbe0d5578bf2",
-    "v26.4.1_darwin-x64" = "177543c1fb053f286c253416a54afc800c9f621221a536228960de1e80e9326c",
-    "v26.4.1_linux-arm64" = "9a558680fefd1930207aaed5be25e90e89a0bbe2cf85fccec7e44eca99b24af8",
-    "v26.4.1_linux-x64" = "f45c663a3b247458b7cb3c978315582caef84912cde348939ef27e297ac2928e",
-    "v26.4.1_win32-x64" = "29a81582997722a6faf67d47a2e9450d5d9b4168904d285b608702a723eeef51",
-    "v26.4.0_darwin-arm64" = "655343e19e7d65a7decf65602d8dadcb18a5d2c6ae5de04e2d54e111d6d8bd20",
-    "v26.4.0_darwin-x64" = "0162fc874e9a4822cef2d3640ff5ae0a5c5522ca69eb8eec7e5eb1fa615489f8",
-    "v26.4.0_linux-arm64" = "2369a0bd60eb35a4fc07756c0ca5fdd00daa8af0a0b5398ce79d2dec01681d8d",
-    "v26.4.0_linux-x64" = "f2e527133f532dee8a82db6efac82d6a31825281d2e1fffdfc03b855d9649912",
-    "v26.4.0_win32-x64" = "d56cfabb9018f5f3fb58f9fdcf278696e1220605ff62c6758da56202bc6d06c3",
-    "v6.0.0_darwin-arm64" = "0b8a0fdeb43577e77da6324dca9136965d99492d37fbc319afe990dee19d632a",
-    "v6.0.0_darwin-x64" = "5784f0a35983c9ff1a4804b5c6c959dd3ba7304e83785cdb710714f1467fdfc3",
-    "v6.0.0_linux-arm64" = "f181b6e1d35475b123d6617436e08986693c9ad7be2269f48aa959d79b7deee4",
-    "v6.0.0_linux-x64" = "673a94e1f4a82169cf6d8186458e6476eb91c6f3f2cc0d7d27c8f0b08eed0e98",
-    "v6.0.0_win32-x64" = "ad0e78aab2f0ff1686c495f6c0876afde7087a586d0154825c396f93ee7c4bbf",
-    "v5.27.1_darwin-arm64" = "7fbc441a42feb414f247e8df1b99f839fe3b0e2433ac66e55cebd547c84592ff",
-    "v5.27.1_darwin-x64" = "4d6b09a0da37b1c7b63e1420f899a90896354e2e22827613a827e35736ce906d",
-    "v5.27.1_linux-arm64" = "5e023e34af3c71326fbb32fbbd354ccf7262a878e1340c2bbf3bc72832c005c7",
-    "v5.27.1_linux-x64" = "851461c905a1529706b856ca0e750944dd07e3a0b0109f3b66d06a719e3e450b",
-    "v5.27.1_win32-x64" = "f4de1ab2317adf74f02b5f71648086f06b725f2fd57c4e2b1fbc0a14a75959db"
-  )
-
-  if (key %in% names(KNOWN_HASHES)) {
-    return(KNOWN_HASHES[[key]])
-  }
+  # We rely entirely on dynamic fetching for e-kotov/osrm-binaries
+  # If a provider does not publish checksums (like Project-OSRM/osrm-backend),
+  # this safely returns NA_character_ and skips validation.
   
   # Fallback: attempt to fetch checksums.txt from GitHub release
   if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
