@@ -7,17 +7,14 @@ jobs:
       - name: Setup MSVC
         uses: ilammy/msvc-dev-cmd@v1
       - name: Download Windows Binary
-        continue-on-error: true
         run: |
           Invoke-WebRequest -Uri "https://github.com/e-kotov/osrm-binaries/releases/download/v26.7.2/osrm-v26.7.2-win32-x64-Release.tar.gz" -OutFile "osrm.tar.gz"
           tar -xzf osrm.tar.gz
           cd osrm-v26.7.2-win32-x64-Release
-          dumpbin /dependents osrm-extract.exe
           dumpbin /imports osrm-extract.exe > imports.txt
-          ./osrm-extract.exe --help
+          dumpbin /dependents osrm-extract.exe > dependents.txt
       - name: Upload imports
-        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: imports
-          path: osrm-v26.7.2-win32-x64-Release/imports.txt
+          path: osrm-v26.7.2-win32-x64-Release/*.txt
