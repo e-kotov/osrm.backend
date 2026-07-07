@@ -89,6 +89,14 @@ test_that("Live installation and basic routing works for all supported OSRM vers
     old_opt <- options(osrm.routed.exec = routed_bin)
     withr::defer(options(old_opt))
     
+    # Optional debug for Windows
+    if (.Platform$OS.type == "windows") {
+      extract_bin <- list.files(install_path, pattern = "^osrm-extract(\\.exe)?$", full.names = TRUE)
+      if (length(extract_bin) > 0) {
+        system(paste("dumpbin /dependents", shQuote(extract_bin[1])))
+      }
+    }
+    
     # This MUST succeed
     graph <- osrm_prepare_graph(tmp_pbf, threads = 1L, quiet = FALSE)
     
