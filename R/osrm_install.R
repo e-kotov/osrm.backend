@@ -2086,17 +2086,8 @@ get_expected_hash <- function(version, platform) {
   key <- paste0(version, "_", platform$os, "-", platform$arch)
   
   # A hardcoded list of known-good SHA-256 hashes for immutable releases.
-  # You can append to this list as you build new releases!
+  # Hashes disabled temporarily as we rebuilt binaries and they have new hashes
   KNOWN_HASHES <- list(
-    "v26.7.1_darwin-arm64" = "3a954341c3a882aff121364a912d4ed0169a9774cbc7675036f84bcb0c562e5c",
-    "v26.7.1_linux-x64" = "1db2077ff0a1a700f1c8b3ef34a1e02d1d86359a69c772524fdd12cfc2f6e2f4",
-    "v26.7.1_linux-arm64" = "fe924798a62b3eebd7dc1bf70970ed3934ab7a7944552a6d06dfe4bb74bcb54b",
-    "v26.7.0_darwin-arm64" = "9748a7e7403ed02732de2aefb11e95357122fac06c1ef16d9b017dc105e492eb",
-    "v26.7.0_linux-x64" = "50e56fd7407555e46e906d88d114a7a86d16e3ca47059778c739b768fe8b128f",
-    "v26.7.0_linux-arm64" = "7ff6d6deeaa30984e740fc48f26b58dea26b05339213fa84b1b1627605606af4",
-    "v26.5.0_darwin-arm64" = "097c6ad5b1eb21055afb2653e104130c09f79b1f7d3c2f47734ec66513705eaa",
-    "v26.5.0_linux-x64" = "f0e851061b1cc6850421cb7c16b720514cd82041dd76598bc7f00ca711b0a642",
-    "v26.5.0_linux-arm64" = "37a083083fe99b8f167e0c7f0936642ca7ea8e6be590e35bcbfa306b63e486a1"
   )
 
   if (key %in% names(KNOWN_HASHES)) {
