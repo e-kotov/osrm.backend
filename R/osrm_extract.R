@@ -201,18 +201,21 @@ osrm_extract <- function(
   }
 
   # Determine final processx parameters
-  show_echo <- !quiet && verbose
-  show_spinner <- !quiet && spinner
-  show_echo_cmd <- !quiet && echo_cmd
+  bin_path <- resolve_osrm_bin("osrm-extract")
 
   # run extraction
   logs <- processx::run(
-    resolve_osrm_bin("osrm-extract"),
+    command = bin_path,
     args = arguments,
-    echo = show_echo,
-    spinner = show_spinner,
-    echo_cmd = show_echo_cmd
+    echo = quiet == FALSE,
+    echo_cmd = quiet == FALSE,
+    error_on_status = FALSE
   )
+  if (logs$status != 0) {
+    message("STDOUT:\n", logs$stdout)
+    message("STDERR:\n", logs$stderr)
+    stop("System command '", basename(bin_path), "' failed")
+  }
 
   # verify timestamp file
   timestamp_file <- paste0(base, ".osrm.timestamp")
