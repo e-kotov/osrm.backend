@@ -1,0 +1,22 @@
+name: Debug Windows Binary
+on: workflow_dispatch
+jobs:
+  debug:
+    runs-on: windows-latest
+    steps:
+      - name: Download Windows Binary
+        run: |
+          Invoke-WebRequest -Uri "https://github.com/e-kotov/osrm-binaries/releases/download/v26.7.2/osrm-v26.7.2-win32-x64-Release.tar.gz" -OutFile "osrm.tar.gz"
+          tar -xzf osrm.tar.gz
+          cd osrm-v26.7.2-win32-x64-Release
+          # Set up MSVC environment for dumpbin
+          & "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Common7\Tools\Launch-VsDevShell.ps1" -Arch amd64
+          dumpbin /dependents osrm-extract.exe
+          dumpbin /imports osrm-extract.exe > imports.txt
+          # Also run it to see if it prints anything
+          ./osrm-extract.exe --help || echo "Failed with exit code $LASTEXITCODE"
+      - name: Upload imports
+        uses: actions/upload-artifact@v4
+        with:
+          name: imports
+          path: osrm-v26.7.2-win32-x64-Release/imports.txt
