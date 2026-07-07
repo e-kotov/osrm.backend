@@ -15,11 +15,14 @@ function correctly.
 ``` r
 osrm_install(
   version = "latest",
+  osrm_binaries_provider = c("default", "official"),
   dest_dir = NULL,
   force = FALSE,
   path_action = c("session", "project", "none"),
   quiet = FALSE,
-  check_tested = TRUE
+  check_tested = TRUE,
+  download_url = NULL,
+  file_path = NULL
 )
 ```
 
@@ -34,6 +37,19 @@ osrm_install(
   Versions other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and
   `v26.5.0` will trigger a warning but are still attempted if binaries
   are available.
+
+- osrm_binaries_provider:
+
+  A string specifying the provider to download binaries from. Defaults
+  to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing
+  custom immutable builds (statically linked) that fix glibc
+  compatibility issues and bundle necessary libraries. Set to
+  `"official"` to download the upstream binaries from
+  `"Project-OSRM/osrm-backend"` (which will automatically trigger legacy
+  runtime hacks for macOS and Windows). Advanced users can override the
+  provider completely by setting the R option
+  `osrm.backend.custom_repository` to a custom GitHub repository (e.g.
+  `"my-user/my-repo"`).
 
 - dest_dir:
 
@@ -73,6 +89,17 @@ osrm_install(
   the requested OSRM version has not been explicitly validated by the
   package maintainers. If `FALSE`, it issues a status message instead.
 
+- download_url:
+
+  **Advanced usage only.** A direct URL to a `.tar.gz` archive
+  containing OSRM binaries. If provided, `version` and
+  `osrm_binaries_provider` are ignored.
+
+- file_path:
+
+  **Advanced usage only.** A local file path to a `.tar.gz` archive
+  containing OSRM binaries. If provided, skips downloading entirely.
+
 ## Value
 
 The path to the installation directory.
@@ -82,7 +109,7 @@ The path to the installation directory.
 The function performs the following steps:
 
 1.  Queries the GitHub API to find the specified release of
-    `Project-OSRM/osrm-backend`.
+    `e-kotov/osrm-binaries`.
 
 2.  Identifies the correct binary (`.tar.gz` archive) for the user's OS
     (Linux, macOS, or Windows) and architecture (x64, arm64).
@@ -101,28 +128,27 @@ The function performs the following steps:
 7.  Optionally modifies the `PATH` environment variable for the current
     session or project.
 
-macOS users should note that upstream OSRM v6.x (and newer) binaries are
-built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer. `osrm_install()`
-automatically blocks v6+ installs on older macOS releases and, when
-`version = "latest"`, selects the most recent v5 build instead while
-warning about the requirement. Warnings include both the marketing
-version and Darwin kernel so you'll see messages like
-`macOS 13 Ventura [Darwin 22.6.0]`.
+### Binary Providers
 
-When installing OSRM v6.x or newer for Windows, the upstream release
-omits the Intel Threading Building Blocks (TBB) runtime and a compatible
-`bz2` DLL. To keep the executables runnable out of the box,
-`osrm_install()` fetches TBB from [oneTBB
-v2022.3.0](https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0)
-and the BZip2 runtime from [bzip2-windows
-v1.0.8.0](https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0),
-verifying their SHA-256 checksums before extraction. Without these extra
-libraries, the OSRM v6+ binaries shipped for Windows cannot start.
+The `osrm_binaries_provider` argument allows choosing between two
+release sources:
 
-On macOS, OSRM v6.x and newer binaries also miss the bundled TBB
-runtime. The installer reuses the libraries from release `v5.27.1` to
-keep the binaries functional and patches their `libbz2` linkage using
-`install_name_tool` so that they load the system-provided BZip2 runtime.
+- **`"default"` (e-kotov/osrm-binaries)**: This provider is highly
+  recommended. It offers standalone, immutable C++ binaries that are
+  statically linked and patched during the build process to guarantee
+  maximum compatibility across older and newer operating systems. It
+  explicitly bundles required libraries (like Intel TBB), skips NodeJS
+  bloat, and provides exclusive support for `linux-arm64` (e.g., AWS
+  Graviton, Raspberry Pi) and modern Apple Silicon Macs.
+
+- **`"official"` (Project-OSRM/osrm-backend)**: The upstream releases
+  provided by the core OSRM team. These binaries are wrapped inside
+  `node_osrm` NodeJS tarballs and lack `linux-arm64` builds. When
+  installing v6.x or newer via the `"official"` provider on Windows or
+  macOS, upstream releases omit the Intel TBB runtime. In these cases,
+  `osrm_install()` will automatically attempt legacy runtime hacks (e.g.
+  downloading oneTBB, patching `libbz2` linkage via `install_name_tool`)
+  to keep the binaries functional out-of-the-box.
 
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options

@@ -4,8 +4,30 @@
 
 CRAN release: 2026-04-26
 
+### Major Changes
+
+- Introduced `osrm_binaries_provider` argument to
+  [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
+  (default: `"default"`). This automatically fetches static,
+  highly-compatible binaries built directly by this package’s maintainer
+  (`e-kotov/osrm-binaries`). These new binaries include native
+  `linux-arm64` and `darwin-arm64` support, bundle required libraries
+  like Intel TBB natively to avoid legacy runtime hacks, and reduce
+  overhead by dropping unnecessary NodeJS wrappers. The original
+  upstream binaries remain fully supported via
+  `osrm_binaries_provider = "official"`.
+- Added `download_url` and `file_path` parameters to
+  [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
+  for deterministic manual installations without relying on GitHub API
+  metadata lookups.
+
 ### Bug fixes
 
+- Heavily optimized GitHub API rate limit handling during installation.
+  When fetching known versions from the default provider, the package
+  now bypasses API checks entirely by directly constructing asset URLs.
+- Increased stability of the live integration tests against custom
+  routing instances and proxy-blocked networks.
 - Fixes for install process of OSRM binaries v26+ on Windows.
 
 ## osrm.backend 0.3.0

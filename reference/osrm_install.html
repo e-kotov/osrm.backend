@@ -68,11 +68,14 @@ installed but are not guranteed to function correctly.</p>
     <h2 id="ref-usage">Usage<a class="anchor" aria-label="anchor" href="#ref-usage"></a></h2>
     <div class="sourceCode"><pre class="sourceCode r"><code><span><span class="fu">osrm_install</span><span class="op">(</span></span>
 <span>  version <span class="op">=</span> <span class="st">"latest"</span>,</span>
+<span>  osrm_binaries_provider <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"default"</span>, <span class="st">"official"</span><span class="op">)</span>,</span>
 <span>  dest_dir <span class="op">=</span> <span class="cn">NULL</span>,</span>
 <span>  force <span class="op">=</span> <span class="cn">FALSE</span>,</span>
 <span>  path_action <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"session"</span>, <span class="st">"project"</span>, <span class="st">"none"</span><span class="op">)</span>,</span>
 <span>  quiet <span class="op">=</span> <span class="cn">FALSE</span>,</span>
-<span>  check_tested <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  check_tested <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  download_url <span class="op">=</span> <span class="cn">NULL</span>,</span>
+<span>  file_path <span class="op">=</span> <span class="cn">NULL</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -86,6 +89,16 @@ Defaults to <code>"latest"</code>. Use <code>"latest"</code> to automatically fi
 recent stable version (internally calls <code><a href="osrm_check_latest_version.html">osrm_check_latest_version()</a></code>). Versions
 other than <code>v5.27.1</code>, <code>v6.0.0</code>, <code>v26.4.0</code>, <code>v26.4.1</code>, and <code>v26.5.0</code> will
 trigger a warning but are still attempted if binaries are available.</p></dd>
+
+
+<dt id="arg-osrm-binaries-provider">osrm_binaries_provider<a class="anchor" aria-label="anchor" href="#arg-osrm-binaries-provider"></a></dt>
+<dd><p>A string specifying the provider to download binaries from.
+Defaults to <code>"default"</code>, which pulls from <code>"e-kotov/osrm-binaries"</code> providing custom immutable builds
+(statically linked) that fix glibc compatibility issues and bundle necessary libraries.
+Set to <code>"official"</code> to download the upstream binaries from <code>"Project-OSRM/osrm-backend"</code>
+(which will automatically trigger legacy runtime hacks for macOS and Windows).
+Advanced users can override the provider completely by setting the R option
+<code>osrm.backend.custom_repository</code> to a custom GitHub repository (e.g. <code>"my-user/my-repo"</code>).</p></dd>
 
 
 <dt id="arg-dest-dir">dest_dir<a class="anchor" aria-label="anchor" href="#arg-dest-dir"></a></dt>
@@ -121,6 +134,16 @@ warnings. Defaults to <code>FALSE</code>.</p></dd>
 a warning if the requested OSRM version has not been explicitly validated
 by the package maintainers. If <code>FALSE</code>, it issues a status message instead.</p></dd>
 
+
+<dt id="arg-download-url">download_url<a class="anchor" aria-label="anchor" href="#arg-download-url"></a></dt>
+<dd><p><strong>Advanced usage only.</strong> A direct URL to a <code>.tar.gz</code> archive containing OSRM binaries.
+If provided, <code>version</code> and <code>osrm_binaries_provider</code> are ignored.</p></dd>
+
+
+<dt id="arg-file-path">file_path<a class="anchor" aria-label="anchor" href="#arg-file-path"></a></dt>
+<dd><p><strong>Advanced usage only.</strong> A local file path to a <code>.tar.gz</code> archive containing OSRM binaries.
+If provided, skips downloading entirely.</p></dd>
+
 </dl></div>
     <div class="section level2">
     <h2 id="value">Value<a class="anchor" aria-label="anchor" href="#value"></a></h2>
@@ -129,7 +152,7 @@ by the package maintainers. If <code>FALSE</code>, it issues a status message in
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
     <p>The function performs the following steps:</p><ol><li><p>Queries the GitHub API to find the specified release of
-<code>Project-OSRM/osrm-backend</code>.</p></li>
+<code>e-kotov/osrm-binaries</code>.</p></li>
 <li><p>Identifies the correct binary (<code>.tar.gz</code> archive) for the user's OS
 (Linux, macOS, or Windows) and architecture (x64, arm64).</p></li>
 <li><p>Downloads the archive to a temporary location.</p></li>
@@ -141,24 +164,21 @@ by the package maintainers. If <code>FALSE</code>, it issues a status message in
 them alongside the binaries.</p></li>
 <li><p>Optionally modifies the <code>PATH</code> environment variable for the current
 session or project.</p></li>
-</ol><p>macOS users should note that upstream OSRM v6.x (and newer) binaries are
-built for macOS 15.0 (Sequoia, Darwin 24.0.0) or newer. <code>osrm_install()</code>
-automatically blocks v6+ installs on older macOS releases and, when
-<code>version = "latest"</code>, selects the most recent v5 build instead while warning
-about the requirement. Warnings include both the marketing version and Darwin
-kernel so you'll see messages like <code>macOS 13 Ventura [Darwin 22.6.0]</code>.</p>
-<p>When installing OSRM v6.x or newer for Windows, the upstream release omits
-the Intel Threading Building Blocks (TBB) runtime and a compatible <code>bz2</code> DLL.
-To keep the executables runnable out of the box, <code>osrm_install()</code> fetches TBB
-from <a href="https://github.com/uxlfoundation/oneTBB/releases/tag/v2022.3.0" class="external-link">oneTBB
-v2022.3.0</a> and the BZip2 runtime from
-<a href="https://github.com/philr/bzip2-windows/releases/tag/v1.0.8.0" class="external-link">bzip2-windows
-v1.0.8.0</a>, verifying their SHA-256 checksums before extraction. Without these
-extra libraries, the OSRM v6+ binaries shipped for Windows cannot start.</p>
-<p>On macOS, OSRM v6.x and newer binaries also miss the bundled TBB runtime.
-The installer reuses the libraries from release <code>v5.27.1</code> to keep the
-binaries functional and patches their <code>libbz2</code> linkage using
-<code>install_name_tool</code> so that they load the system-provided BZip2 runtime.</p>
+</ol><div class="section">
+<h3 id="binary-providers">Binary Providers<a class="anchor" aria-label="anchor" href="#binary-providers"></a></h3>
+<p>The <code>osrm_binaries_provider</code> argument allows choosing between two release sources:</p><ul><li><p><strong><code>"default"</code> (e-kotov/osrm-binaries)</strong>: This provider is highly recommended. It offers standalone,
+immutable C++ binaries that are statically linked and patched during the build process to guarantee
+maximum compatibility across older and newer operating systems. It explicitly bundles required
+libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for <code>linux-arm64</code>
+(e.g., AWS Graviton, Raspberry Pi) and modern Apple Silicon Macs.</p></li>
+<li><p><strong><code>"official"</code> (Project-OSRM/osrm-backend)</strong>: The upstream releases provided by the core
+OSRM team. These binaries are wrapped inside <code>node_osrm</code> NodeJS tarballs and lack <code>linux-arm64</code>
+builds. When installing v6.x or newer via the <code>"official"</code> provider on Windows or macOS, upstream
+releases omit the Intel TBB runtime. In these cases, <code>osrm_install()</code> will automatically attempt
+legacy runtime hacks (e.g. downloading oneTBB, patching <code>libbz2</code> linkage via <code>install_name_tool</code>)
+to keep the binaries functional out-of-the-box.</p></li>
+</ul></div>
+
 <p>Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options
 <code>osrm.backend.override_os</code> and <code>osrm.backend.override_arch</code> (e.g.,
