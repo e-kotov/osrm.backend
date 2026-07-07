@@ -13,7 +13,7 @@ dir.create(test_osrm_path, showWarnings = FALSE, recursive = TRUE)
 # We skip installation on CRAN to avoid timeouts and policy violations.
 if (identical(Sys.getenv("NOT_CRAN"), "true")) {
   message("Running locally/CI: Installing OSRM binary to tempdir...")
-  try(osrm_install(version = "v5.27.1", dest_dir = test_osrm_path, quiet = TRUE), silent = TRUE)
+  try(osrm_install(version = "v26.7.2", dest_dir = test_osrm_path, quiet = TRUE), silent = TRUE)
 } else {
   message("Running on CRAN: Skipping OSRM binary installation.")
 }
