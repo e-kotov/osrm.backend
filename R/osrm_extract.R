@@ -218,6 +218,14 @@ osrm_extract <- function(
   if (logs$status != 0) {
     message("STDOUT:\n", logs$stdout)
     message("STDERR:\n", logs$stderr)
+    if (Sys.info()[["sysname"]] == "Windows") {
+      message("Running ldd to check for DLL conflicts:")
+      try({
+        ldd_res <- processx::run("ldd", args = c(bin_path), error_on_status = FALSE)
+        message(ldd_res$stdout)
+        message(ldd_res$stderr)
+      }, silent = TRUE)
+    }
     stop("System command '", basename(bin_path), "' failed with exit code ", logs$status)
   }
 
