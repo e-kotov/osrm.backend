@@ -2169,5 +2169,26 @@ get_expected_hash <- function(version, platform) {
   if (key %in% names(KNOWN_HASHES)) {
     return(KNOWN_HASHES[[key]])
   }
+  
+  # Fallback: attempt to fetch checksums.txt from GitHub release
+  if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+    checksum_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/checksums.txt", version)
+    tryCatch({
+      lines <- readLines(checksum_url, warn = FALSE)
+      # Search for the hash matching our expected filename
+      tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
+      # Handle legacy naming conventions in older scripts if necessary
+      if (platform$os == "win32" && platform$arch == "x64") {
+        tar_filename <- sprintf("osrm-%s-win32-x64-Release.tar.gz", version)
+      }
+      for (line in lines) {
+        if (grepl(tar_filename, line, fixed = TRUE)) {
+          hash <- strsplit(trimws(line), "\\s+")[[1]][1]
+          return(hash)
+        }
+      }
+    }, error = function(e) NULL)
+  }
+  
   return(NA_character_)
 }
