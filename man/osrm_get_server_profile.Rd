@@ -27,3 +27,8 @@ It follows a priority list:
 \item Falls back to \code{getOption("osrm.profile")}.
 }
 }
+\examples{
+\dontrun{
+osrm_get_server_profile(port = 5000)
+}
+}

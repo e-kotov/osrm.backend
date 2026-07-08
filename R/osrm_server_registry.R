@@ -388,6 +388,10 @@
 #' @param port Optional integer. The port of the server.
 #' @return A character string representing the profile name (default "car").
 #' @export
+#' @examples
+#' \dontrun{
+#' osrm_get_server_profile(port = 5000)
+#' }
 osrm_get_server_profile <- function(input_osrm = NULL, port = NULL) {
   # 1. Check Registry (if port is known or input_osrm is process)
   reg_profile <- NULL

@@ -1,0 +1,10 @@
+R/osrm_gui.R
+R/osrm_gui_internals.R
+R/osrm_install.R
+R/osrm_start_server.R
+R/osrm_stop_server.R
+R/osrm_start.R
+R/utils.R
+R/osrm_server_registry.R
+R/osrm_which.R
+R/osrm_uninstall.R
