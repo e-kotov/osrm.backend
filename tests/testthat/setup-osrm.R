@@ -5,7 +5,9 @@ Sys.setenv(OSRM_BACKEND_ALLOW_TAR_WARNINGS = "true")
 test_osrm_path <- file.path(tempdir(), "osrm_bin_test")
 
 # Clean up any previous runs to ensure a fresh state
-if (dir.exists(test_osrm_path)) unlink(test_osrm_path, recursive = TRUE)
+if (dir.exists(test_osrm_path)) {
+  unlink(test_osrm_path, recursive = TRUE)
+}
 dir.create(test_osrm_path, showWarnings = FALSE, recursive = TRUE)
 
 # POLITE INSTALLATION:
@@ -13,13 +15,31 @@ dir.create(test_osrm_path, showWarnings = FALSE, recursive = TRUE)
 # We skip installation on CRAN to avoid timeouts and policy violations.
 if (identical(Sys.getenv("NOT_CRAN"), "true")) {
   message("Running locally/CI: Installing OSRM binary to tempdir...")
-  try(osrm_install(version = "v26.7.2", dest_dir = test_osrm_path, quiet = TRUE), silent = TRUE)
+  test_osrm_versions <- tryCatch(
+    osrm_check_available_versions(prereleases = TRUE),
+    error = function(...) character()
+  )
+  if (length(test_osrm_versions)) {
+    try(
+      osrm_install(
+        version = test_osrm_versions[[1]],
+        dest_dir = test_osrm_path,
+        quiet = TRUE
+      ),
+      silent = TRUE
+    )
+  }
 } else {
   message("Running on CRAN: Skipping OSRM binary installation.")
 }
 
 # CONFIGURATION (Only runs if binary exists):
-bin_path <- list.files(test_osrm_path, pattern = "^osrm-routed(\\.exe)?$", full.names = TRUE, recursive = TRUE)
+bin_path <- list.files(
+  test_osrm_path,
+  pattern = "^osrm-routed(\\.exe)?$",
+  full.names = TRUE,
+  recursive = TRUE
+)
 
 if (length(bin_path) > 0) {
   exe_path <- normalizePath(bin_path[1], mustWork = FALSE)
@@ -34,7 +54,9 @@ if (length(bin_path) > 0) {
 
   # Add to PATH so Sys.which finds it
   old_path <- Sys.getenv("PATH")
-  Sys.setenv(PATH = paste(dirname(exe_path), old_path, sep = .Platform$path.sep))
+  Sys.setenv(
+    PATH = paste(dirname(exe_path), old_path, sep = .Platform$path.sep)
+  )
 }
 
 # Helper functions to check for required binaries and profiles
