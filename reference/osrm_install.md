@@ -93,12 +93,19 @@ osrm_install(
 
   **Advanced usage only.** A direct URL to a `.tar.gz` archive
   containing OSRM binaries. If provided, `version` and
-  `osrm_binaries_provider` are ignored.
+  `osrm_binaries_provider` are ignored. The archive must be structured
+  similarly to the default releases, containing the required OSRM
+  executables (at least `osrm-routed` or `osrm-routed.exe`) either
+  directly at the root of the archive or nested under a single directory
+  level. Supporting libraries and Lua profiles placed in the same folder
+  will be installed alongside.
 
 - file_path:
 
   **Advanced usage only.** A local file path to a `.tar.gz` archive
-  containing OSRM binaries. If provided, skips downloading entirely.
+  containing OSRM binaries. If provided, skips downloading entirely. The
+  archive structure expectations are identical to those of
+  `download_url`.
 
 ## Value
 

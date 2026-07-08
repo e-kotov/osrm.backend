@@ -47,12 +47,14 @@
 <h3 id="major-changes-0-3-1">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-0-3-1"></a></h3>
 <ul><li>Introduced <code>osrm_binaries_provider</code> argument to <code><a href="../reference/osrm_install.html">osrm_install()</a></code> (default: <code>"default"</code>). This automatically fetches static, highly-compatible binaries built directly by this package’s maintainer (<code>e-kotov/osrm-binaries</code>). These new binaries include native <code>linux-arm64</code> and <code>darwin-arm64</code> support, bundle required libraries like Intel TBB natively to avoid legacy runtime hacks, and reduce overhead by dropping unnecessary NodeJS wrappers. The original upstream binaries remain fully supported via <code>osrm_binaries_provider = "official"</code>.</li>
 <li>Added <code>download_url</code> and <code>file_path</code> parameters to <code><a href="../reference/osrm_install.html">osrm_install()</a></code> for deterministic manual installations without relying on GitHub API metadata lookups.</li>
+<li>Switched binary integrity verification to dynamically fetch <code>checksums.txt</code> from GitHub release assets on-the-fly, ensuring installation security without requiring R package updates when new binary builds are released.</li>
 </ul></div>
 <div class="section level3">
 <h3 id="bug-fixes-0-3-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-1"></a></h3>
 <ul><li>Heavily optimized GitHub API rate limit handling during installation. When fetching known versions from the default provider, the package now bypasses API checks entirely by directly constructing asset URLs.</li>
 <li>Increased stability of the live integration tests against custom routing instances and proxy-blocked networks.</li>
 <li>Fixes for install process of OSRM binaries v26+ on Windows.</li>
+<li>Added weekly cross-provider integration tests (<code>tests/testthat/test-compatibility.R</code>) to automatically verify that custom binaries produce identical routing results and are fully cross-compatible with official releases.</li>
 </ul></div>
 </div>
     <div class="section level2">
@@ -96,7 +98,7 @@
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>

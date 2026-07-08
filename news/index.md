@@ -20,6 +20,10 @@ CRAN release: 2026-04-26
   [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
   for deterministic manual installations without relying on GitHub API
   metadata lookups.
+- Switched binary integrity verification to dynamically fetch
+  `checksums.txt` from GitHub release assets on-the-fly, ensuring
+  installation security without requiring R package updates when new
+  binary builds are released.
 
 ### Bug fixes
 
@@ -29,6 +33,10 @@ CRAN release: 2026-04-26
 - Increased stability of the live integration tests against custom
   routing instances and proxy-blocked networks.
 - Fixes for install process of OSRM binaries v26+ on Windows.
+- Added weekly cross-provider integration tests
+  (`tests/testthat/test-compatibility.R`) to automatically verify that
+  custom binaries produce identical routing results and are fully
+  cross-compatible with official releases.
 
 ## osrm.backend 0.3.0
 

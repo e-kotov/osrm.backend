@@ -137,12 +137,15 @@ by the package maintainers. If <code>FALSE</code>, it issues a status message in
 
 <dt id="arg-download-url">download_url<a class="anchor" aria-label="anchor" href="#arg-download-url"></a></dt>
 <dd><p><strong>Advanced usage only.</strong> A direct URL to a <code>.tar.gz</code> archive containing OSRM binaries.
-If provided, <code>version</code> and <code>osrm_binaries_provider</code> are ignored.</p></dd>
+If provided, <code>version</code> and <code>osrm_binaries_provider</code> are ignored. The archive must be structured similarly
+to the default releases, containing the required OSRM executables (at least <code>osrm-routed</code> or <code>osrm-routed.exe</code>)
+either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
+placed in the same folder will be installed alongside.</p></dd>
 
 
 <dt id="arg-file-path">file_path<a class="anchor" aria-label="anchor" href="#arg-file-path"></a></dt>
 <dd><p><strong>Advanced usage only.</strong> A local file path to a <code>.tar.gz</code> archive containing OSRM binaries.
-If provided, skips downloading entirely.</p></dd>
+If provided, skips downloading entirely. The archive structure expectations are identical to those of <code>download_url</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">
@@ -221,7 +224,7 @@ OS and CPU combination that exists on the GitHub releases.</p>
 </div>
 
 <div class="pkgdown-footer-right">
-  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
+  <p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.1.</p>
 </div>
 
     </footer></div>
