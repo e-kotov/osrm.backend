@@ -55,3 +55,34 @@ test_that("Cross-provider compatibility works for latest versions", {
     }
   }
 })
+
+test_that("OSRM darwin-x64 runs under Rosetta on Apple Silicon", {
+  skip_if_not(identical(Sys.getenv("RUN_OSRM_LIVE_TESTS"), "true"), "Live OSRM tests skipped")
+  
+  # Only run this test if we are actually on a macOS ARM64 platform
+  platform <- get_platform_info()
+  skip_if_not(identical(platform$os, "darwin") && identical(platform$arch, "arm64"), "Not on macOS arm64")
+  
+  test_map <- tempfile(fileext = ".osm.pbf")
+  download.file("https://download.geofabrik.de/europe/monaco-latest.osm.pbf", test_map, quiet = TRUE)
+  
+  # Override arch to force download of x64 binary
+  old_arch <- options(osrm.backend.override_arch = "x64")
+  on.exit(options(old_arch), add = TRUE)
+  
+  dir_ours_x64 <- tempfile()
+  dir.create(dir_ours_x64)
+  osrm_install(version = "v26.7.2", osrm_binaries_provider = "default", dest_dir = dir_ours_x64, quiet = TRUE)
+  
+  opts <- options(osrm.backend.path = dir_ours_x64)
+  on.exit(options(opts), add = TRUE)
+  
+  job_ours <- osrm_prepare_graph(test_map, profile = osrm_find_profile("car.lua"), verbosity = "NONE")
+  server_ours <- osrm_start(job_ours$osrm_job_artifact, port = 5001, verbosity = "NONE")
+  Sys.sleep(2)
+  res <- jsonlite::fromJSON("http://127.0.0.1:5001/route/v1/driving/7.419,43.731;7.418,43.733")
+  server_ours$kill()
+  
+  expect_true(!is.null(res$routes))
+})
+

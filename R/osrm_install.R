@@ -2101,7 +2101,7 @@ get_expected_hash <- function(version, platform) {
   if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
     checksum_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/checksums.txt", version)
     tryCatch({
-      lines <- readLines(checksum_url, warn = FALSE)
+      lines <- suppressWarnings(readLines(checksum_url, warn = FALSE))
       # Search for the hash matching our expected filename
       tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
       # Handle legacy naming conventions in older scripts if necessary
