@@ -36,3 +36,11 @@ osrm_get_server_profile(input_osrm = NULL, port = NULL)
 ## Value
 
 A character string representing the profile name (default "car").
+
+## Examples
+
+``` r
+if (FALSE) { # \dontrun{
+osrm_get_server_profile(port = 5000)
+} # }
+```
