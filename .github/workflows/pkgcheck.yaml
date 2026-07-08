@@ -16,7 +16,14 @@ on:
 jobs:
   pkgcheck:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+      RUN_OSRM_LIVE_TESTS: "true"
     permissions:
+      contents: read
       issues: write
+      pull-requests: write
+      actions: read
     steps:
+      - uses: actions/checkout@v4
       - uses: ropensci-review-tools/pkgcheck-action@main
