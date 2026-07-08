@@ -84,9 +84,12 @@
 #'   a warning if the requested OSRM version has not been explicitly validated
 #'   by the package maintainers. If `FALSE`, it issues a status message instead.
 #' @param download_url **Advanced usage only.** A direct URL to a `.tar.gz` archive containing OSRM binaries.
-#'   If provided, `version` and `osrm_binaries_provider` are ignored.
+#'   If provided, `version` and `osrm_binaries_provider` are ignored. The archive must be structured similarly
+#'   to the default releases, containing the required OSRM executables (at least `osrm-routed` or `osrm-routed.exe`)
+#'   either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
+#'   placed in the same folder will be installed alongside.
 #' @param file_path **Advanced usage only.** A local file path to a `.tar.gz` archive containing OSRM binaries.
-#'   If provided, skips downloading entirely.
+#'   If provided, skips downloading entirely. The archive structure expectations are identical to those of `download_url`.
 #' @return The path to the installation directory.
 #' @export
 #' @examples

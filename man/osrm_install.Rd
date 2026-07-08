@@ -58,10 +58,13 @@ a warning if the requested OSRM version has not been explicitly validated
 by the package maintainers. If \code{FALSE}, it issues a status message instead.}
 
 \item{download_url}{\strong{Advanced usage only.} A direct URL to a \code{.tar.gz} archive containing OSRM binaries.
-If provided, \code{version} and \code{osrm_binaries_provider} are ignored.}
+If provided, \code{version} and \code{osrm_binaries_provider} are ignored. The archive must be structured similarly
+to the default releases, containing the required OSRM executables (at least \code{osrm-routed} or \code{osrm-routed.exe})
+either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
+placed in the same folder will be installed alongside.}
 
 \item{file_path}{\strong{Advanced usage only.} A local file path to a \code{.tar.gz} archive containing OSRM binaries.
-If provided, skips downloading entirely.}
+If provided, skips downloading entirely. The archive structure expectations are identical to those of \code{download_url}.}
 }
 \value{
 The path to the installation directory.
