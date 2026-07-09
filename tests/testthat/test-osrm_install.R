@@ -248,6 +248,105 @@ test_that("release_has_binaries detects binaries correctly", {
   expect_false(release_has_binaries(release, platform_win))
 })
 
+test_that("get_osrm_archive_name handles current artifact names", {
+  expect_identical(
+    get_osrm_archive_name(
+      "v26.4.1",
+      list(os = "linux", arch = "arm64")
+    ),
+    "osrm-v26.4.1-linux-arm64-Release.tar.gz"
+  )
+  expect_identical(
+    get_osrm_archive_name(
+      "v26.4.1",
+      list(os = "win32", arch = "x64")
+    ),
+    "osrm-v26.4.1-win32-x64-Release.tar.gz"
+  )
+})
+
+test_that("get_release_asset_sha256 reads GitHub release asset digests", {
+  release <- list(
+    assets = list(
+      list(
+        name = "osrm-v26.4.1-linux-x64-Release.tar.gz",
+        digest = "sha256:BF50340B1BCFC5B2ADD49D935FFB16B6A21AD291FCE1552B9FBE20594AAC0194"
+      ),
+      list(
+        name = "checksums.txt",
+        digest = "sha256:d75508057dd93f0be0a8464d5adf93e86ebfdfde69a48e220a5f6bd1bd2e156d"
+      )
+    )
+  )
+
+  expect_identical(
+    get_release_asset_sha256(
+      release,
+      "osrm-v26.4.1-linux-x64-Release.tar.gz"
+    ),
+    "bf50340b1bcfc5b2add49d935ffb16b6a21ad291fce1552b9fbe20594aac0194"
+  )
+})
+
+test_that("get_release_asset_sha256 handles simplified asset data frames", {
+  release <- list(
+    assets = data.frame(
+      name = c(
+        "checksums.txt",
+        "osrm-v26.4.1-win32-x64-Release.tar.gz"
+      ),
+      digest = c(
+        "sha256:d75508057dd93f0be0a8464d5adf93e86ebfdfde69a48e220a5f6bd1bd2e156d",
+        "sha256:26f1181b2dc20f10eb97d2fa50aa9845290d68ebffe47e7954a2e916c94ca347"
+      )
+    )
+  )
+
+  expect_identical(
+    get_release_asset_sha256(
+      release,
+      "osrm-v26.4.1-win32-x64-Release.tar.gz"
+    ),
+    "26f1181b2dc20f10eb97d2fa50aa9845290d68ebffe47e7954a2e916c94ca347"
+  )
+})
+
+test_that("get_release_asset_sha256 returns NA for missing or invalid digests", {
+  expect_identical(
+    get_release_asset_sha256(
+      list(
+        assets = list(list(
+          name = "osrm-v26.4.1-linux-x64-Release.tar.gz",
+          digest = "md5:bad"
+        ))
+      ),
+      "osrm-v26.4.1-linux-x64-Release.tar.gz"
+    ),
+    NA_character_
+  )
+  expect_identical(
+    get_release_asset_sha256(
+      list(assets = list()),
+      "osrm-v26.4.1-linux-x64-Release.tar.gz"
+    ),
+    NA_character_
+  )
+  expect_identical(
+    get_release_asset_sha256(
+      list(
+        assets = list(
+          list(name = "osrm-v26.4.1-linux-x64-Release.tar.gz"),
+          list(
+            digest = "sha256:bf50340b1bcfc5b2add49d935ffb16b6a21ad291fce1552b9fbe20594aac0194"
+          )
+        )
+      ),
+      "osrm-v26.4.1-linux-x64-Release.tar.gz"
+    ),
+    NA_character_
+  )
+})
+
 # Test path helpers ----
 test_that("osrm_default_install_root returns cache directory", {
   root <- osrm_default_install_root()
@@ -630,10 +729,13 @@ test_that("set_path_session removes old cached versions and prioritizes new vers
   v5_dir <- file.path(cache_root, "test_v5.27.1")
   dir.create(v6_dir, recursive = TRUE, showWarnings = FALSE)
   dir.create(v5_dir, recursive = TRUE, showWarnings = FALSE)
-  on.exit({
-    unlink(v6_dir, recursive = TRUE)
-    unlink(v5_dir, recursive = TRUE)
-  }, add = TRUE)
+  on.exit(
+    {
+      unlink(v6_dir, recursive = TRUE)
+      unlink(v5_dir, recursive = TRUE)
+    },
+    add = TRUE
+  )
 
   # Create a system installation directory (outside cache)
   system_dir <- tempfile()
@@ -683,16 +785,18 @@ test_that("set_path_session preserves system installations when adding cached ve
   on.exit(unlink(v6_dir, recursive = TRUE), add = TRUE)
 
   # Create multiple system installation directories
-  homebrew_dir <- "/usr/local/bin"  # Common homebrew location
+  homebrew_dir <- "/usr/local/bin" # Common homebrew location
   custom_dir <- tempfile()
   dir.create(custom_dir)
   on.exit(unlink(custom_dir, recursive = TRUE), add = TRUE)
 
   # Set up PATH with system installations
-  Sys.setenv(PATH = paste(
-    c(homebrew_dir, custom_dir, orig_path),
-    collapse = .Platform$path.sep
-  ))
+  Sys.setenv(
+    PATH = paste(
+      c(homebrew_dir, custom_dir, orig_path),
+      collapse = .Platform$path.sep
+    )
+  )
 
   # Add cached version to PATH
   set_path_session(v6_dir, quiet = TRUE)
@@ -738,16 +842,28 @@ test_that("set_path_project replaces old cached version with new one", {
   rprofile <- file.path(tmp_dir, ".Rprofile")
   lines <- readLines(rprofile)
   # Use forward slashes to match what set_path_project writes to .Rprofile
-  expect_true(any(grepl(normalizePath(v6_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
+  expect_true(any(grepl(
+    normalizePath(v6_dir, mustWork = FALSE, winslash = "/"),
+    lines,
+    fixed = TRUE
+  )))
 
   # Now add v5.27.1 - it should replace v6.0.0
   set_path_project(v5_dir, quiet = TRUE)
 
   lines <- readLines(rprofile)
   # v5.27.1 should be in .Rprofile
-  expect_true(any(grepl(normalizePath(v5_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
+  expect_true(any(grepl(
+    normalizePath(v5_dir, mustWork = FALSE, winslash = "/"),
+    lines,
+    fixed = TRUE
+  )))
   # v6.0.0 should NOT be in .Rprofile anymore
-  expect_false(any(grepl(normalizePath(v6_dir, mustWork = FALSE, winslash = "/"), lines, fixed = TRUE)))
+  expect_false(any(grepl(
+    normalizePath(v6_dir, mustWork = FALSE, winslash = "/"),
+    lines,
+    fixed = TRUE
+  )))
   # Should only have one osrm.backend line
   count <- sum(grepl("#added-by-r-pkg-osrm.backend", lines, fixed = TRUE))
   expect_identical(count, 1L)
@@ -760,9 +876,9 @@ test_that("set_path_project replaces old cached version with new one", {
 test_that("osrm_install handles check_tested correctly", {
   # We use a dummy dest_dir to avoid actual installation and bypass API checks if possible
   # but here we just want to see if the message/warning is emitted.
-  # We'll need to mock/catch the execution before it hits the network if possible, 
+  # We'll need to mock/catch the execution before it hits the network if possible,
   # or just use expect_warning/expect_message and let it try (and fail) or stop early.
-  
+
   dummy_dest <- tempfile()
   dir.create(dummy_dest)
   on.exit(unlink(dummy_dest, recursive = TRUE))
@@ -771,19 +887,44 @@ test_that("osrm_install handles check_tested correctly", {
   # We use force = TRUE to ensure it doesn't stop because it already exists
   # We use quiet = TRUE to suppress other messages
   expect_silent(
-    suppressWarnings(try(osrm_install(version = "v26.5.0", dest_dir = dummy_dest, force = TRUE, quiet = TRUE), silent = TRUE))
+    suppressWarnings(try(
+      osrm_install(
+        version = "v26.5.0",
+        dest_dir = dummy_dest,
+        force = TRUE,
+        quiet = TRUE
+      ),
+      silent = TRUE
+    ))
   )
 
   # Test 2: Untested version should warn by default
   # It will likely fail later on GitHub API check, but the warning happens early
   expect_warning(
-    try(osrm_install(version = "v99.9.9", dest_dir = dummy_dest, force = TRUE, quiet = FALSE), silent = TRUE),
+    try(
+      osrm_install(
+        version = "v99.9.9",
+        dest_dir = dummy_dest,
+        force = TRUE,
+        quiet = FALSE
+      ),
+      silent = TRUE
+    ),
     "has not been validated"
   )
 
   # Test 3: Untested version with check_tested = FALSE should message
   expect_message(
-    try(osrm_install(version = "v99.9.9", dest_dir = dummy_dest, check_tested = FALSE, force = TRUE, quiet = FALSE), silent = TRUE),
+    try(
+      osrm_install(
+        version = "v99.9.9",
+        dest_dir = dummy_dest,
+        check_tested = FALSE,
+        force = TRUE,
+        quiet = FALSE
+      ),
+      silent = TRUE
+    ),
     "has not been validated"
   )
 })
@@ -795,13 +936,21 @@ test_that("osrm_install manual installation options work", {
 
   # Test file_path error handling
   expect_error(
-    osrm_install(dest_dir = dummy_dest, file_path = "nonexistent_file_path.tar.gz", quiet = TRUE),
+    osrm_install(
+      dest_dir = dummy_dest,
+      file_path = "nonexistent_file_path.tar.gz",
+      quiet = TRUE
+    ),
     "Provided file_path does not exist"
   )
 
   # Test download_url error handling
   expect_error(
-    osrm_install(dest_dir = dummy_dest, download_url = "http://localhost:9999/fake.tar.gz", quiet = TRUE),
+    osrm_install(
+      dest_dir = dummy_dest,
+      download_url = "http://localhost:9999/fake.tar.gz",
+      quiet = TRUE
+    ),
     "Failed to download file"
   )
 })

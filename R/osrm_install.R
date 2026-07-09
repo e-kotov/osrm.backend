@@ -29,16 +29,16 @@
 #' \subsection{Binary Providers}{
 #' The `osrm_binaries_provider` argument allows choosing between two release sources:
 #' \itemize{
-#'   \item \strong{`"default"` (e-kotov/osrm-binaries)}: This provider is highly recommended. It offers standalone, 
-#'   immutable C++ binaries that are statically linked and patched during the build process to guarantee 
-#'   maximum compatibility across older and newer operating systems. It explicitly bundles required 
-#'   libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for `linux-arm64` 
+#'   \item \strong{`"default"` (e-kotov/osrm-binaries)}: This provider is highly recommended. It offers standalone,
+#'   immutable C++ binaries that are statically linked and patched during the build process to guarantee
+#'   maximum compatibility across older and newer operating systems. It explicitly bundles required
+#'   libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for `linux-arm64`
 #'   (e.g., AWS Graviton, Raspberry Pi) and modern Apple Silicon Macs.
-#'   \item \strong{`"official"` (Project-OSRM/osrm-backend)}: The upstream releases provided by the core 
-#'   OSRM team. These binaries are wrapped inside `node_osrm` NodeJS tarballs and lack `linux-arm64` 
-#'   builds. When installing v6.x or newer via the `"official"` provider on Windows or macOS, upstream 
-#'   releases omit the Intel TBB runtime. In these cases, `osrm_install()` will automatically attempt 
-#'   legacy runtime hacks (e.g. downloading oneTBB, patching `libbz2` linkage via `install_name_tool`) 
+#'   \item \strong{`"official"` (Project-OSRM/osrm-backend)}: The upstream releases provided by the core
+#'   OSRM team. These binaries are wrapped inside `node_osrm` NodeJS tarballs and lack `linux-arm64`
+#'   builds. When installing v6.x or newer via the `"official"` provider on Windows or macOS, upstream
+#'   releases omit the Intel TBB runtime. In these cases, `osrm_install()` will automatically attempt
+#'   legacy runtime hacks (e.g. downloading oneTBB, patching `libbz2` linkage via `install_name_tool`)
 #'   to keep the binaries functional out-of-the-box.
 #' }
 #' }
@@ -56,8 +56,8 @@
 #'   other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and `v26.5.0` will
 #'   trigger a warning but are still attempted if binaries are available.
 #' @param osrm_binaries_provider A string specifying the provider to download binaries from.
-#'   Defaults to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing custom immutable builds 
-#'   (statically linked) that fix glibc compatibility issues and bundle necessary libraries. 
+#'   Defaults to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing custom immutable builds
+#'   (statically linked) that fix glibc compatibility issues and bundle necessary libraries.
 #'   Set to `"official"` to download the upstream binaries from `"Project-OSRM/osrm-backend"`
 #'   (which will automatically trigger legacy runtime hacks for macOS and Windows).
 #'   Advanced users can override the provider completely by setting the R option
@@ -128,7 +128,11 @@ osrm_install <- function(
   osrm_binaries_provider <- match.arg(osrm_binaries_provider)
   repo <- getOption("osrm.backend.custom_repository")
   if (is.null(repo)) {
-    repo <- if (osrm_binaries_provider == "default") "e-kotov/osrm-binaries" else "Project-OSRM/osrm-backend"
+    repo <- if (osrm_binaries_provider == "default") {
+      "e-kotov/osrm-binaries"
+    } else {
+      "Project-OSRM/osrm-backend"
+    }
   }
   old_opts <- options(osrm.backend.repository = repo)
   on.exit(options(old_opts), add = TRUE)
@@ -303,31 +307,52 @@ osrm_install <- function(
 
   if (manual_install) {
     if (!is.null(file_path)) {
-      if (!file.exists(file_path)) stop("Provided file_path does not exist: ", file_path)
+      if (!file.exists(file_path)) {
+        stop("Provided file_path does not exist: ", file_path)
+      }
       tmp_file <- file_path
       emit_message("Using local file: ", tmp_file)
     } else {
       tmp_file <- tempfile(fileext = ".tar.gz")
       on.exit(unlink(tmp_file), add = TRUE)
       emit_message("Downloading from ", download_url)
-      tryCatch({
-        req <- httr2::req_retry(httr2::request(download_url), max_tries = 3)
-        httr2::req_perform(req, path = tmp_file)
-      }, error = function(e) {
-        stop("Failed to download file: ", e$message, call. = FALSE)
-      })
+      tryCatch(
+        {
+          req <- httr2::req_retry(httr2::request(download_url), max_tries = 3)
+          httr2::req_perform(req, path = tmp_file)
+        },
+        error = function(e) {
+          stop("Failed to download file: ", e$message, call. = FALSE)
+        }
+      )
     }
   } else {
     # --- 4. Fetch release metadata or construct directly ---
-    if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
-      emit_message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
-      asset_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/osrm-%s-%s-%s-Release.tar.gz", version, version, platform$os, platform$arch)
+    if (
+      identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+    ) {
+      emit_message(sprintf(
+        "Detected platform: %s-%s",
+        platform$os,
+        platform$arch
+      ))
+      asset_url <- sprintf(
+        "https://github.com/e-kotov/osrm-binaries/releases/download/%s/osrm-%s-%s-%s-Release.tar.gz",
+        version,
+        version,
+        platform$os,
+        platform$arch
+      )
       emit_message("Found matching binary: ", basename(asset_url))
     } else {
       release_info <- get_release_by_tag(version)
 
       # --- 5. Detect platform ---
-      emit_message(sprintf("Detected platform: %s-%s", platform$os, platform$arch))
+      emit_message(sprintf(
+        "Detected platform: %s-%s",
+        platform$os,
+        platform$arch
+      ))
       emit_message(sprintf(
         "Found release: %s (%s)",
         release_info$tag_name,
@@ -357,10 +382,15 @@ osrm_install <- function(
 
   # Check if expert user has explicitly opted out
   skip_validation <- isTRUE(getOption("osrm.backend.skip_validation", FALSE))
-  is_official_repo <- identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  is_official_repo <- identical(
+    getOption("osrm.backend.repository"),
+    "e-kotov/osrm-binaries"
+  )
 
   if (skip_validation) {
-    emit_message("Bypassing SHA-256 checksum validation as requested by user option.")
+    emit_message(
+      "Bypassing SHA-256 checksum validation as requested by user option."
+    )
   } else if (!manual_install && is_official_repo) {
     expected_hash <- get_expected_hash(version, platform)
     if (!is.na(expected_hash)) {
@@ -368,8 +398,12 @@ osrm_install <- function(
       if (actual_hash != expected_hash) {
         stop(
           "SECURITY ERROR: The downloaded binary checksum does not match the known-good hash!\n",
-          "Expected: ", expected_hash, "\n",
-          "Actual:   ", actual_hash, "\n",
+          "Expected: ",
+          expected_hash,
+          "\n",
+          "Actual:   ",
+          actual_hash,
+          "\n",
           "This could indicate a tampered release or a corrupted download. Aborting installation.\n",
           "To override this check, set options(osrm.backend.skip_validation = TRUE).",
           call. = FALSE
@@ -378,8 +412,13 @@ osrm_install <- function(
       emit_message("Checksum verified (", actual_hash, ")")
     } else {
       warning(
-        "No known-good SHA-256 hash found for version '", version,
-        "' on platform '", platform$os, "-", platform$arch, "'. Proceeding without validation.",
+        "No known-good SHA-256 hash found for version '",
+        version,
+        "' on platform '",
+        platform$os,
+        "-",
+        platform$arch,
+        "'. Proceeding without validation.",
         call. = FALSE
       )
     }
@@ -403,7 +442,11 @@ osrm_install <- function(
   )
 
   if (!is.null(status) && status != 0) {
-    stop("Failed to extract archive: tar returned exit code ", status, call. = FALSE)
+    stop(
+      "Failed to extract archive: tar returned exit code ",
+      status,
+      call. = FALSE
+    )
   }
 
   # --- 8. Locate and install binaries ---
@@ -443,7 +486,12 @@ osrm_install <- function(
   files_to_copy <- list.files(bin_source_dir, full.names = TRUE)
 
   emit_message("Installing binaries to ", dest_dir)
-  file.copy(from = files_to_copy, to = dest_dir, overwrite = TRUE, recursive = TRUE)
+  file.copy(
+    from = files_to_copy,
+    to = dest_dir,
+    overwrite = TRUE,
+    recursive = TRUE
+  )
 
   # Check if we need to install supplementary libraries/dlls
   maybe_install_windows_v6_runtime(
@@ -468,7 +516,10 @@ osrm_install <- function(
   # --- 9. Download and install Lua profiles ---
   # If we are using our custom binaries, the profiles directory is already bundled inside the tarball
   # and was copied recursively above. We only need to download them for official binaries.
-  if (!identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries") && !dir.exists(file.path(dest_dir, "profiles"))) {
+  if (
+    !identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries") &&
+      !dir.exists(file.path(dest_dir, "profiles"))
+  ) {
     install_profiles_for_release(release_info, dest_dir, quiet = quiet)
   }
 
@@ -577,7 +628,7 @@ find_latest_pre_v6_release <- function(platform) {
 #'   in the returned list. Defaults to `FALSE`.
 #' @return A character vector of available version tags.
 #' @export
-#' 
+#'
 #' @examples
 #' \donttest{
 #' if (identical(Sys.getenv("OSRM_EXAMPLES"), "true")) {
@@ -982,7 +1033,9 @@ github_api_request_with_retries <- function(url, error_message, verb = "GET") {
 }
 
 #' @noRd
-get_all_releases <- function(repo = getOption("osrm.backend.repository", "e-kotov/osrm-binaries")) {
+get_all_releases <- function(
+  repo = getOption("osrm.backend.repository", "e-kotov/osrm-binaries")
+) {
   url <- paste0("https://api.github.com/repos/", repo, "/releases")
 
   resp <- github_api_request_with_retries(
@@ -994,7 +1047,10 @@ get_all_releases <- function(repo = getOption("osrm.backend.repository", "e-koto
 }
 
 #' @noRd
-get_release_by_tag <- function(version, repo = getOption("osrm.backend.repository", "e-kotov/osrm-binaries")) {
+get_release_by_tag <- function(
+  version,
+  repo = getOption("osrm.backend.repository", "e-kotov/osrm-binaries")
+) {
   url <- paste0(
     "https://api.github.com/repos/",
     repo,
@@ -1288,7 +1344,9 @@ maybe_install_windows_v6_runtime <- function(
     return(invisible(NULL))
   }
 
-  if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+  if (
+    identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  ) {
     return(invisible(NULL))
   }
 
@@ -1314,7 +1372,9 @@ maybe_install_linux_v6_runtime <- function(
     return(invisible(NULL))
   }
 
-  if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+  if (
+    identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  ) {
     return(invisible(NULL))
   }
 
@@ -1375,7 +1435,9 @@ maybe_install_macos_v6_runtime <- function(
     return(invisible(NULL))
   }
 
-  if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+  if (
+    identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  ) {
     return(invisible(NULL))
   }
 
@@ -1427,7 +1489,10 @@ ensure_linux_tbb_runtime <- function(
     }
   }
 
-  release_info <- get_release_by_tag(reference_version, repo = "Project-OSRM/osrm-backend")
+  release_info <- get_release_by_tag(
+    reference_version,
+    repo = "Project-OSRM/osrm-backend"
+  )
   asset_url <- find_asset_url(release_info, platform)
 
   tmp_tar <- tempfile(fileext = ".tar.gz")
@@ -1577,7 +1642,10 @@ ensure_macos_tbb_runtime <- function(
     }
   }
 
-  release_info <- get_release_by_tag(reference_version, repo = "Project-OSRM/osrm-backend")
+  release_info <- get_release_by_tag(
+    reference_version,
+    repo = "Project-OSRM/osrm-backend"
+  )
   asset_url <- find_asset_url(release_info, platform)
 
   tmp_tar <- tempfile(fileext = ".tar.gz")
@@ -1788,7 +1856,13 @@ version_at_least <- function(version, minimum) {
 
 #' @noRd
 # Download a zip archive, verify its checksum, and extract a single file.
-download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL, quiet = FALSE) {
+download_zip_asset <- function(
+  url,
+  member_path,
+  dest_path,
+  sha256 = NULL,
+  quiet = FALSE
+) {
   member_path <- gsub("^/+", "", member_path)
   normalized_member <- gsub("\\\\", "/", member_path)
 
@@ -1862,7 +1936,11 @@ download_zip_asset <- function(url, member_path, dest_path, sha256 = NULL, quiet
   tryCatch(
     {
       if (quiet) {
-        suppressWarnings(utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract))
+        suppressWarnings(utils::unzip(
+          tmp_zip,
+          files = selected_member,
+          exdir = tmp_extract
+        ))
       } else {
         utils::unzip(tmp_zip, files = selected_member, exdir = tmp_extract)
       }
@@ -2096,54 +2174,100 @@ get_expected_hash <- function(version, platform) {
   # We rely entirely on dynamic fetching for e-kotov/osrm-binaries
   # If a provider does not publish checksums (like Project-OSRM/osrm-backend),
   # this safely returns NA_character_ and skips validation.
-  
-  # Fallback: attempt to fetch checksums.txt from GitHub release
-  if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
-    # Prefer the GitHub Releases API asset digest when available (returns e.g. "sha256:<hex>").
-    api_url <- sprintf("https://api.github.com/repos/%s/releases/tags/%s", "e-kotov/osrm-binaries", version)
-    tryCatch({
-      # Use httr2 (already used elsewhere in this package) to fetch the release JSON
-      req <- httr2::request(api_url)
-      resp <- httr2::req_perform(req)
-      body <- httr2::resp_body_json(resp, simplifyVector = TRUE)
-      if (!is.null(body$assets) && length(body$assets) > 0) {
-        tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
-        # Handle legacy naming conventions for Windows artifacts
-        if (platform$os == "win32" && platform$arch == "x64") {
-          tar_filename <- sprintf("osrm-%s-win32-x64-Release.tar.gz", version)
-        }
-        for (asset in body$assets) {
-          if (!is.null(asset$name) && nzchar(asset$name) && identical(asset$name, tar_filename)) {
-            if (!is.null(asset$digest) && nzchar(asset$digest)) {
-              # asset$digest has the form "sha256:<hex>", strip prefix if present
-              hash <- sub("^sha256:", "", asset$digest)
-              return(hash)
-            }
-          }
-        }
-      }
-    }, error = function(e) {
-      # Fall through to checksums.txt fallback on any API error
-      NULL
-    })
 
-    # Fallback: attempt to fetch checksums.txt from GitHub release (legacy path)
-    checksum_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/checksums.txt", version)
-    tryCatch({
-      lines <- suppressWarnings(readLines(checksum_url, warn = FALSE))
-      # Search for the hash matching our expected filename
-      tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
-      if (platform$os == "win32" && platform$arch == "x64") {
-        tar_filename <- sprintf("osrm-%s-win32-x64-Release.tar.gz", version)
-      }
-      for (line in lines) {
-        if (grepl(tar_filename, line, fixed = TRUE)) {
-          hash <- strsplit(trimws(line), "\\s+")[[1]][1]
+  if (
+    identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  ) {
+    tar_filename <- get_osrm_archive_name(version, platform)
+
+    # Prefer the GitHub Releases API asset digest when available.
+    api_url <- sprintf(
+      "https://api.github.com/repos/%s/releases/tags/%s",
+      "e-kotov/osrm-binaries",
+      version
+    )
+    tryCatch(
+      {
+        req <- httr2::request(api_url)
+        resp <- httr2::req_perform(req)
+        body <- httr2::resp_body_json(resp, simplifyVector = FALSE)
+        hash <- get_release_asset_sha256(body, tar_filename)
+        if (!is.na(hash)) {
           return(hash)
         }
+      },
+      error = function(e) {
+        # Fall through to checksums.txt fallback on any API error
+        NULL
       }
-    }, error = function(e) NULL)
+    )
+
+    # Fallback: attempt to fetch checksums.txt from GitHub release (legacy path)
+    checksum_url <- sprintf(
+      "https://github.com/e-kotov/osrm-binaries/releases/download/%s/checksums.txt",
+      version
+    )
+    tryCatch(
+      {
+        lines <- suppressWarnings(readLines(checksum_url, warn = FALSE))
+        for (line in lines) {
+          if (grepl(tar_filename, line, fixed = TRUE)) {
+            hash <- strsplit(trimws(line), "\\s+")[[1]][1]
+            return(hash)
+          }
+        }
+      },
+      error = function(e) NULL
+    )
   }
-  
+
   return(NA_character_)
+}
+
+get_osrm_archive_name <- function(version, platform) {
+  if (identical(platform$os, "win32") && identical(platform$arch, "x64")) {
+    return(sprintf("osrm-%s-win32-x64-Release.tar.gz", version))
+  }
+
+  sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
+}
+
+get_release_asset_sha256 <- function(release_info, asset_name) {
+  assets <- release_info$assets
+  if (is.null(assets) || length(assets) == 0) {
+    return(NA_character_)
+  }
+
+  if (is.data.frame(assets)) {
+    if (!all(c("name", "digest") %in% names(assets))) {
+      return(NA_character_)
+    }
+    match <- which(as.character(assets$name) == asset_name)
+    if (length(match) == 0) {
+      return(NA_character_)
+    }
+    digest <- assets$digest[[match[[1]]]]
+  } else {
+    digest <- NA_character_
+    for (asset in assets) {
+      name <- asset$name
+      if (is.null(name) || length(name) == 0) {
+        next
+      }
+      if (identical(as.character(name)[[1]], asset_name)) {
+        digest <- asset[["digest"]]
+        break
+      }
+    }
+  }
+
+  if (is.null(digest) || length(digest) == 0) {
+    return(NA_character_)
+  }
+  digest <- as.character(digest)[[1]]
+  if (is.na(digest) || !grepl("^sha256:[[:xdigit:]]{64}$", digest)) {
+    return(NA_character_)
+  }
+
+  tolower(sub("^sha256:", "", digest))
 }
