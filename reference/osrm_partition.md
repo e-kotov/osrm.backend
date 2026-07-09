@@ -35,36 +35,33 @@ osrm_partition(
 
 - threads:
 
-  An integer. Number of threads to use; default `8` (osrm-partition's
-  default).
+  An integer. Number of threads for extract and partition/contract;
+  default `8`.
 
 - verbosity:
 
-  A string. Log verbosity level passed to `-l/--verbosity` (one of
+  A string. Log verbosity for extract/partition/contract (one of
   `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
 
 - balance:
 
-  A numeric. Balance for left and right side in single bisection;
-  default `1.2`.
+  A numeric. Balance for `osrm-partition`; default `1.2`.
 
 - boundary:
 
-  A numeric. Percentage of embedded nodes to contract as sources and
-  sinks; default `0.25`.
+  A numeric. Boundary percentage for `osrm-partition`; default `0.25`.
 
 - optimizing_cuts:
 
-  An integer. Number of cuts to use for optimizing a single bisection;
-  default `10`.
+  An integer. Optimizing cuts for `osrm-partition`; default `10`.
 
 - small_component_size:
 
-  An integer. Size threshold for small components; default `1000`.
+  An integer. For extract & partition; default `1000`.
 
 - max_cell_sizes:
 
-  A numeric vector. Maximum cell sizes starting from level 1; default
+  A numeric vector. Max cell sizes for `osrm-partition`; default
   `c(128,4096,65536,2097152)`.
 
 - quiet:

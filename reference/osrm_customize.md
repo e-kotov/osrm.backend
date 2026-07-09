@@ -35,12 +35,12 @@ osrm_customize(
 
 - threads:
 
-  An integer. Number of threads to use; default `8` (osrm-customize's
-  default).
+  An integer. Number of threads for extract and partition/contract;
+  default `8`.
 
 - verbosity:
 
-  A string. Log verbosity level passed to `-l/--verbosity` (one of
+  A string. Log verbosity for extract/partition/contract (one of
   `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
 
 - segment_speed_file:
@@ -54,17 +54,15 @@ osrm_customize(
 
 - edge_weight_updates_over_factor:
 
-  A numeric. Factor threshold for logging large weight updates; default
-  `0`.
+  A numeric. Threshold for logging large weight updates; default `0`.
 
 - parse_conditionals_from_now:
 
-  A numeric. UTC timestamp from which to evaluate conditional turn
-  restrictions; default `0`.
+  A numeric. UTC timestamp for conditional restrictions; default `0`.
 
 - time_zone_file:
 
-  A string or `NULL`. GeoJSON file with time zone boundaries; default
+  A string or `NULL`. GeoJSON file for time zone boundaries; default
   `NULL`.
 
 - quiet:

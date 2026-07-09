@@ -80,32 +80,32 @@ or a directory containing exactly one <code>.osrm.timestamp</code> file.</p></dd
 
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
-<dd><p>An integer. Number of threads to use; default <code>8</code> (osrm-partition's default).</p></dd>
+<dd><p>An integer. Number of threads for extract and partition/contract; default <code>8</code>.</p></dd>
 
 
 <dt id="arg-verbosity">verbosity<a class="anchor" aria-label="anchor" href="#arg-verbosity"></a></dt>
-<dd><p>A string. Log verbosity level passed to <code>-l/--verbosity</code>
+<dd><p>A string. Log verbosity for extract/partition/contract
 (one of <code>"NONE","ERROR","WARNING","INFO","DEBUG"</code>); default <code>"INFO"</code>.</p></dd>
 
 
 <dt id="arg-balance">balance<a class="anchor" aria-label="anchor" href="#arg-balance"></a></dt>
-<dd><p>A numeric. Balance for left and right side in single bisection; default <code>1.2</code>.</p></dd>
+<dd><p>A numeric. Balance for <code>osrm-partition</code>; default <code>1.2</code>.</p></dd>
 
 
 <dt id="arg-boundary">boundary<a class="anchor" aria-label="anchor" href="#arg-boundary"></a></dt>
-<dd><p>A numeric. Percentage of embedded nodes to contract as sources and sinks; default <code>0.25</code>.</p></dd>
+<dd><p>A numeric. Boundary percentage for <code>osrm-partition</code>; default <code>0.25</code>.</p></dd>
 
 
 <dt id="arg-optimizing-cuts">optimizing_cuts<a class="anchor" aria-label="anchor" href="#arg-optimizing-cuts"></a></dt>
-<dd><p>An integer. Number of cuts to use for optimizing a single bisection; default <code>10</code>.</p></dd>
+<dd><p>An integer. Optimizing cuts for <code>osrm-partition</code>; default <code>10</code>.</p></dd>
 
 
 <dt id="arg-small-component-size">small_component_size<a class="anchor" aria-label="anchor" href="#arg-small-component-size"></a></dt>
-<dd><p>An integer. Size threshold for small components; default <code>1000</code>.</p></dd>
+<dd><p>An integer. For extract &amp; partition; default <code>1000</code>.</p></dd>
 
 
 <dt id="arg-max-cell-sizes">max_cell_sizes<a class="anchor" aria-label="anchor" href="#arg-max-cell-sizes"></a></dt>
-<dd><p>A numeric vector. Maximum cell sizes starting from level 1; default <code>c(128,4096,65536,2097152)</code>.</p></dd>
+<dd><p>A numeric vector. Max cell sizes for <code>osrm-partition</code>; default <code>c(128,4096,65536,2097152)</code>.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>

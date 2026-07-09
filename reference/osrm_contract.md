@@ -35,11 +35,12 @@ osrm_contract(
 
 - threads:
 
-  An integer. Number of threads to use; default `8`.
+  An integer. Number of threads for extract and partition/contract;
+  default `8`.
 
 - verbosity:
 
-  A string. Log verbosity level passed to `-l/--verbosity` (one of
+  A string. Log verbosity for extract/partition/contract (one of
   `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
 
 - segment_speed_file:

@@ -80,11 +80,11 @@ or a directory containing exactly one <code>.osrm.partition</code> file.</p></dd
 
 
 <dt id="arg-threads">threads<a class="anchor" aria-label="anchor" href="#arg-threads"></a></dt>
-<dd><p>An integer. Number of threads to use; default <code>8</code> (osrm-customize's default).</p></dd>
+<dd><p>An integer. Number of threads for extract and partition/contract; default <code>8</code>.</p></dd>
 
 
 <dt id="arg-verbosity">verbosity<a class="anchor" aria-label="anchor" href="#arg-verbosity"></a></dt>
-<dd><p>A string. Log verbosity level passed to <code>-l/--verbosity</code>
+<dd><p>A string. Log verbosity for extract/partition/contract
 (one of <code>"NONE","ERROR","WARNING","INFO","DEBUG"</code>); default <code>"INFO"</code>.</p></dd>
 
 
@@ -97,15 +97,15 @@ or a directory containing exactly one <code>.osrm.partition</code> file.</p></dd
 
 
 <dt id="arg-edge-weight-updates-over-factor">edge_weight_updates_over_factor<a class="anchor" aria-label="anchor" href="#arg-edge-weight-updates-over-factor"></a></dt>
-<dd><p>A numeric. Factor threshold for logging large weight updates; default <code>0</code>.</p></dd>
+<dd><p>A numeric. Threshold for logging large weight updates; default <code>0</code>.</p></dd>
 
 
 <dt id="arg-parse-conditionals-from-now">parse_conditionals_from_now<a class="anchor" aria-label="anchor" href="#arg-parse-conditionals-from-now"></a></dt>
-<dd><p>A numeric. UTC timestamp from which to evaluate conditional turn restrictions; default <code>0</code>.</p></dd>
+<dd><p>A numeric. UTC timestamp for conditional restrictions; default <code>0</code>.</p></dd>
 
 
 <dt id="arg-time-zone-file">time_zone_file<a class="anchor" aria-label="anchor" href="#arg-time-zone-file"></a></dt>
-<dd><p>A string or <code>NULL</code>. GeoJSON file with time zone boundaries; default <code>NULL</code>.</p></dd>
+<dd><p>A string or <code>NULL</code>. GeoJSON file for time zone boundaries; default <code>NULL</code>.</p></dd>
 
 
 <dt id="arg-quiet">quiet<a class="anchor" aria-label="anchor" href="#arg-quiet"></a></dt>
