@@ -2099,12 +2099,40 @@ get_expected_hash <- function(version, platform) {
   
   # Fallback: attempt to fetch checksums.txt from GitHub release
   if (identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")) {
+    # Prefer the GitHub Releases API asset digest when available (returns e.g. "sha256:<hex>").
+    api_url <- sprintf("https://api.github.com/repos/%s/releases/tags/%s", "e-kotov/osrm-binaries", version)
+    tryCatch({
+      # Use httr2 (already used elsewhere in this package) to fetch the release JSON
+      req <- httr2::request(api_url)
+      resp <- httr2::req_perform(req)
+      body <- httr2::resp_body_json(resp, simplifyVector = TRUE)
+      if (!is.null(body$assets) && length(body$assets) > 0) {
+        tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
+        # Handle legacy naming conventions for Windows artifacts
+        if (platform$os == "win32" && platform$arch == "x64") {
+          tar_filename <- sprintf("osrm-%s-win32-x64-Release.tar.gz", version)
+        }
+        for (asset in body$assets) {
+          if (!is.null(asset$name) && nzchar(asset$name) && identical(asset$name, tar_filename)) {
+            if (!is.null(asset$digest) && nzchar(asset$digest)) {
+              # asset$digest has the form "sha256:<hex>", strip prefix if present
+              hash <- sub("^sha256:", "", asset$digest)
+              return(hash)
+            }
+          }
+        }
+      }
+    }, error = function(e) {
+      # Fall through to checksums.txt fallback on any API error
+      NULL
+    })
+
+    # Fallback: attempt to fetch checksums.txt from GitHub release (legacy path)
     checksum_url <- sprintf("https://github.com/e-kotov/osrm-binaries/releases/download/%s/checksums.txt", version)
     tryCatch({
       lines <- suppressWarnings(readLines(checksum_url, warn = FALSE))
       # Search for the hash matching our expected filename
       tar_filename <- sprintf("osrm-%s-%s-%s-Release.tar.gz", version, platform$os, platform$arch)
-      # Handle legacy naming conventions in older scripts if necessary
       if (platform$os == "win32" && platform$arch == "x64") {
         tar_filename <- sprintf("osrm-%s-win32-x64-Release.tar.gz", version)
       }
