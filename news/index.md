@@ -20,8 +20,8 @@ CRAN release: 2026-04-26
   [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
   for deterministic manual installations without relying on GitHub API
   metadata lookups.
-- Switched binary integrity verification to dynamically fetch
-  `checksums.txt` from GitHub release assets on-the-fly, ensuring
+- Switched binary integrity verification to use GitHub release asset
+  digests first, with `checksums.txt` as a fallback, ensuring
   installation security without requiring R package updates when new
   binary builds are released.
 
