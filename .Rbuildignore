@@ -12,6 +12,7 @@
 ^private$
 ^[.]?air[.]toml$
 ^\.vscode$
+^\.covrignore$
 ^vignettes/\.quarto$
 ^vignettes/*_files$
 ^man\/figures\/card\.png$

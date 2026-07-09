@@ -23,9 +23,9 @@ osrm_contract(
 \item{input_osrm}{A string. Path to a \code{.osrm.timestamp} file, the base path to the \code{.osrm} files (without extension),
 or a directory containing exactly one \code{.osrm.timestamp} file.}
 
-\item{threads}{An integer. Number of threads to use; default \code{8}.}
+\item{threads}{An integer. Number of threads for extract and partition/contract; default \code{8}.}
 
-\item{verbosity}{A string. Log verbosity level passed to \code{-l/--verbosity}
+\item{verbosity}{A string. Log verbosity for extract/partition/contract
 (one of \verb{"NONE","ERROR","WARNING","INFO","DEBUG"}); default \code{"INFO"}.}
 
 \item{segment_speed_file}{A string or \code{NULL}. Path to nodeA,nodeB,speed CSV; default \code{NULL}.}

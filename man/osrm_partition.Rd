@@ -23,20 +23,20 @@ osrm_partition(
 \item{input_osrm}{A string. Path to a \code{.osrm.timestamp} file, the base path to the \code{.osrm} files (without extension),
 or a directory containing exactly one \code{.osrm.timestamp} file.}
 
-\item{threads}{An integer. Number of threads to use; default \code{8} (osrm-partition's default).}
+\item{threads}{An integer. Number of threads for extract and partition/contract; default \code{8}.}
 
-\item{verbosity}{A string. Log verbosity level passed to \code{-l/--verbosity}
+\item{verbosity}{A string. Log verbosity for extract/partition/contract
 (one of \verb{"NONE","ERROR","WARNING","INFO","DEBUG"}); default \code{"INFO"}.}
 
-\item{balance}{A numeric. Balance for left and right side in single bisection; default \code{1.2}.}
+\item{balance}{A numeric. Balance for \code{osrm-partition}; default \code{1.2}.}
 
-\item{boundary}{A numeric. Percentage of embedded nodes to contract as sources and sinks; default \code{0.25}.}
+\item{boundary}{A numeric. Boundary percentage for \code{osrm-partition}; default \code{0.25}.}
 
-\item{optimizing_cuts}{An integer. Number of cuts to use for optimizing a single bisection; default \code{10}.}
+\item{optimizing_cuts}{An integer. Optimizing cuts for \code{osrm-partition}; default \code{10}.}
 
-\item{small_component_size}{An integer. Size threshold for small components; default \code{1000}.}
+\item{small_component_size}{An integer. For extract & partition; default \code{1000}.}
 
-\item{max_cell_sizes}{A numeric vector. Maximum cell sizes starting from level 1; default \code{c(128,4096,65536,2097152)}.}
+\item{max_cell_sizes}{A numeric vector. Max cell sizes for \code{osrm-partition}; default \code{c(128,4096,65536,2097152)}.}
 
 \item{quiet}{A logical. Master switch that suppresses package messages and
 process output when \code{TRUE}; default \code{FALSE}.}

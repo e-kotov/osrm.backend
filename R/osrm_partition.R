@@ -8,14 +8,6 @@
 #'
 #' @param input_osrm A string. Path to a `.osrm.timestamp` file, the base path to the `.osrm` files (without extension),
 #'   or a directory containing exactly one `.osrm.timestamp` file.
-#' @param threads An integer. Number of threads to use; default `8` (osrm-partition's default).
-#' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
-#'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
-#' @param balance A numeric. Balance for left and right side in single bisection; default `1.2`.
-#' @param boundary A numeric. Percentage of embedded nodes to contract as sources and sinks; default `0.25`.
-#' @param optimizing_cuts An integer. Number of cuts to use for optimizing a single bisection; default `10`.
-#' @param small_component_size An integer. Size threshold for small components; default `1000`.
-#' @param max_cell_sizes A numeric vector. Maximum cell sizes starting from level 1; default `c(128,4096,65536,2097152)`.
 #' @inheritParams osrm_prepare_graph
 #'
 #' @return An object of class \code{osrm_job} with the following elements:

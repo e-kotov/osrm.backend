@@ -7,6 +7,7 @@
 #' @return Named list with `center` (c(lng, lat)) and `bbox` (c(lng_min, lat_min, lng_max, lat_max))
 #'   or NULL if bbox not found or file invalid
 #' @keywords internal
+#' @noRd
 read_pbf_header_bbox <- function(pbf_file) {
   if (!file.exists(pbf_file)) {
     return(NULL)
@@ -153,6 +154,7 @@ read_pbf_header_bbox <- function(pbf_file) {
 }
 
 #' @keywords internal
+#' @noRd
 .read_varint <- function(bytes, start = 1) {
   result <- 0
   shift <- 0
@@ -172,6 +174,7 @@ read_pbf_header_bbox <- function(pbf_file) {
 }
 
 #' @keywords internal
+#' @noRd
 .parse_header_bbox <- function(bbox_bytes) {
   pos <- 1
   coords <- list(left = NULL, right = NULL, top = NULL, bottom = NULL)
@@ -220,6 +223,7 @@ read_pbf_header_bbox <- function(pbf_file) {
 }
 
 #' @keywords internal
+#' @noRd
 .zigzag_decode_64 <- function(n) {
   if (n %% 2 == 0) {
     n / 2
@@ -229,6 +233,7 @@ read_pbf_header_bbox <- function(pbf_file) {
 }
 
 #' @keywords internal
+#' @noRd
 .zlib_decompress <- function(data) {
   if (length(data) == 0) {
     stop("Empty data to decompress")
@@ -329,6 +334,7 @@ read_pbf_header_bbox <- function(pbf_file) {
 #' @return Named list with `center` (c(lng, lat)) and `bbox` (c(lng_min, lat_min, lng_max, lat_max))
 #'   or NULL if bbox could not be determined
 #' @keywords internal
+#' @noRd
 .get_pbf_extent <- function(pbf_file) {
   if (!file.exists(pbf_file)) {
     return(NULL)

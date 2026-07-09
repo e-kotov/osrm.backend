@@ -23,20 +23,20 @@ osrm_customize(
 \item{input_osrm}{A string. Path to a \code{.osrm.partition} file, the base path to the partitioned \code{.osrm} files (without extension),
 or a directory containing exactly one \code{.osrm.partition} file.}
 
-\item{threads}{An integer. Number of threads to use; default \code{8} (osrm-customize's default).}
+\item{threads}{An integer. Number of threads for extract and partition/contract; default \code{8}.}
 
-\item{verbosity}{A string. Log verbosity level passed to \code{-l/--verbosity}
+\item{verbosity}{A string. Log verbosity for extract/partition/contract
 (one of \verb{"NONE","ERROR","WARNING","INFO","DEBUG"}); default \code{"INFO"}.}
 
 \item{segment_speed_file}{A string or \code{NULL}. Path to nodeA,nodeB,speed CSV; default \code{NULL}.}
 
 \item{turn_penalty_file}{A string or \code{NULL}. Path to from_,to_,via_nodes,penalties CSV; default \code{NULL}.}
 
-\item{edge_weight_updates_over_factor}{A numeric. Factor threshold for logging large weight updates; default \code{0}.}
+\item{edge_weight_updates_over_factor}{A numeric. Threshold for logging large weight updates; default \code{0}.}
 
-\item{parse_conditionals_from_now}{A numeric. UTC timestamp from which to evaluate conditional turn restrictions; default \code{0}.}
+\item{parse_conditionals_from_now}{A numeric. UTC timestamp for conditional restrictions; default \code{0}.}
 
-\item{time_zone_file}{A string or \code{NULL}. GeoJSON file with time zone boundaries; default \code{NULL}.}
+\item{time_zone_file}{A string or \code{NULL}. GeoJSON file for time zone boundaries; default \code{NULL}.}
 
 \item{quiet}{A logical. Master switch that suppresses package messages and
 process output when \code{TRUE}; default \code{FALSE}.}

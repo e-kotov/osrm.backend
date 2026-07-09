@@ -8,14 +8,7 @@
 #'
 #' @param input_osrm A string. Path to a `.osrm.partition` file, the base path to the partitioned `.osrm` files (without extension),
 #'   or a directory containing exactly one `.osrm.partition` file.
-#' @param threads An integer. Number of threads to use; default `8` (osrm-customize's default).
-#' @param verbosity A string. Log verbosity level passed to `-l/--verbosity`
-#'   (one of `"NONE","ERROR","WARNING","INFO","DEBUG"`); default `"INFO"`.
-#' @param segment_speed_file A string or `NULL`. Path to nodeA,nodeB,speed CSV; default `NULL`.
-#' @param turn_penalty_file A string or `NULL`. Path to from_,to_,via_nodes,penalties CSV; default `NULL`.
-#' @param edge_weight_updates_over_factor A numeric. Factor threshold for logging large weight updates; default `0`.
-#' @param parse_conditionals_from_now A numeric. UTC timestamp from which to evaluate conditional turn restrictions; default `0`.
-#' @param time_zone_file A string or `NULL`. GeoJSON file with time zone boundaries; default `NULL`.
+#' @inheritParams osrm_contract
 #' @inheritParams osrm_prepare_graph
 #'
 #' @return An object of class \code{osrm_job} with the following elements:
