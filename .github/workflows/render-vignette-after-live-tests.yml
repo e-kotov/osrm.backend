@@ -1,0 +1,46 @@
+name: Render Vignette After Live Tests
+
+on:
+  workflow_run:
+    workflows: ["OSRM Live Integration Tests"]
+    types:
+      - completed
+
+jobs:
+  render-and-commit:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup R
+        uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+        with:
+          quarto-version: '1.9.38'
+
+      - name: Render binary providers vignette
+        run: |
+          mkdir -p docs/articles
+          quarto render vignettes/binary-providers.qmd --to html --output docs/articles/binary-providers.html
+
+      - name: Commit rendered vignette
+        env:
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: |
+          git config user.name "$GIT_COMMITTER_NAME"
+          git config user.email "$GIT_COMMITTER_EMAIL"
+          if git add docs/articles/binary-providers.html && ! git diff --staged --quiet; then
+            git commit -m "ci: update rendered binary-providers vignette after live tests"
+            git push origin HEAD:main
+          else
+            echo "No changes to commit."
+          fi

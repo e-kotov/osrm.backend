@@ -3,12 +3,17 @@
 #' @description
 #' `r lifecycle::badge("stable")`
 #'
-#' Downloads and installs pre-compiled binaries for the OSRM backend from the
-#' official GitHub releases. The function automatically detects the user's
-#' operating system and architecture to download the appropriate files. Only the
-#' latest v5 release (`v5.27.1`), `v6.0.0`, `v26.4.0` and `v26.4.1` were manually
-#' tested and are known to work well; other releases available on GitHub can be
-#' installed but are not guranteed to function correctly.
+#' Downloads and installs pre-compiled binaries for the OSRM backend. By
+#' default, `osrm_install()` uses the `e-kotov/osrm-binaries` release repository,
+#' which publishes immutable backend command-line archives primarily for this R
+#' package. The upstream `Project-OSRM/osrm-backend` release repository can still
+#' be used with `osrm_binaries_provider = "official"`.
+#'
+#' The function automatically detects the user's operating system and
+#' architecture to download the appropriate files. Versions listed in
+#' `tested_versions` inside this function are validated by this package's live
+#' integration tests; other releases available on GitHub can be installed but
+#' are not guaranteed to function correctly.
 #'
 #' @details
 #' The function performs the following steps:
@@ -29,17 +34,17 @@
 #' \subsection{Binary Providers}{
 #' The `osrm_binaries_provider` argument allows choosing between two release sources:
 #' \itemize{
-#'   \item \strong{`"default"` (e-kotov/osrm-binaries)}: This provider is highly recommended. It offers standalone,
-#'   immutable C++ binaries that are statically linked and patched during the build process to guarantee
-#'   maximum compatibility across older and newer operating systems. It explicitly bundles required
-#'   libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for `linux-arm64`
-#'   (e.g., AWS Graviton, Raspberry Pi) and modern Apple Silicon Macs.
+#'   \item \strong{`"default"` (e-kotov/osrm-binaries)}: This provider is highly recommended and is the
+#'   primary supported path for this R package. It offers standalone, immutable OSRM backend archives
+#'   with predictable asset names, bundled runtime libraries where practical, SHA-256 verification,
+#'   and no Node.js wrapper artifacts. It also provides native `linux-arm64` and `darwin-arm64`
+#'   archives.
 #'   \item \strong{`"official"` (Project-OSRM/osrm-backend)}: The upstream releases provided by the core
-#'   OSRM team. These binaries are wrapped inside `node_osrm` NodeJS tarballs and lack `linux-arm64`
-#'   builds. When installing v6.x or newer via the `"official"` provider on Windows or macOS, upstream
-#'   releases omit the Intel TBB runtime. In these cases, `osrm_install()` will automatically attempt
-#'   legacy runtime hacks (e.g. downloading oneTBB, patching `libbz2` linkage via `install_name_tool`)
-#'   to keep the binaries functional out-of-the-box.
+#'   OSRM team. These releases are intended primarily for upstream OSRM's Node.js distribution and are
+#'   packaged as `node_osrm` archives. Their platform coverage and bundled runtime libraries may differ
+#'   across OSRM versions, and recent upstream binaries may depend on runtime libraries from newer build
+#'   environments. `osrm_install()` keeps compatibility code for this provider, but it is a secondary
+#'   path rather than the package's main installation source.
 #' }
 #' }
 #'
@@ -57,10 +62,9 @@
 #'   are installed without warnings; other available versions are still attempted
 #'   with a warning.
 #' @param osrm_binaries_provider A string specifying the provider to download binaries from.
-#'   Defaults to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing custom immutable builds
-#'   (statically linked) that fix glibc compatibility issues and bundle necessary libraries.
-#'   Set to `"official"` to download the upstream binaries from `"Project-OSRM/osrm-backend"`
-#'   (which will automatically trigger legacy runtime hacks for macOS and Windows).
+#'   Defaults to `"default"`, which pulls from `"e-kotov/osrm-binaries"` and is the primary supported
+#'   provider for this package. Set to `"official"` to download upstream binaries from
+#'   `"Project-OSRM/osrm-backend"` where available.
 #'   Advanced users can override the provider completely by setting the R option
 #'   `osrm.backend.custom_repository` to a custom GitHub repository (e.g. `"my-user/my-repo"`).
 #' @param dest_dir A string specifying the directory where OSRM binaries should be
@@ -163,23 +167,9 @@ osrm_install <- function(
   }
 
   # --- 2. Determine version and get release info ---
-  tested_versions <- c(
-    "v5.27.1",
-    "v6.0.0",
-    "v26.4.0",
-    "v26.4.1",
-    "v26.5.0",
-    "v26.6.0",
-    "v26.6.1",
-    "v26.6.2",
-    "v26.6.3",
-    "v26.6.4",
-    "v26.6.5",
-    "v26.7.0",
-    "v26.7.1",
-    "v26.7.2",
-    "v26.7.3"
-  )
+  # Validated versions are maintained by the package's live integration tests.
+  # See the live tests workflow and per-OS test badges for current coverage:
+  # https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml
   requested_version <- version
   mac_release_display <- mac_release_info$display_name
   if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
@@ -224,30 +214,12 @@ osrm_install <- function(
       call. = FALSE
     )
   }
-  if (!version %in% tested_versions) {
-    warning_message <- sprintf(
-      paste(
-        "Version '%s' has not been validated by osrm.backend;",
-        "only %s are tested."
-      ),
-      version,
-      paste(tested_versions, collapse = ", ")
+  if (isTRUE(check_tested)) {
+    emit_message(
+      "Validated OSRM versions are maintained by the package's live integration tests on GitHub Actions. ",
+      "See the OSRM live tests workflow and per-OS badges for the current list of validated versions: ",
+      "https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml"
     )
-    if (identical(requested_version, "latest")) {
-      warning_message <- sprintf(
-        paste(
-          "Latest available release '%s' has not been validated by",
-          "osrm.backend; only %s are tested."
-        ),
-        version,
-        paste(tested_versions, collapse = ", ")
-      )
-    }
-    if (isTRUE(check_tested)) {
-      emit_warning(warning_message, call. = FALSE)
-    } else {
-      emit_message(warning_message)
-    }
   }
 
   # Validate requested tag exists for this platform before hitting the API.
