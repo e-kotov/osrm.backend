@@ -24,6 +24,8 @@ CRAN release: 2026-04-26
   digests first, with `checksums.txt` as a fallback, ensuring
   installation security without requiring R package updates when new
   binary builds are released.
+- Marked all currently published immutable OSRM binary releases through
+  `v26.7.3` as validated by `osrm.backend`.
 
 ### Bug fixes
 
