@@ -5,6 +5,7 @@
 * Introduced `osrm_binaries_provider` argument to `osrm_install()` (default: `"default"`). This automatically fetches static, highly-compatible binaries built directly by this package's maintainer (`e-kotov/osrm-binaries`). These new binaries include native `linux-arm64` and `darwin-arm64` support, bundle required libraries like Intel TBB natively to avoid legacy runtime hacks, and reduce overhead by dropping unnecessary NodeJS wrappers. The original upstream binaries remain fully supported via `osrm_binaries_provider = "official"`.
 * Added `download_url` and `file_path` parameters to `osrm_install()` for deterministic manual installations without relying on GitHub API metadata lookups.
 * Switched binary integrity verification to use GitHub release asset digests first, with `checksums.txt` as a fallback, ensuring installation security without requiring R package updates when new binary builds are released.
+* Marked all currently published immutable OSRM binary releases through `v26.7.3` as validated by `osrm.backend`.
 
 ## Bug fixes
 

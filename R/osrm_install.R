@@ -52,9 +52,10 @@
 #'
 #' @param version A string specifying the OSRM version tag to install.
 #'   Defaults to `"latest"`. Use `"latest"` to automatically find the most
-#'   recent stable version (internally calls [osrm_check_latest_version()]). Versions
-#'   other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and `v26.5.0` will
-#'   trigger a warning but are still attempted if binaries are available.
+#'   recent stable version (internally calls [osrm_check_latest_version()]).
+#'   Versions published in `e-kotov/osrm-binaries` and validated by this package
+#'   are installed without warnings; other available versions are still attempted
+#'   with a warning.
 #' @param osrm_binaries_provider A string specifying the provider to download binaries from.
 #'   Defaults to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing custom immutable builds
 #'   (statically linked) that fix glibc compatibility issues and bundle necessary libraries.
@@ -162,7 +163,23 @@ osrm_install <- function(
   }
 
   # --- 2. Determine version and get release info ---
-  tested_versions <- c("v5.27.1", "v6.0.0", "v26.4.0", "v26.4.1", "v26.5.0")
+  tested_versions <- c(
+    "v5.27.1",
+    "v6.0.0",
+    "v26.4.0",
+    "v26.4.1",
+    "v26.5.0",
+    "v26.6.0",
+    "v26.6.1",
+    "v26.6.2",
+    "v26.6.3",
+    "v26.6.4",
+    "v26.6.5",
+    "v26.7.0",
+    "v26.7.1",
+    "v26.7.2",
+    "v26.7.3"
+  )
   requested_version <- version
   mac_release_display <- mac_release_info$display_name
   if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
