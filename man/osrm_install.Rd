@@ -19,15 +19,15 @@ osrm_install(
 \arguments{
 \item{version}{A string specifying the OSRM version tag to install.
 Defaults to \code{"latest"}. Use \code{"latest"} to automatically find the most
-recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}). Versions
-other than \code{v5.27.1}, \code{v6.0.0}, \code{v26.4.0}, \code{v26.4.1}, and \code{v26.5.0} will
-trigger a warning but are still attempted if binaries are available.}
+recent stable version (internally calls \code{\link[=osrm_check_latest_version]{osrm_check_latest_version()}}).
+Versions published in \code{e-kotov/osrm-binaries} and validated by this package
+are installed without warnings; other available versions are still attempted
+with a warning.}
 
 \item{osrm_binaries_provider}{A string specifying the provider to download binaries from.
-Defaults to \code{"default"}, which pulls from \code{"e-kotov/osrm-binaries"} providing custom immutable builds
-(statically linked) that fix glibc compatibility issues and bundle necessary libraries.
-Set to \code{"official"} to download the upstream binaries from \code{"Project-OSRM/osrm-backend"}
-(which will automatically trigger legacy runtime hacks for macOS and Windows).
+Defaults to \code{"default"}, which pulls from \code{"e-kotov/osrm-binaries"} and is the primary supported
+provider for this package. Set to \code{"official"} to download upstream binaries from
+\code{"Project-OSRM/osrm-backend"} where available.
 Advanced users can override the provider completely by setting the R option
 \code{osrm.backend.custom_repository} to a custom GitHub repository (e.g. \code{"my-user/my-repo"}).}
 
@@ -72,12 +72,17 @@ The path to the installation directory.
 \description{
 \ifelse{html}{\href{https://lifecycle.r-lib.org/articles/stages.html#stable}{\figure{lifecycle-stable.svg}{options: alt='[Stable]'}}}{\strong{[Stable]}}
 
-Downloads and installs pre-compiled binaries for the OSRM backend from the
-official GitHub releases. The function automatically detects the user's
-operating system and architecture to download the appropriate files. Only the
-latest v5 release (\code{v5.27.1}), \code{v6.0.0}, \code{v26.4.0} and \code{v26.4.1} were manually
-tested and are known to work well; other releases available on GitHub can be
-installed but are not guranteed to function correctly.
+Downloads and installs pre-compiled binaries for the OSRM backend. By
+default, \code{osrm_install()} uses the \code{e-kotov/osrm-binaries} release repository,
+which publishes immutable backend command-line archives primarily for this R
+package. The upstream \code{Project-OSRM/osrm-backend} release repository can still
+be used with \code{osrm_binaries_provider = "official"}.
+
+The function automatically detects the user's operating system and
+architecture to download the appropriate files. Versions listed in
+\code{tested_versions} inside this function are validated by this package's live
+integration tests; other releases available on GitHub can be installed but
+are not guaranteed to function correctly.
 }
 \details{
 The function performs the following steps:
@@ -100,17 +105,17 @@ session or project.
 \subsection{Binary Providers}{
 The \code{osrm_binaries_provider} argument allows choosing between two release sources:
 \itemize{
-\item \strong{\code{"default"} (e-kotov/osrm-binaries)}: This provider is highly recommended. It offers standalone,
-immutable C++ binaries that are statically linked and patched during the build process to guarantee
-maximum compatibility across older and newer operating systems. It explicitly bundles required
-libraries (like Intel TBB), skips NodeJS bloat, and provides exclusive support for \code{linux-arm64}
-(e.g., AWS Graviton, Raspberry Pi) and modern Apple Silicon Macs.
+\item \strong{\code{"default"} (e-kotov/osrm-binaries)}: This provider is highly recommended and is the
+primary supported path for this R package. It offers standalone, immutable OSRM backend archives
+with predictable asset names, bundled runtime libraries where practical, SHA-256 verification,
+and no Node.js wrapper artifacts. It also provides native \code{linux-arm64} and \code{darwin-arm64}
+archives.
 \item \strong{\code{"official"} (Project-OSRM/osrm-backend)}: The upstream releases provided by the core
-OSRM team. These binaries are wrapped inside \code{node_osrm} NodeJS tarballs and lack \code{linux-arm64}
-builds. When installing v6.x or newer via the \code{"official"} provider on Windows or macOS, upstream
-releases omit the Intel TBB runtime. In these cases, \code{osrm_install()} will automatically attempt
-legacy runtime hacks (e.g. downloading oneTBB, patching \code{libbz2} linkage via \code{install_name_tool})
-to keep the binaries functional out-of-the-box.
+OSRM team. These releases are intended primarily for upstream OSRM's Node.js distribution and are
+packaged as \code{node_osrm} archives. Their platform coverage and bundled runtime libraries may differ
+across OSRM versions, and recent upstream binaries may depend on runtime libraries from newer build
+environments. \code{osrm_install()} keeps compatibility code for this provider, but it is a secondary
+path rather than the package's main installation source.
 }
 }
 
