@@ -10,10 +10,11 @@
 #' be used with `osrm_binaries_provider = "official"`.
 #'
 #' The function automatically detects the user's operating system and
-#' architecture to download the appropriate files. Versions listed in
-#' `tested_versions` inside this function are validated by this package's live
-#' integration tests; other releases available on GitHub can be installed but
-#' are not guaranteed to function correctly.
+#' architecture to download the appropriate files. Validated versions are
+#' maintained by the package's live integration tests; see the OSRM live tests
+#' workflow and per-OS badges on GitHub Actions for the current validated
+#' versions. Other releases available on GitHub can be installed but are not
+#' guaranteed to function correctly.
 #'
 #' @details
 #' The function performs the following steps:
