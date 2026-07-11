@@ -84,9 +84,17 @@ prepare a graph, and verify that routing works through both the OSRM HTTP API
 and, where available, the `{osrm}` R package.
 
 <!-- Include generated table of auto-tested releases -->
-```{r, eval=TRUE, echo=FALSE}
-if (file.exists("vignettes/generated-tested-versions.md")) {
-  cat(readLines("vignettes/generated-tested-versions.md"), sep = "\n")
+```{r, eval=TRUE, echo=FALSE, results='asis'}
+generated_table <- if (file.exists("vignettes/generated-tested-versions.md")) {
+  "vignettes/generated-tested-versions.md"
+} else if (file.exists("generated-tested-versions.md")) {
+  "generated-tested-versions.md"
+} else {
+  NA_character_
+}
+
+if (!is.na(generated_table)) {
+  cat(readLines(generated_table), sep = "\n")
 } else {
   cat("\n> Auto-tested releases table not available.\n")
 }

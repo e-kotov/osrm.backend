@@ -55,17 +55,19 @@ expand_range_to_tags <- function(message) {
         grepl("^v\\d+\\.\\d+\\.\\d+$", parts[2])) {
       # Query releases from e-kotov/osrm-binaries (public)
       releases_url <- "https://api.github.com/repos/e-kotov/osrm-binaries/releases?per_page=200"
-      releases <- tryCatch(jsonlite::fromJSON(releases_url), error = function(e) NULL)
+      releases <- tryCatch(jsonlite::fromJSON(releases_url, simplifyVector = FALSE), error = function(e) NULL)
       if (is.null(releases) || length(releases) == 0) return(NULL)
-      tags <- vapply(releases, function(x) x$tag_name %||% NA_character_, FUN.VALUE = "")
+      tags <- vapply(releases, function(x) { if (is.list(x) && !is.null(x$tag_name)) x$tag_name else NA_character_ }, FUN.VALUE = "")
       tags <- tags[grepl("^v\\d+\\.\\d+\\.\\d+$", tags)]
       if (length(tags) == 0) return(NULL)
-      # numeric compare by package_version
-      from_v <- utils::packageVersion(sub("^v", "", parts[1]))
-      to_v <- utils::packageVersion(sub("^v", "", parts[2]))
-      good <- vapply(tags, function(t) {
-        tv <- tryCatch(utils::packageVersion(sub("^v", "", t)), error = function(e) NA)
-        !is.na(tv) && (tv >= from_v) && (tv <= to_v)
+      # compare semantic version strings using utils::compareVersion
+      from_v <- sub("^v", "", parts[1])
+      to_v <- sub("^v", "", parts[2])
+      tags_no_v <- sub("^v", "", tags)
+      good <- vapply(tags_no_v, function(tv) {
+        cmp1 <- tryCatch(utils::compareVersion(tv, from_v), error = function(e) NA_integer_)
+        cmp2 <- tryCatch(utils::compareVersion(tv, to_v), error = function(e) NA_integer_)
+        !is.na(cmp1) && !is.na(cmp2) && (cmp1 >= 0) && (cmp2 <= 0)
       }, logical(1))
       out <- tags[good]
       if (length(out) == 0) return(NULL)
