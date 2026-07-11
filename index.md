@@ -46,7 +46,6 @@ The official upstream binaries from
 are still available with:
 
 ``` r
-
 osrm_install(osrm_binaries_provider = "official")
 ```
 
@@ -61,7 +60,6 @@ for details.
 Install the latest stable release of `osrm.backend` from CRAN with:
 
 ``` r
-
 install.packages("osrm.backend")
 ```
 
@@ -69,7 +67,6 @@ You can install the development version of `osrm.backend` from R
 Universe with:
 
 ``` r
-
 install.packages('osrm.backend',
  repos = c('https://e-kotov.r-universe.dev', 'https://cloud.r-project.org')
 )
@@ -78,7 +75,6 @@ install.packages('osrm.backend',
 or from [GitHub repo](https://github.com/e-kotov/osrm.backend) with:
 
 ``` r
-
 # install.packages("pak")
 pak::pak("e-kotov/osrm.backend")
 ```
@@ -111,3 +107,14 @@ osrm GUI demo 2
 3](https://github.com/user-attachments/assets/7b524d02-4e28-4f22-8c1b-221c2e9c7204)
 
 osrm GUI demo 3
+
+### Auto-tested OSRM releases (generated)
+
+| OS          | Badge                                                                                                                                                        | Validated releases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Notes             |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| **LINUX**   | ![LINUX badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_ubuntu.json)    | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
+| **MACOS**   | ![MACOS badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_macos.json)     | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
+| **WINDOWS** | ![WINDOWS badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_windows.json) | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
+
+Badge source: `badges` branch — raw JSON files
+(e.g. `osrm_versions_ubuntu.json`).
