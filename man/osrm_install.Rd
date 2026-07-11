@@ -53,9 +53,10 @@ the \code{PATH} for all future sessions in that project.
 \item{quiet}{A logical value. If \code{TRUE}, suppresses installer messages and
 warnings. Defaults to \code{FALSE}.}
 
-\item{check_tested}{A logical value. If \code{TRUE} (default), the function issues
-a warning if the requested OSRM version has not been explicitly validated
-by the package maintainers. If \code{FALSE}, it issues a status message instead.}
+\item{check_tested}{A logical value. If \code{TRUE} (default), the function emits
+a status message pointing to the live integration-test badges that report
+currently validated OSRM versions. If \code{FALSE}, this status message is
+suppressed.}
 
 \item{download_url}{\strong{Advanced usage only.} A direct URL to a \code{.tar.gz} archive containing OSRM binaries.
 If provided, \code{version} and \code{osrm_binaries_provider} are ignored. The archive must be structured similarly

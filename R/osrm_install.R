@@ -86,9 +86,10 @@
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
 #'   warnings. Defaults to `FALSE`.
-#' @param check_tested A logical value. If `TRUE` (default), the function issues
-#'   a warning if the requested OSRM version has not been explicitly validated
-#'   by the package maintainers. If `FALSE`, it issues a status message instead.
+#' @param check_tested A logical value. If `TRUE` (default), the function emits
+#'   a status message pointing to the live integration-test badges that report
+#'   currently validated OSRM versions. If `FALSE`, this status message is
+#'   suppressed.
 #' @param download_url **Advanced usage only.** A direct URL to a `.tar.gz` archive containing OSRM binaries.
 #'   If provided, `version` and `osrm_binaries_provider` are ignored. The archive must be structured similarly
 #'   to the default releases, containing the required OSRM executables (at least `osrm-routed` or `osrm-routed.exe`)

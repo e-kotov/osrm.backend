@@ -54,6 +54,7 @@ reference:
       - osrm_clear_path
       - osrm_check_latest_version
       - osrm_check_available_versions
+      - osrm_validated_versions
   - title: "Build routing graphs"
     desc: >
       Prepare OSRM graphs from raw OSM extracts or run specific pipeline stages when you need finer control.

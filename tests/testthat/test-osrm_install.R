@@ -898,9 +898,8 @@ test_that("osrm_install handles check_tested correctly", {
     ))
   )
 
-  # Test 2: Untested version should warn by default
-  # It will likely fail later on GitHub API check, but the warning happens early
-  expect_warning(
+  # Test 2: check_tested = TRUE should point users to live validation results
+  expect_message(
     try(
       osrm_install(
         version = "v99.9.9",
@@ -910,11 +909,11 @@ test_that("osrm_install handles check_tested correctly", {
       ),
       silent = TRUE
     ),
-    "has not been validated"
+    "Validated OSRM versions"
   )
 
-  # Test 3: Untested version with check_tested = FALSE should message
-  expect_message(
+  # Test 3: check_tested = FALSE suppresses the live-validation status message
+  expect_silent(
     try(
       osrm_install(
         version = "v99.9.9",
@@ -924,8 +923,7 @@ test_that("osrm_install handles check_tested correctly", {
         quiet = FALSE
       ),
       silent = TRUE
-    ),
-    "has not been validated"
+    )
   )
 })
 
