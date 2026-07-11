@@ -38,6 +38,9 @@ tidy.
 - [`osrm_check_available_versions()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_available_versions.md)
   **\[stable\]** : Check for Available OSRM Versions
 
+- [`osrm_validated_versions()`](https://www.ekotov.pro/osrm.backend/reference/osrm_validated_versions.md)
+  : Fetch validated OSRM versions from per-OS badge JSON
+
 ## Build routing graphs
 
 Prepare OSRM graphs from raw OSM extracts or run specific pipeline

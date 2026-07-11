@@ -2,13 +2,19 @@
 
 **\[stable\]**
 
-Downloads and installs pre-compiled binaries for the OSRM backend from
-the official GitHub releases. The function automatically detects the
-user's operating system and architecture to download the appropriate
-files. Only the latest v5 release (`v5.27.1`), `v6.0.0`, `v26.4.0` and
-`v26.4.1` were manually tested and are known to work well; other
-releases available on GitHub can be installed but are not guranteed to
-function correctly.
+Downloads and installs pre-compiled binaries for the OSRM backend. By
+default, `osrm_install()` uses the `e-kotov/osrm-binaries` release
+repository, which publishes immutable backend command-line archives
+primarily for this R package. The upstream `Project-OSRM/osrm-backend`
+release repository can still be used with
+`osrm_binaries_provider = "official"`.
+
+The function automatically detects the user's operating system and
+architecture to download the appropriate files. Validated versions are
+maintained by the package's live integration tests; see the OSRM live
+tests workflow and per-OS badges on GitHub Actions for the current
+validated versions. Other releases available on GitHub can be installed
+but are not guaranteed to function correctly.
 
 ## Usage
 
@@ -34,22 +40,19 @@ osrm_install(
   `"latest"`. Use `"latest"` to automatically find the most recent
   stable version (internally calls
   [`osrm_check_latest_version()`](https://www.ekotov.pro/osrm.backend/reference/osrm_check_latest_version.md)).
-  Versions other than `v5.27.1`, `v6.0.0`, `v26.4.0`, `v26.4.1`, and
-  `v26.5.0` will trigger a warning but are still attempted if binaries
-  are available.
+  Versions published in `e-kotov/osrm-binaries` and validated by this
+  package are installed without warnings; other available versions are
+  still attempted with a warning.
 
 - osrm_binaries_provider:
 
   A string specifying the provider to download binaries from. Defaults
-  to `"default"`, which pulls from `"e-kotov/osrm-binaries"` providing
-  custom immutable builds (statically linked) that fix glibc
-  compatibility issues and bundle necessary libraries. Set to
-  `"official"` to download the upstream binaries from
-  `"Project-OSRM/osrm-backend"` (which will automatically trigger legacy
-  runtime hacks for macOS and Windows). Advanced users can override the
-  provider completely by setting the R option
-  `osrm.backend.custom_repository` to a custom GitHub repository (e.g.
-  `"my-user/my-repo"`).
+  to `"default"`, which pulls from `"e-kotov/osrm-binaries"` and is the
+  primary supported provider for this package. Set to `"official"` to
+  download upstream binaries from `"Project-OSRM/osrm-backend"` where
+  available. Advanced users can override the provider completely by
+  setting the R option `osrm.backend.custom_repository` to a custom
+  GitHub repository (e.g. `"my-user/my-repo"`).
 
 - dest_dir:
 
@@ -85,9 +88,10 @@ osrm_install(
 
 - check_tested:
 
-  A logical value. If `TRUE` (default), the function issues a warning if
-  the requested OSRM version has not been explicitly validated by the
-  package maintainers. If `FALSE`, it issues a status message instead.
+  A logical value. If `TRUE` (default), the function emits a status
+  message pointing to the live integration-test badges that report
+  currently validated OSRM versions. If `FALSE`, this status message is
+  suppressed.
 
 - download_url:
 
@@ -141,21 +145,21 @@ The `osrm_binaries_provider` argument allows choosing between two
 release sources:
 
 - **`"default"` (e-kotov/osrm-binaries)**: This provider is highly
-  recommended. It offers standalone, immutable C++ binaries that are
-  statically linked and patched during the build process to guarantee
-  maximum compatibility across older and newer operating systems. It
-  explicitly bundles required libraries (like Intel TBB), skips NodeJS
-  bloat, and provides exclusive support for `linux-arm64` (e.g., AWS
-  Graviton, Raspberry Pi) and modern Apple Silicon Macs.
+  recommended and is the primary supported path for this R package. It
+  offers standalone, immutable OSRM backend archives with predictable
+  asset names, bundled runtime libraries where practical, SHA-256
+  verification, and no Node.js wrapper artifacts. It also provides
+  native `linux-arm64` and `darwin-arm64` archives.
 
 - **`"official"` (Project-OSRM/osrm-backend)**: The upstream releases
-  provided by the core OSRM team. These binaries are wrapped inside
-  `node_osrm` NodeJS tarballs and lack `linux-arm64` builds. When
-  installing v6.x or newer via the `"official"` provider on Windows or
-  macOS, upstream releases omit the Intel TBB runtime. In these cases,
-  `osrm_install()` will automatically attempt legacy runtime hacks (e.g.
-  downloading oneTBB, patching `libbz2` linkage via `install_name_tool`)
-  to keep the binaries functional out-of-the-box.
+  provided by the core OSRM team. These releases are intended primarily
+  for upstream OSRM's Node.js distribution and are packaged as
+  `node_osrm` archives. Their platform coverage and bundled runtime
+  libraries may differ across OSRM versions, and recent upstream
+  binaries may depend on runtime libraries from newer build
+  environments. `osrm_install()` keeps compatibility code for this
+  provider, but it is a secondary path rather than the package's main
+  installation source.
 
 Power users (including package authors running cross-platform tests) can
 override the auto-detected platform by setting the R options

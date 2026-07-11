@@ -18,8 +18,9 @@ CRAN release: 2026-04-26
   `osrm_binaries_provider = "official"`.
 - Added `download_url` and `file_path` parameters to
   [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
-  for deterministic manual installations without relying on GitHub API
-  metadata lookups.
+  to support advanced/manual installations from a supplied archive URL
+  or a local tarball path. These parameters are intended for advanced
+  users who need explicit control over the installation source.
 - Switched binary integrity verification to use GitHub release asset
   digests first, with `checksums.txt` as a fallback, ensuring
   installation security without requiring R package updates when new

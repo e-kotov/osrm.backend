@@ -8,9 +8,10 @@ The goal of `osrm.backend` is to be a companion to
 [osrm](https://github.com/riatelab/osrm) R package
 <https://github.com/riatelab/osrm>:
 
-- provide single line quick start with `osmr_start()` function that does
-  everything automatically to run local OSRM backend server, no other
-  setup is required;
+- provide single line quick start with
+  [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
+  function that does everything automatically to run local OSRM backend
+  server, no other setup is required;
 
 - easily install `osrm.backend` on major operating systems (Linux,
   Windows, MacOS);
@@ -18,6 +19,42 @@ The goal of `osrm.backend` is to be a companion to
 - provide wrapper functions to prepare data for `osrm` routing;
 
 - provide wrapper to start/stop local OSRM backend server.
+
+## OSRM backend binaries
+
+By default, `osrm.backend` installs OSRM from
+[`e-kotov/osrm-binaries`](https://github.com/e-kotov/osrm-binaries).
+These are immutable OSRM backend binary releases built from upstream
+OSRM source tags primarily for this R package.
+
+The default binary releases are different from the official upstream
+OSRM release assets:
+
+- they contain backend command-line executables such as `osrm-extract`,
+  `osrm-contract`, `osrm-customize`, `osrm-partition`, and
+  `osrm-routed`;
+- they do not include upstream `node_osrm` Node.js package artifacts;
+- they use predictable archive names for Linux, macOS, and Windows;
+- they bundle runtime libraries where practical, so the archives are
+  more portable for R users than relying on a local OSRM build
+  toolchain;
+- they are live-tested by this package on Linux, Linux arm64, macOS, and
+  Windows.
+
+The official upstream binaries from
+[`Project-OSRM/osrm-backend`](https://github.com/Project-OSRM/osrm-backend)
+are still available with:
+
+``` r
+
+osrm_install(osrm_binaries_provider = "official")
+```
+
+That provider is kept as a compatibility option. The main supported and
+tested installation path is the default `e-kotov/osrm-binaries`
+provider. See the [OSRM binary providers
+vignette](https://www.ekotov.pro/osrm.backend/articles/binary-providers.html)
+for details.
 
 ## Installation
 
@@ -51,7 +88,7 @@ You can prepare the OpenStreetMap data for routing with one function
 `osrm.server` option to `http://localhost:5001/` and use all the
 [osrm](https://github.com/riatelab/osrm) functions as usual. You do not
 need to have `osrm-backend` installed or have `Docker` to run
-`osrm-backend` from a container, everything is handled automatically an
+`osrm-backend` from a container, everything is handled automatically on
 all major operating systems. Just follow the [Get
 started](https://www.ekotov.pro/osrm.backend/articles/osrm-backend.html)
 guide. For advanced control over each step of the process, see the full
