@@ -130,7 +130,7 @@ for (os in names(os_list)) {
   rows[[os]] <- list(ok = TRUE, label = label, message = message, color = color, badge = badge_img, tags = tags, raw = json)
 }
 
-format_tags_links <- function(tags, max_items = 12) {
+format_tags_links <- function(tags) {
   if (is.null(tags) || length(tags) == 0) return("")
   tags <- unname(as.character(tags))
   link_for_tag <- function(t) {
@@ -138,8 +138,7 @@ format_tags_links <- function(tags, max_items = 12) {
     sprintf("<a href=\"%s\"><code>%s</code></a>", href, t)
   }
   links <- vapply(tags, link_for_tag, FUN.VALUE = character(1))
-  if (length(links) <= max_items) return(paste(links, collapse = ", "))
-  paste0(paste(links[1:max_items], collapse = ", "), sprintf(" (+%d more)", length(links) - max_items))
+  paste(links, collapse = ", ")
 }
 
 # Build HTML table
