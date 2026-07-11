@@ -1,5 +1,3 @@
-
-
 <!-- README.md is generated from README.qmd. Please edit that file -->
 
 # osrm.backend <a href="https://www.ekotov.pro/osrm.backend/"><img src="man/figures/logo.png" align="right" width="200" alt="r5rgui website" /></a>
@@ -132,9 +130,6 @@ reference](https://www.ekotov.pro/osrm.backend/reference/index.html).
 3](https://github.com/user-attachments/assets/7b524d02-4e28-4f22-8c1b-221c2e9c7204)
 
 
-
-
-
 <!-- AUTO_TESTED_VERSIONS_START -->
 
 <div class='auto-tested-versions'>
@@ -150,6 +145,3 @@ reference](https://www.ekotov.pro/osrm.backend/reference/index.html).
 </div>
 
 <!-- AUTO_TESTED_VERSIONS_END -->
-
-
-

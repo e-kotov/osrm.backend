@@ -181,17 +181,24 @@ readme_file <- "README.md"
 start_marker <- "<!-- AUTO_TESTED_VERSIONS_START -->"
 end_marker <- "<!-- AUTO_TESTED_VERSIONS_END -->"
 
-frag_text <- c("", start_marker, "", html_lines, "", end_marker, "")
+frag_text <- c(start_marker, "", html_lines, "", end_marker)
+trim_blank_edges <- function(x) {
+  if (length(x) == 0) return(x)
+  non_blank <- which(nzchar(x))
+  if (length(non_blank) == 0) return(character())
+  x[min(non_blank):max(non_blank)]
+}
 
 if (file.exists(readme_file)) {
   rd <- readLines(readme_file)
   if (any(grepl(start_marker, rd, fixed = TRUE)) && any(grepl(end_marker, rd, fixed = TRUE))) {
     s <- which(grepl(start_marker, rd, fixed = TRUE))[1]
     e <- which(grepl(end_marker, rd, fixed = TRUE))[1]
-    new_rd <- c(rd[1:(s-1)], frag_text, rd[(e+1):length(rd)])
+    before <- if (s > 1) rd[seq_len(s - 1)] else character()
+    after <- if (e < length(rd)) rd[seq.int(e + 1, length(rd))] else character()
+    new_rd <- c(trim_blank_edges(before), "", "", frag_text, trim_blank_edges(after))
   } else {
-    # append
-    new_rd <- c(rd, "", "", frag_text)
+    new_rd <- c(trim_blank_edges(rd), "", "", frag_text)
   }
   writeLines(new_rd, readme_file)
   cat("Updated", readme_file, "\n")
