@@ -38,8 +38,8 @@ Encoding: UTF-8
 Language: en
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 7.3.3
-SystemRequirements: OSRM backend binaries (>= v5.27.0);
-    package downloads binaries automatically from
-    <https://github.com/e-kotov/osrm-binaries> by default; upstream
-    OSRM binaries from <https://github.com/Project-OSRM/osrm-backend>
-    are available as an optional provider
+SystemRequirements: OSRM backend binaries (>= v5.27.0); package downloads
+    binaries automatically from <https://github.com/e-kotov/osrm-binaries>
+    by default; upstream OSRM binaries from
+    <https://github.com/Project-OSRM/osrm-backend> are available as an
+    optional provider
