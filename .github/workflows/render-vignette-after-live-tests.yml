@@ -33,7 +33,7 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::knitr, any::rmarkdown, any::pkgload, any::jsonlite, any::pkgdown, local::.
+          extra-packages: any::knitr, any::rmarkdown, any::pkgload, any::jsonlite, any::pkgdown, any::quarto, local::.
           needs: website
 
       - name: Generate tested releases table
