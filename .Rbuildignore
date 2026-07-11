@@ -25,7 +25,6 @@
 ^tools$
 ^test_results\.rds$
 ^osrm_versions\.json$
-^osrm-binaries$
 ^scratch_osrm_backend$
 ^test_bin$
 ^test_install\.R$
