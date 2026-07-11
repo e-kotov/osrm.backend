@@ -125,7 +125,7 @@ test_that("Cross-provider compatibility works for latest versions", {
   skip_if_not(tested_any, "No cross-provider versions could prepare graphs")
 })
 
-test_that("OSRM darwin-x64 runs under Rosetta on Apple Silicon", {
+test_that("OSRM darwin-x64 releases run under Rosetta on Apple Silicon", {
   skip_if_not(
     identical(Sys.getenv("RUN_OSRM_LIVE_TESTS"), "true"),
     "Live OSRM tests skipped"
@@ -149,35 +149,61 @@ test_that("OSRM darwin-x64 runs under Rosetta on Apple Silicon", {
   old_arch <- options(osrm.backend.override_arch = "x64")
   on.exit(options(old_arch), add = TRUE)
 
-  dir_ours_x64 <- tempfile()
-  dir.create(dir_ours_x64)
   x64_versions <- osrm_check_available_versions(prereleases = TRUE)
   skip_if_not(length(x64_versions) > 0, "No OSRM darwin-x64 releases available")
-  osrm_install(
-    version = x64_versions[[1]],
-    osrm_binaries_provider = "default",
-    dest_dir = dir_ours_x64,
-    quiet = TRUE
-  )
 
-  opts <- options(osrm.backend.path = dir_ours_x64)
-  on.exit(options(opts), add = TRUE)
+  for (ver in x64_versions) {
+    message(sprintf("\n>>> ROSETTA TEST: OSRM %s darwin-x64 <<<", ver))
 
-  job_ours <- osrm_prepare_graph(
-    test_map,
-    profile = osrm_find_profile("car.lua"),
-    verbosity = "NONE"
-  )
-  server_ours <- osrm_start(
-    job_ours$osrm_job_artifact,
-    port = 5001,
-    verbosity = "NONE"
-  )
-  Sys.sleep(2)
-  res <- jsonlite::fromJSON(
-    "http://127.0.0.1:5001/route/v1/driving/7.419,43.731;7.418,43.733"
-  )
-  server_ours$kill()
+    install_dir <- file.path(
+      tempdir(),
+      paste0("osrm_rosetta_", gsub("\\.", "_", ver))
+    )
+    if (dir.exists(install_dir)) {
+      unlink(install_dir, recursive = TRUE)
+    }
+    dir.create(install_dir, recursive = TRUE)
+    withr::defer(unlink(install_dir, recursive = TRUE))
 
-  expect_true(!is.null(res$routes))
+    osrm_install(
+      version = ver,
+      osrm_binaries_provider = "default",
+      dest_dir = install_dir,
+      path_action = "none",
+      quiet = TRUE
+    )
+
+    work_dir <- tempfile()
+    dir.create(work_dir)
+    withr::defer(unlink(work_dir, recursive = TRUE))
+    version_map <- file.path(work_dir, "monaco.osm.pbf")
+    file.copy(test_map, version_map)
+
+    withr::with_options(
+      list(osrm.backend.path = install_dir),
+      {
+        job_ours <- osrm_prepare_graph(
+          version_map,
+          profile = osrm_find_profile("car.lua"),
+          verbosity = "NONE"
+        )
+        port <- sample(15000:25000, 1)
+        server_ours <- osrm_start(
+          job_ours$osrm_job_artifact,
+          port = port,
+          verbosity = "NONE"
+        )
+        withr::defer(try(server_ours$kill(), silent = TRUE))
+        Sys.sleep(2)
+        res <- jsonlite::fromJSON(sprintf(
+          "http://127.0.0.1:%d/route/v1/driving/7.419,43.731;7.418,43.733",
+          port
+        ))
+        server_ours$kill()
+
+        expect_equal(res$code, "Ok")
+        expect_gt(nrow(res$routes), 0)
+      }
+    )
+  }
 })
