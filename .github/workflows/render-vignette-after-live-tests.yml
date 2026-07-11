@@ -29,6 +29,11 @@ jobs:
         with:
           quarto-version: '1.9.38'
 
+      - name: Setup R dependencies
+        uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::knitr, any::rmarkdown
+
       - name: Render binary providers vignette
         run: |
           mkdir -p docs/articles
