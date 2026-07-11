@@ -3,6 +3,8 @@ title: "OSRM binary providers"
 format:
   html:
     code-fold: false
+execute:
+  eval: false
 vignette:
   engine: knitr::rmarkdown
   id: binary-providers
@@ -114,4 +116,3 @@ osrm_install(osrm_binaries_provider = "official")
 
 For details about how the default binaries are built and published, see the
 [`e-kotov/osrm-binaries`](https://github.com/e-kotov/osrm-binaries) repository.
-

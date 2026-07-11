@@ -6,6 +6,9 @@ on:
     types:
       - completed
 
+permissions:
+  contents: write
+
 jobs:
   render-and-commit:
     if: ${{ github.event.workflow_run.conclusion == 'success' }}
@@ -29,7 +32,7 @@ jobs:
       - name: Render binary providers vignette
         run: |
           mkdir -p docs/articles
-          quarto render vignettes/binary-providers.qmd --to html --output docs/articles/binary-providers.html
+          quarto render vignettes/binary-providers.qmd --to html --output-dir ../docs/articles
 
       - name: Commit rendered vignette
         env:
@@ -38,7 +41,7 @@ jobs:
         run: |
           git config user.name "$GIT_COMMITTER_NAME"
           git config user.email "$GIT_COMMITTER_EMAIL"
-          if git add docs/articles/binary-providers.html && ! git diff --staged --quiet; then
+          if git add -f docs/articles/binary-providers.html && ! git diff --staged --quiet; then
             git commit -m "ci: update rendered binary-providers vignette after live tests"
             git push origin HEAD:main
           else
