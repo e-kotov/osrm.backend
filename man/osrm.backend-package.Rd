@@ -8,7 +8,7 @@
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Install and control 'Open Source Routing Machine' ('OSRM') backend executables to prepare routing data and run/stop a local 'OSRM' server. For computations with the running server use the 'osrm' R package (\url{https://cran.r-project.org/package=osrm}).
+Install and control 'Open Source Routing Machine' ('OSRM') backend executables to prepare routing data and run/stop a local 'OSRM' server. For computations with the running server use the 'osrm' package for 'R' (\url{https://cran.r-project.org/package=osrm}).
 }
 \seealso{
 Useful links:

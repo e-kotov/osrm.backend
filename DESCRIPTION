@@ -7,7 +7,7 @@ Authors@R:
 Description: Install and control 'Open Source Routing Machine' ('OSRM')
     backend executables to prepare routing data and run/stop a local
     'OSRM' server. For computations with the running server use the 'osrm'
-    R package (<https://cran.r-project.org/package=osrm>).
+    package for 'R' (<https://cran.r-project.org/package=osrm>).
 License: MIT + file LICENSE
 URL: https://github.com/e-kotov/osrm.backend,
     https://www.ekotov.pro/osrm.backend/

@@ -79,9 +79,11 @@
 #' @param path_action A string specifying how to handle the system `PATH`. One of:
 #'   \itemize{
 #'     \item `"session"` (default): Adds the OSRM bin directory to the `PATH`
-#'       for the current R session only.
+#'       for the rest of the current R session. This intentionally changes the
+#'       session environment and is not reset automatically.
 #'     \item `"project"`: Modifies the `.Rprofile` in the current project to set
-#'       the `PATH` for all future sessions in that project.
+#'       the `PATH` for future sessions in that project. Use [osrm_clear_path()]
+#'       to remove lines added by `osrm.backend`.
 #'     \item `"none"`: Does not modify the `PATH`.
 #'   }
 #' @param quiet A logical value. If `TRUE`, suppresses installer messages and
@@ -655,7 +657,8 @@ osrm_check_available_versions <- function(prereleases = FALSE) {
 #' Clear OSRM Path from Project's .Rprofile
 #'
 #' Scans the `.Rprofile` file in the current project's root directory and
-#' removes any lines that were added by `osrm_install()` to modify the `PATH`.
+#' removes lines that were added by `osrm_install(path_action = "project")` to
+#' modify the `PATH` for future R sessions in that project.
 #'
 #' @param quiet A logical value. If `TRUE`, suppresses messages. Defaults to `FALSE`.
 #' @return `TRUE` if the file was modified, `FALSE` otherwise.
@@ -1176,23 +1179,24 @@ install_profiles_for_release <- function(
   tar_members <- NULL
   last_list_error <- NULL
   for (args in list_attempts) {
-    tar_members <- tryCatch(
+    result <- tryCatch(
       {
         res <- run_untar(args)
         if (is.character(res)) {
-          res
+          list(members = res, error = NULL)
         } else {
-          last_list_error <<- list(
-            message = paste0("tar returned exit code ", res)
+          list(
+            members = NULL,
+            error = list(message = paste0("tar returned exit code ", res))
           )
-          NULL
         }
       },
       error = function(e) {
-        last_list_error <<- e
-        NULL
+        list(members = NULL, error = e)
       }
     )
+    tar_members <- result$members
+    last_list_error <- result$error
     if (!is.null(tar_members)) {
       break
     }
@@ -1241,22 +1245,24 @@ install_profiles_for_release <- function(
   last_extract_error <- NULL
   extracted <- FALSE
   for (args in untar_attempts) {
-    tryCatch(
+    result <- tryCatch(
       {
         status <- run_untar(args)
-        # untar returns 0 for success, non-zero for failure
         if (is.null(status) || status == 0) {
-          extracted <- TRUE
+          list(extracted = TRUE, error = NULL)
         } else {
-          last_extract_error <<- list(
-            message = paste0("tar returned exit code ", status)
+          list(
+            extracted = FALSE,
+            error = list(message = paste0("tar returned exit code ", status))
           )
         }
       },
       error = function(e) {
-        last_extract_error <<- e
+        list(extracted = FALSE, error = e)
       }
     )
+    extracted <- result$extracted
+    last_extract_error <- result$error
     if (isTRUE(extracted)) {
       break
     }
@@ -2069,6 +2075,9 @@ set_path_session <- function(dir, quiet = FALSE) {
     Sys.setenv(PATH = new_path)
     if (!quiet) {
       message(sprintf("Added '%s' to PATH for this session.", normalized_dir))
+      message(
+        "This session PATH change is intentional and is not reset automatically."
+      )
     }
   } else if (!quiet) {
     message(sprintf("'%s' is already first in PATH.", normalized_dir))
@@ -2082,6 +2091,7 @@ set_path_project <- function(dir, quiet = FALSE) {
   if (!quiet) {
     message("You chose to set the OSRM path for this project.")
     message("This will update the following file: ", r_profile_path)
+    message("Run osrm_clear_path() to remove this package's PATH entry later.")
   }
 
   # Use forward slashes for cross-platform compatibility in the .Rprofile

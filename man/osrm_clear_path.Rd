@@ -14,7 +14,8 @@ osrm_clear_path(quiet = FALSE)
 }
 \description{
 Scans the \code{.Rprofile} file in the current project's root directory and
-removes any lines that were added by \code{osrm_install()} to modify the \code{PATH}.
+removes lines that were added by \code{osrm_install(path_action = "project")} to
+modify the \code{PATH} for future R sessions in that project.
 }
 \examples{
 \donttest{

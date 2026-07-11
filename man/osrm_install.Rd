@@ -44,9 +44,11 @@ existing installation is detected.}
 \item{path_action}{A string specifying how to handle the system \code{PATH}. One of:
 \itemize{
 \item \code{"session"} (default): Adds the OSRM bin directory to the \code{PATH}
-for the current R session only.
+for the rest of the current R session. This intentionally changes the
+session environment and is not reset automatically.
 \item \code{"project"}: Modifies the \code{.Rprofile} in the current project to set
-the \code{PATH} for all future sessions in that project.
+the \code{PATH} for future sessions in that project. Use \code{\link[=osrm_clear_path]{osrm_clear_path()}}
+to remove lines added by \code{osrm.backend}.
 \item \code{"none"}: Does not modify the \code{PATH}.
 }}
 

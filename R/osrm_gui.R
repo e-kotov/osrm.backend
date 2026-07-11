@@ -1078,7 +1078,7 @@ osrm_gui <- function(
 
       if (debug) {
         debug_msg("Trip (Live) request points:")
-        print(pts_df)
+        utils::str(pts_df)
       }
 
       # 1. Calculate trip using direct HTTP API
@@ -1206,7 +1206,7 @@ osrm_gui <- function(
 
           if (debug) {
             debug_msg("Trip (Stable) request points:")
-            print(data.frame(lon = local_lons, lat = local_lats))
+            utils::str(data.frame(lon = local_lons, lat = local_lats))
             debug_msg(
               "  class(local_lons)=",
               class(local_lons),
