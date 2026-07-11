@@ -8,14 +8,14 @@ message: 'To cite package "osrm.backend" in publications use:'
 type: software
 license: MIT
 title: 'osrm.backend: Bindings for ''Open Source Routing Machine'''
-version: 0.3.0.9000
+version: 0.4.0
 doi: 10.32614/CRAN.package.osrm.backend
 identifiers:
 - type: doi
   value: 10.32614/CRAN.package.osrm.backend
 abstract: Install and control 'Open Source Routing Machine' ('OSRM') backend executables
   to prepare routing data and run/stop a local 'OSRM' server. For computations with
-  the running server use the 'osrm' R package (<https://cran.r-project.org/package=osrm>).
+  the running server use the 'osrm' package for 'R' (<https://cran.r-project.org/package=osrm>).
 authors:
 - family-names: Kotov
   given-names: Egor

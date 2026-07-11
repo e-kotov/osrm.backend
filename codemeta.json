@@ -2,13 +2,13 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "identifier": "osrm.backend",
-  "description": "Install and control 'Open Source Routing Machine' ('OSRM') backend executables to prepare routing data and run/stop a local 'OSRM' server. For computations with the running server use the 'osrm' R package (<https://cran.r-project.org/package=osrm>).",
+  "description": "Install and control 'Open Source Routing Machine' ('OSRM') backend executables to prepare routing data and run/stop a local 'OSRM' server. For computations with the running server use the 'osrm' package for 'R' (<https://cran.r-project.org/package=osrm>).",
   "name": "osrm.backend: Bindings for 'Open Source Routing Machine'",
   "relatedLink": ["https://www.ekotov.pro/osrm.backend/", "https://CRAN.R-project.org/package=osrm.backend"],
   "codeRepository": "https://github.com/e-kotov/osrm.backend",
   "issueTracker": "https://github.com/e-kotov/osrm.backend/issues",
   "license": "https://spdx.org/licenses/MIT",
-  "version": "0.3.0.9000",
+  "version": "0.4.0",
   "programmingLanguage": {
     "@type": "ComputerLanguage",
     "name": "R",
@@ -258,7 +258,7 @@
     },
     "SystemRequirements": "OSRM backend binaries (>= v5.27.0); package downloads\n    binaries automatically from <https://github.com/e-kotov/osrm-binaries>\n    by default; upstream OSRM binaries from\n    <https://github.com/Project-OSRM/osrm-backend> are available as an\n    optional provider"
   },
-  "fileSize": "6215.548KB",
+  "fileSize": "7231.601KB",
   "citation": [
     {
       "@type": "SoftwareSourceCode",
