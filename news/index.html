@@ -16,7 +16,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -46,16 +46,17 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.3.1" id="osrmbackend-031">osrm.backend 0.3.1<a class="anchor" aria-label="anchor" href="#osrmbackend-031"></a></h2><p class="text-muted">CRAN release: 2026-04-26</p>
+<h2 class="pkg-version" data-toc-text="0.4.0" id="osrmbackend-040">osrm.backend 0.4.0<a class="anchor" aria-label="anchor" href="#osrmbackend-040"></a></h2>
 <div class="section level3">
-<h3 id="major-changes-0-3-1">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-0-3-1"></a></h3>
-<ul><li>Introduced <code>osrm_binaries_provider</code> argument to <code><a href="../reference/osrm_install.html">osrm_install()</a></code> (default: <code>"default"</code>). This automatically fetches static, highly-compatible binaries built directly by this package’s maintainer (<code>e-kotov/osrm-binaries</code>). These new binaries include native <code>linux-arm64</code> and <code>darwin-arm64</code> support, bundle required libraries like Intel TBB natively to avoid legacy runtime hacks, and reduce overhead by dropping unnecessary NodeJS wrappers. The original upstream binaries remain fully supported via <code>osrm_binaries_provider = "official"</code>.</li>
+<h3 id="major-changes-0-4-0">Major Changes<a class="anchor" aria-label="anchor" href="#major-changes-0-4-0"></a></h3>
+<ul><li>Now shipping self-built, self-contained, immutable OSRM releases for all supported platforms — macOS (Intel x86_64 &amp; Apple Silicon arm64 — Mac computers), Linux (x86_64 &amp; arm64), and Windows (x86_64). Binaries are bundled with required runtime libraries (e.g., Intel TBB), fully tested and validated by the package maintainer and available via the default binaries provider to simplify secure installs.</li>
+<li>Introduced <code>osrm_binaries_provider</code> argument to <code><a href="../reference/osrm_install.html">osrm_install()</a></code> (default: “default”). This automatically fetches static, highly-compatible binaries built directly by this package’s maintainer (<code>e-kotov/osrm-binaries</code>). These binaries provide native arm64 and x86_64 builds where available across Linux, macOS (Apple Silicon and Intel) and Windows, and bundle required runtime libraries (e.g., Intel TBB) to avoid legacy runtime hacks and reduce overhead by dropping unnecessary NodeJS wrappers. The original upstream binaries remain fully supported via <code>osrm_binaries_provider = "official"</code>.</li>
 <li>Added <code>download_url</code> and <code>file_path</code> parameters to <code><a href="../reference/osrm_install.html">osrm_install()</a></code> to support advanced/manual installations from a supplied archive URL or a local tarball path. These parameters are intended for advanced users who need explicit control over the installation source.</li>
 <li>Switched binary integrity verification to use GitHub release asset digests first, with <code>checksums.txt</code> as a fallback, ensuring installation security without requiring R package updates when new binary builds are released.</li>
 <li>Marked all currently published immutable OSRM binary releases through <code>v26.7.3</code> as validated by <code>osrm.backend</code>.</li>
 </ul></div>
 <div class="section level3">
-<h3 id="bug-fixes-0-3-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-3-1"></a></h3>
+<h3 id="bug-fixes-0-4-0">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-0"></a></h3>
 <ul><li>Heavily optimized GitHub API rate limit handling during installation. When fetching known versions from the default provider, the package now bypasses API checks entirely by directly constructing asset URLs.</li>
 <li>Increased stability of the live integration tests against custom routing instances and proxy-blocked networks.</li>
 <li>Fixes for install process of OSRM binaries v26+ on Windows.</li>

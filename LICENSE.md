@@ -1,6 +1,6 @@
 # MIT License
 
-Copyright (c) 2025 osrm.backend authors
+Copyright (c) 2025-2026 osrm.backend authors
 
 Permission is hereby granted, free of charge, to any person obtaining a
 copy of this software and associated documentation files (the

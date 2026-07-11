@@ -1,21 +1,25 @@
 # Changelog
 
-## osrm.backend 0.3.1
-
-CRAN release: 2026-04-26
+## osrm.backend 0.4.0
 
 ### Major Changes
 
+- Now shipping self-built, self-contained, immutable OSRM releases for
+  all supported platforms — macOS (Intel x86_64 & Apple Silicon arm64 —
+  Mac computers), Linux (x86_64 & arm64), and Windows (x86_64). Binaries
+  are bundled with required runtime libraries (e.g., Intel TBB), fully
+  tested and validated by the package maintainer and available via the
+  default binaries provider to simplify secure installs.
 - Introduced `osrm_binaries_provider` argument to
   [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
-  (default: `"default"`). This automatically fetches static,
+  (default: “default”). This automatically fetches static,
   highly-compatible binaries built directly by this package’s maintainer
-  (`e-kotov/osrm-binaries`). These new binaries include native
-  `linux-arm64` and `darwin-arm64` support, bundle required libraries
-  like Intel TBB natively to avoid legacy runtime hacks, and reduce
-  overhead by dropping unnecessary NodeJS wrappers. The original
-  upstream binaries remain fully supported via
-  `osrm_binaries_provider = "official"`.
+  (`e-kotov/osrm-binaries`). These binaries provide native arm64 and
+  x86_64 builds where available across Linux, macOS (Apple Silicon and
+  Intel) and Windows, and bundle required runtime libraries (e.g., Intel
+  TBB) to avoid legacy runtime hacks and reduce overhead by dropping
+  unnecessary NodeJS wrappers. The original upstream binaries remain
+  fully supported via `osrm_binaries_provider = "official"`.
 - Added `download_url` and `file_path` parameters to
   [`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
   to support advanced/manual installations from a supplied archive URL

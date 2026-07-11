@@ -2,7 +2,7 @@
 
 Install and control 'Open Source Routing Machine' ('OSRM') backend
 executables to prepare routing data and run/stop a local 'OSRM' server.
-For computations with the running server use the 'osrm' R package
+For computations with the running server use the 'osrm' package for 'R'
 (<https://cran.r-project.org/package=osrm>).
 
 ## See also

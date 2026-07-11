@@ -38,7 +38,7 @@ guaranteed to function correctly."><meta property="og:image" content="https://ww
 
     <a class="navbar-brand me-2" href="../index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.3.1.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -136,9 +136,11 @@ existing installation is detected.</p></dd>
 
 <dt id="arg-path-action">path_action<a class="anchor" aria-label="anchor" href="#arg-path-action"></a></dt>
 <dd><p>A string specifying how to handle the system <code>PATH</code>. One of:</p><ul><li><p><code>"session"</code> (default): Adds the OSRM bin directory to the <code>PATH</code>
-for the current R session only.</p></li>
+for the rest of the current R session. This intentionally changes the
+session environment and is not reset automatically.</p></li>
 <li><p><code>"project"</code>: Modifies the <code>.Rprofile</code> in the current project to set
-the <code>PATH</code> for all future sessions in that project.</p></li>
+the <code>PATH</code> for future sessions in that project. Use <code><a href="osrm_clear_path.html">osrm_clear_path()</a></code>
+to remove lines added by <code>osrm.backend</code>.</p></li>
 <li><p><code>"none"</code>: Does not modify the <code>PATH</code>.</p></li>
 </ul></dd>
 

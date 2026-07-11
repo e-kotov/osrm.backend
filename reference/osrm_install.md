@@ -74,10 +74,13 @@ osrm_install(
   A string specifying how to handle the system `PATH`. One of:
 
   - `"session"` (default): Adds the OSRM bin directory to the `PATH` for
-    the current R session only.
+    the rest of the current R session. This intentionally changes the
+    session environment and is not reset automatically.
 
   - `"project"`: Modifies the `.Rprofile` in the current project to set
-    the `PATH` for all future sessions in that project.
+    the `PATH` for future sessions in that project. Use
+    [`osrm_clear_path()`](https://www.ekotov.pro/osrm.backend/reference/osrm_clear_path.md)
+    to remove lines added by `osrm.backend`.
 
   - `"none"`: Does not modify the `PATH`.
 

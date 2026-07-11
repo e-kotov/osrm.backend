@@ -1,9 +1,8 @@
 # Clear OSRM Path from Project's .Rprofile
 
 Scans the `.Rprofile` file in the current project's root directory and
-removes any lines that were added by
-[`osrm_install()`](https://www.ekotov.pro/osrm.backend/reference/osrm_install.md)
-to modify the `PATH`.
+removes lines that were added by `osrm_install(path_action = "project")`
+to modify the `PATH` for future R sessions in that project.
 
 ## Usage
 
