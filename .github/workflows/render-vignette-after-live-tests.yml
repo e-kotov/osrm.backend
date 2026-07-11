@@ -33,7 +33,10 @@ jobs:
       - name: Setup R dependencies
         uses: r-lib/actions/setup-r-dependencies@v2
         with:
-          extra-packages: any::knitr, any::rmarkdown
+          extra-packages: any::knitr, any::rmarkdown, any::pkgload, any::jsonlite
+
+      - name: Generate tested releases table
+        run: Rscript tools/generate_tested_table.R
 
       - name: Render binary providers vignette
         run: |

@@ -83,6 +83,18 @@ install all available supported versions for each platform, start `osrm-routed`,
 prepare a graph, and verify that routing works through both the OSRM HTTP API
 and, where available, the `{osrm}` R package.
 
+<!-- Include generated table of auto-tested releases -->
+```{=markdown}
+```{r, echo=FALSE}
+if (file.exists("vignettes/generated-tested-versions.md")) {
+  cat(paste(readLines("vignettes/generated-tested-versions.md"), collapse = "\n"))
+} else {
+  cat("\n> Auto-tested releases table not available.\n")
+}
+```
+```
+
+
 The official provider is also exercised through a cross-provider compatibility
 test where a version is available from both repositories and the official
 artifact can prepare the test graph. This is intentionally conditional:
