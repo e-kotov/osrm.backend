@@ -2,6 +2,8 @@
 
 ## osrm.backend 0.4.0
 
+CRAN release: 2026-07-11
+
 ### Major Changes
 
 - Now shipping self-built, self-contained, immutable OSRM releases for

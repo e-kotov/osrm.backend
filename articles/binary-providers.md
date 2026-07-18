@@ -1,7 +1,6 @@
 # OSRM binary providers
 
 ``` r
-
 knitr::opts_chunk$set(eval = FALSE)
 library(osrm.backend)
 ```
@@ -24,7 +23,6 @@ The default provider downloads from
 [`e-kotov/osrm-binaries`](https://github.com/e-kotov/osrm-binaries):
 
 ``` r
-
 install_dir <- osrm_install(osrm_binaries_provider = "default")
 ```
 
@@ -54,7 +52,6 @@ The official provider downloads from
 [`Project-OSRM/osrm-backend`](https://github.com/Project-OSRM/osrm-backend):
 
 ``` r
-
 install_dir <- osrm_install(osrm_binaries_provider = "official")
 ```
 
@@ -85,10 +82,10 @@ both the OSRM HTTP API and, where available, the
 
 ### Auto-tested OSRM releases (generated)
 
-| OS | Badge | Validated releases | Notes |
-|----|----|----|----|
-| **LINUX** | ![LINUX badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_ubuntu.json) | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
-| **MACOS** | ![MACOS badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_macos.json) | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
+| OS          | Badge                                                                                                                                                        | Validated releases                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               | Notes             |
+|-------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------|
+| **LINUX**   | ![LINUX badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_ubuntu.json)    | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
+| **MACOS**   | ![MACOS badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_macos.json)     | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
 | **WINDOWS** | ![WINDOWS badge](https://img.shields.io/endpoint?url=https%3A%2F%2Fraw.githubusercontent.com%2Fe-kotov%2Fosrm.backend%2Fbadges%2Fosrm_versions_windows.json) | [`v26.7.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.3), [`v26.7.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.2), [`v26.7.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.1), [`v26.7.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.7.0), [`v26.6.5`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.5), [`v26.6.4`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.4), [`v26.6.3`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.3), [`v26.6.2`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.2), [`v26.6.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.1), [`v26.6.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.6.0), [`v26.5.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.5.0), [`v26.4.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.1), [`v26.4.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v26.4.0), [`v6.0.0`](https://github.com/e-kotov/osrm-binaries/releases/tag/v6.0.0), [`v5.27.1`](https://github.com/e-kotov/osrm-binaries/releases/tag/v5.27.1) | v5.27.1 - v26.7.3 |
 
 Badge source: `badges` branch — raw JSON files
@@ -116,7 +113,6 @@ In practice, this means:
 Most users should use the default provider:
 
 ``` r
-
 osrm_install()
 ```
 
@@ -124,7 +120,6 @@ Use the official provider only when you have a specific reason to test
 or depend on upstream OSRM’s official release artifacts:
 
 ``` r
-
 osrm_install(osrm_binaries_provider = "official")
 ```
 
