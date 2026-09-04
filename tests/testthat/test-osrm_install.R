@@ -874,55 +874,54 @@ test_that("set_path_project replaces old cached version with new one", {
 
 # Test version validation logic ----
 test_that("osrm_install handles check_tested correctly", {
-  # We use a dummy dest_dir to avoid actual installation and bypass API checks if possible
-  # but here we just want to see if the message/warning is emitted.
-  # We'll need to mock/catch the execution before it hits the network if possible,
-  # or just use expect_warning/expect_message and let it try (and fail) or stop early.
-
   dummy_dest <- tempfile()
   dir.create(dummy_dest)
   on.exit(unlink(dummy_dest, recursive = TRUE))
 
-  # Test 1: Validated version (v26.5.0) should be silent
-  # We use force = TRUE to ensure it doesn't stop because it already exists
-  # We use quiet = TRUE to suppress other messages
-  expect_silent(
-    suppressWarnings(try(
-      osrm_install(
-        version = "v26.5.0",
-        dest_dir = dummy_dest,
-        force = TRUE,
-        quiet = TRUE
-      ),
-      silent = TRUE
-    ))
+  # Set up a dummy existing installation so osrm_install returns before downloading
+  dir.create(file.path(dummy_dest, "profiles"), showWarnings = FALSE)
+  bin_name <- if (.Platform$OS.type == "windows") "osrm-routed.exe" else "osrm-routed"
+  file.create(file.path(dummy_dest, bin_name))
+
+  testthat::local_mocked_bindings(
+    osrm_check_available_versions = function(...) "v5.27.1"
   )
 
-  # Test 2: check_tested = TRUE should point users to live validation results
+  # Test 1: check_tested = TRUE emits validation-status message
   expect_message(
-    try(
-      osrm_install(
-        version = "v99.9.9",
-        dest_dir = dummy_dest,
-        force = TRUE,
-        quiet = FALSE
-      ),
-      silent = TRUE
+    osrm_install(
+      version = "v5.27.1",
+      dest_dir = dummy_dest,
+      check_tested = TRUE,
+      force = FALSE,
+      path_action = "none",
+      quiet = FALSE
     ),
     "Validated OSRM versions"
   )
 
-  # Test 3: check_tested = FALSE suppresses the live-validation status message
+  # Test 2: check_tested = FALSE suppresses the validation-status message
+  expect_no_message(
+    osrm_install(
+      version = "v5.27.1",
+      dest_dir = dummy_dest,
+      check_tested = FALSE,
+      force = FALSE,
+      path_action = "none",
+      quiet = FALSE
+    ),
+    message = "Validated OSRM versions"
+  )
+
+  # Test 3: quiet = TRUE suppresses all messages
   expect_silent(
-    try(
-      osrm_install(
-        version = "v99.9.9",
-        dest_dir = dummy_dest,
-        check_tested = FALSE,
-        force = TRUE,
-        quiet = FALSE
-      ),
-      silent = TRUE
+    osrm_install(
+      version = "v5.27.1",
+      dest_dir = dummy_dest,
+      check_tested = TRUE,
+      force = FALSE,
+      path_action = "none",
+      quiet = TRUE
     )
   )
 })
@@ -932,7 +931,7 @@ test_that("osrm_install manual installation options work", {
   dir.create(dummy_dest)
   on.exit(unlink(dummy_dest, recursive = TRUE))
 
-  # Test file_path error handling
+  # Test missing file_path with default version fails locally before any network/platform lookup
   expect_error(
     osrm_install(
       dest_dir = dummy_dest,
@@ -942,13 +941,198 @@ test_that("osrm_install manual installation options work", {
     "Provided file_path does not exist"
   )
 
-  # Test download_url error handling
+  # Confirm destination directory is not created when file_path is missing
+  nonexistent_dest <- file.path(tempfile(), "uncreated_dir")
+  expect_false(dir.exists(nonexistent_dest))
+  expect_error(
+    osrm_install(
+      dest_dir = nonexistent_dest,
+      file_path = "nonexistent_file_path.tar.gz",
+      quiet = TRUE
+    ),
+    "Provided file_path does not exist"
+  )
+  expect_false(dir.exists(nonexistent_dest))
+
+  # Test scalar/format validation
   expect_error(
     osrm_install(
       dest_dir = dummy_dest,
-      download_url = "http://localhost:9999/fake.tar.gz",
+      file_path = "",
+      quiet = TRUE
+    ),
+    "non-empty character string"
+  )
+
+  expect_error(
+    osrm_install(
+      dest_dir = dummy_dest,
+      download_url = "not-a-valid-url",
+      quiet = TRUE
+    ),
+    "non-empty valid HTTP or HTTPS URL"
+  )
+
+  # Test rejection of simultaneous file_path and download_url
+  expect_error(
+    osrm_install(
+      dest_dir = dummy_dest,
+      file_path = "some_file.tar.gz",
+      download_url = "https://example.com/fake.tar.gz",
+      quiet = TRUE
+    ),
+    "either 'file_path' or 'download_url'"
+  )
+
+  # Test proving manual-install validation does not call version/API helpers
+  testthat::local_mocked_bindings(
+    osrm_check_latest_version = function(...) stop("Should not call osrm_check_latest_version"),
+    osrm_check_available_versions = function(...) stop("Should not call osrm_check_available_versions"),
+    get_all_releases = function(...) stop("Should not call get_all_releases"),
+    get_release_by_tag = function(...) stop("Should not call get_release_by_tag")
+  )
+  expect_error(
+    osrm_install(
+      dest_dir = dummy_dest,
+      file_path = "nonexistent_file_path.tar.gz",
+      quiet = TRUE
+    ),
+    "Provided file_path does not exist"
+  )
+
+  # Test download_url error handling using mocked package-owned transfer helper
+  testthat::local_mocked_bindings(
+    download_archive_file = function(url, dest_file, ...) {
+      stop("Failed to download file: simulated network failure", call. = FALSE)
+    }
+  )
+  expect_error(
+    osrm_install(
+      dest_dir = dummy_dest,
+      download_url = "https://example.com/fake.tar.gz",
       quiet = TRUE
     ),
     "Failed to download file"
+  )
+})
+
+test_that("github API response classification and retry helpers work correctly", {
+  # 1. Transient status classification
+  resp_429 <- httr2::response(status_code = 429)
+  resp_503 <- httr2::response(status_code = 503)
+  resp_200 <- httr2::response(status_code = 200)
+  resp_403_rate <- httr2::response(
+    status_code = 403,
+    headers = list("x-ratelimit-remaining" = "0")
+  )
+  resp_403_ord <- httr2::response(
+    status_code = 403,
+    headers = list("x-ratelimit-remaining" = "50")
+  )
+  resp_403_retry_short <- httr2::response(
+    status_code = 403,
+    headers = list("x-ratelimit-remaining" = "50", "retry-after" = "5")
+  )
+  resp_403_retry_long <- httr2::response(
+    status_code = 403,
+    headers = list("x-ratelimit-remaining" = "50", "retry-after" = "60")
+  )
+
+  expect_true(github_response_is_transient(resp_429))
+  expect_true(github_response_is_transient(resp_503))
+  expect_false(github_response_is_transient(resp_200))
+  # Primary rate limit 403 is NOT transient (must not retry)
+  expect_false(github_response_is_transient(resp_403_rate))
+  # Ordinary 403 without Retry-After is NOT transient (must not retry)
+  expect_false(github_response_is_transient(resp_403_ord))
+  # 403 with short Retry-After <= 15 is transient
+  expect_true(github_response_is_transient(resp_403_retry_short))
+  # 403 with long Retry-After > 15 is NOT transient
+  expect_false(github_response_is_transient(resp_403_retry_long))
+
+  # 2. Retry-After header extraction
+  expect_equal(github_response_retry_after(resp_403_retry_short), 5)
+  expect_true(is.na(github_response_retry_after(resp_403_ord)))
+
+  # 3. Error formatting
+  cnd_rate <- structure(
+    list(
+      message = "HTTP 403 Forbidden.",
+      resp = httr2::response(
+        status_code = 403,
+        headers = list(
+          "x-ratelimit-remaining" = "0",
+          "x-ratelimit-reset" = "1893456000"
+        )
+      )
+    ),
+    class = c("httr2_http_403", "httr2_http", "error", "condition")
+  )
+  cnd_ord <- structure(
+    list(
+      message = "HTTP 403 Forbidden.",
+      resp = httr2::response(
+        status_code = 403,
+        headers = list(
+          "x-ratelimit-remaining" = "50",
+          "content-type" = "application/json"
+        ),
+        body = charToRaw('{"message": "Resource protected"}')
+      )
+    ),
+    class = c("httr2_http_403", "httr2_http", "error", "condition")
+  )
+  cnd_429 <- structure(
+    list(
+      message = "HTTP 429 Too Many Requests.",
+      resp = resp_429
+    ),
+    class = c("httr2_http_429", "httr2_http", "error", "condition")
+  )
+  cnd_503 <- structure(
+    list(
+      message = "HTTP 503 Service Unavailable.",
+      resp = resp_503
+    ),
+    class = c("httr2_http_503", "httr2_http", "error", "condition")
+  )
+  cnd_trans <- structure(
+    list(message = "Connection timeout"),
+    class = c("simpleError", "error", "condition")
+  )
+
+  err_rate <- format_github_api_error(cnd_rate)
+  expect_match(err_rate, "rate limit exceeded")
+  expect_match(err_rate, "GITHUB_PAT")
+  expect_match(err_rate, "2030-01-01")
+
+  err_ord <- format_github_api_error(cnd_ord)
+  expect_match(err_ord, "HTTP 403")
+  expect_match(err_ord, "Resource protected")
+  expect_match(err_ord, "GITHUB_PAT")
+
+  expect_match(format_github_api_error(cnd_429), "HTTP 429")
+  expect_match(format_github_api_error(cnd_503), "HTTP 503")
+  expect_match(format_github_api_error(cnd_trans), "Connection timeout")
+
+  # 4. github_api_request_with_retries error paths via mocked execute_github_request
+  testthat::local_mocked_bindings(
+    execute_github_request = function(req) {
+      stop("Simulated DNS resolution failure", call. = FALSE)
+    }
+  )
+  expect_error(
+    github_api_request_with_retries("https://api.github.com/test", error_message = "Test API failed: "),
+    "Test API failed: Simulated DNS resolution failure"
+  )
+
+  testthat::local_mocked_bindings(
+    execute_github_request = function(req) {
+      stop(cnd_rate)
+    }
+  )
+  expect_error(
+    github_api_request_with_retries("https://api.github.com/test"),
+    "rate limit exceeded"
   )
 })

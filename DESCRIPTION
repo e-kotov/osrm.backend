@@ -1,6 +1,6 @@
 Package: osrm.backend
 Title: Bindings for 'Open Source Routing Machine'
-Version: 0.4.0
+Version: 0.4.1
 Authors@R: 
     person("Egor", "Kotov", , "kotov.egor@gmail.com", role = c("aut", "cre", "cph"),
            comment = c(ORCID = "0000-0001-6690-5345"))
@@ -12,6 +12,8 @@ License: MIT + file LICENSE
 URL: https://github.com/e-kotov/osrm.backend,
     https://www.ekotov.pro/osrm.backend/
 BugReports: https://github.com/e-kotov/osrm.backend/issues
+Depends:
+    R (>= 3.5.0)
 Imports: 
     digest,
     httr2,
