@@ -105,19 +105,25 @@ jobs:
 
       - name: "Check Offline (as on CRAN: no PAT, network blocked during check)"
         env:
+          # GitHub treats these keys case-insensitively, so only the lowercase
+          # spellings can be declared here. libcurl reads the lowercase ones;
+          # the uppercase variants are exported below for anything that does not.
           all_proxy: http://127.0.0.1:9
           http_proxy: http://127.0.0.1:9
           https_proxy: http://127.0.0.1:9
-          ALL_PROXY: http://127.0.0.1:9
-          HTTP_PROXY: http://127.0.0.1:9
-          HTTPS_PROXY: http://127.0.0.1:9
-          NO_PROXY: ""
           no_proxy: ""
           GITHUB_PAT: ""
           NOT_CRAN: ""
           _R_CHECK_CRAN_INCOMING_REMOTE_: "FALSE"
           _R_CHECK_SYSTEM_CLOCK_: "FALSE"
         run: |
+          dead <- "http://127.0.0.1:9"
+          Sys.setenv(
+            ALL_PROXY = dead,
+            HTTP_PROXY = dead,
+            HTTPS_PROXY = dead,
+            NO_PROXY = ""
+          )
           rcmdcheck::rcmdcheck(
             build_args = "--no-manual",
             args = c("--no-manual", "--as-cran"),
