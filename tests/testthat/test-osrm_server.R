@@ -98,7 +98,7 @@ test_that("osrm_start_server launches osrm-routed with correct arguments", {
 })
 
 test_that("osrm_start_server validates input file extension", {
-  tmp_file <- "test.txt"
+  tmp_file <- tempfile(fileext = ".txt")
   file.create(tmp_file)
   on.exit(unlink(tmp_file))
 
@@ -340,7 +340,7 @@ test_that("registry saves and loads correctly", {
 
 # Tests for osrm_start_server error validation ----
 test_that("osrm_start_server validates input file extension", {
-  tmp_file <- "test.txt"
+  tmp_file <- tempfile(fileext = ".txt")
   file.create(tmp_file)
   on.exit(unlink(tmp_file))
 

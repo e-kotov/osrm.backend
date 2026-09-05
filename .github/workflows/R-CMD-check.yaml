@@ -79,3 +79,63 @@ jobs:
           upload-snapshots: true
           build_args: 'c("--no-manual", "--no-build-vignettes")'
           args: 'c("--no-manual", "--as-cran", "--ignore-vignettes")'
+
+  R-CMD-check-offline:
+    runs-on: ubuntu-latest
+    name: ubuntu-latest (offline check)
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: 'release'
+          use-public-rspm: true
+          install-ghostscript: false
+
+      - name: Setup Quarto
+        uses: quarto-dev/quarto-actions/setup@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, any::testthat, any::tibble
+          needs: check
+
+      - name: "Check Offline (as on CRAN: no PAT, network blocked during check)"
+        env:
+          # GitHub treats these keys case-insensitively, so only the lowercase
+          # spellings can be declared here. libcurl reads the lowercase ones;
+          # the uppercase variants are exported below for anything that does not.
+          all_proxy: http://127.0.0.1:9
+          http_proxy: http://127.0.0.1:9
+          https_proxy: http://127.0.0.1:9
+          no_proxy: ""
+          GITHUB_PAT: ""
+          NOT_CRAN: ""
+          _R_CHECK_CRAN_INCOMING_REMOTE_: "FALSE"
+          _R_CHECK_SYSTEM_CLOCK_: "FALSE"
+        run: |
+          dead <- "http://127.0.0.1:9"
+          Sys.setenv(
+            ALL_PROXY = dead,
+            HTTP_PROXY = dead,
+            HTTPS_PROXY = dead,
+            NO_PROXY = ""
+          )
+          rcmdcheck::rcmdcheck(
+            build_args = "--no-manual",
+            args = c("--no-manual", "--as-cran"),
+            error_on = "warning",
+            check_dir = "check"
+          )
+        shell: Rscript {0}
+
+      - name: Upload offline check results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: offline-check-results
+          path: check
+

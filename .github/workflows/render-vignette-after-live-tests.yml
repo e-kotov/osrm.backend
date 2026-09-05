@@ -39,20 +39,15 @@ jobs:
       - name: Generate tested releases table
         run: Rscript tools/generate_tested_table.R
 
-      - name: Render binary providers vignette
-        run: |
-          mkdir -p docs/articles
-          quarto render vignettes/binary-providers.qmd --to html --output-dir ../docs/articles
-
-      - name: Commit rendered vignette
+      - name: Commit updated release tables
         env:
           GIT_COMMITTER_NAME: github-actions[bot]
           GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
         run: |
           git config user.name "$GIT_COMMITTER_NAME"
           git config user.email "$GIT_COMMITTER_EMAIL"
-          if git add -f docs/articles/binary-providers.html && git add -f vignettes/generated-tested-versions.md README.md && ! git diff --staged --quiet; then
-            git commit -m "ci: update rendered binary-providers vignette and tested releases table after live tests"
+          if git add vignettes/generated-tested-versions.md README.md && ! git diff --staged --quiet; then
+            git commit -m "ci: update tested releases table after live tests"
             git push origin HEAD:main
           else
             echo "No changes to commit."

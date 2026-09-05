@@ -1,3 +1,22 @@
+# osrm.backend 0.4.1
+
+## Bug fixes
+
+* Replaced network-dependent unit tests with deterministic offline tests, so `R CMD check` now succeeds without internet access or GitHub API availability.
+* `osrm_install()` now validates the manual install arguments `file_path` and `download_url` first. A missing, unreadable or malformed value fails immediately, before any version resolution, destination directory creation or GitHub request.
+* Manual installations from `file_path` or `download_url` no longer contact GitHub to resolve or verify a version, and no longer apply the macOS compatibility check, since neither applies to a user supplied archive.
+* The GitHub API client gained an explicit request timeout, a bounded retry budget and accurate response classification. A primary rate limit response, meaning HTTP 403 with `X-RateLimit-Remaining: 0`, now fails at once and reports when the limit resets and how to set `GITHUB_PAT`, instead of retrying four times. API errors again say which request failed.
+* Installing a manual archive that lacks Lua profiles no longer fails with an internal error when a non-default binary provider is selected. It now reports that profiles cannot be fetched for a manual archive.
+
+## Breaking changes
+
+* `osrm_install()` rejects `file_path` and `download_url` supplied together instead of silently preferring `file_path`.
+* Because a manual archive is never resolved against a release, its OSRM version is unknown. When `dest_dir` is `NULL`, such an archive is now installed into a subdirectory named `manual` rather than one named after a version looked up online, and supplementary v6 runtime libraries are not installed automatically. Passing an explicit `version` tag alongside the archive restores both behaviours without any network lookup.
+
+## Internal
+
+* Declared the existing minimum requirement of R (>= 3.5.0) in `DESCRIPTION`.
+
 # osrm.backend 0.4.0
 
 ## Major Changes

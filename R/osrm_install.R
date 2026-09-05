@@ -93,12 +93,20 @@
 #'   currently validated OSRM versions. If `FALSE`, this status message is
 #'   suppressed.
 #' @param download_url **Advanced usage only.** A direct URL to a `.tar.gz` archive containing OSRM binaries.
-#'   If provided, `version` and `osrm_binaries_provider` are ignored. The archive must be structured similarly
+#'   If provided, no GitHub release lookup is performed: the archive is fetched as given, `version` is not
+#'   resolved online, and the macOS compatibility gate is not applied. The archive must be structured similarly
 #'   to the default releases, containing the required OSRM executables (at least `osrm-routed` or `osrm-routed.exe`)
 #'   either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
-#'   placed in the same folder will be installed alongside.
+#'   placed in the same folder will be installed alongside. Cannot be combined with `file_path`.
+#'   Because the archive is not resolved against a release, its OSRM version is unknown: when `dest_dir` is
+#'   `NULL` the binaries are installed into a subdirectory named `manual`, and supplementary v6 runtime
+#'   libraries are not installed automatically. Passing an explicit `version` tag alongside the archive is
+#'   still allowed and is used only to name that subdirectory and to decide whether those runtime libraries
+#'   are needed; it never triggers a network lookup.
 #' @param file_path **Advanced usage only.** A local file path to a `.tar.gz` archive containing OSRM binaries.
-#'   If provided, skips downloading entirely. The archive structure expectations are identical to those of `download_url`.
+#'   If provided, skips downloading entirely. The path is validated before any directory is created or any
+#'   network request is made. The archive structure expectations and the `version` handling are identical to
+#'   those of `download_url`. Cannot be combined with `download_url`.
 #' @return The path to the installation directory.
 #' @export
 #' @examples
@@ -157,7 +165,62 @@ osrm_install <- function(
       warning(...)
     }
   }
+  force <- isTRUE(force)
+  check_tested <- isTRUE(check_tested)
   path_action <- match.arg(path_action)
+
+  # --- Early manual install validation ---
+  manual_install <- !is.null(download_url) || !is.null(file_path)
+
+  if (!is.null(file_path) && !is.null(download_url)) {
+    stop(
+      "Specify either 'file_path' or 'download_url', not both.",
+      call. = FALSE
+    )
+  }
+
+  if (!is.null(file_path)) {
+    if (
+      !is.character(file_path) || length(file_path) != 1 || !nzchar(file_path)
+    ) {
+      stop(
+        "Provided 'file_path' must be a non-empty character string.",
+        call. = FALSE
+      )
+    }
+    if (!file.exists(file_path)) {
+      stop("Provided file_path does not exist: ", file_path, call. = FALSE)
+    }
+    if (file.access(file_path, mode = 4) != 0) {
+      stop("Provided file_path is not readable: ", file_path, call. = FALSE)
+    }
+  }
+
+  if (!is.null(download_url)) {
+    if (
+      !is.character(download_url) ||
+        length(download_url) != 1 ||
+        !nzchar(download_url)
+    ) {
+      stop(
+        "Provided 'download_url' must be a non-empty character string.",
+        call. = FALSE
+      )
+    }
+    if (!grepl("^https?://", download_url, ignore.case = TRUE)) {
+      stop(
+        "Provided 'download_url' must be a non-empty valid HTTP or HTTPS URL: ",
+        download_url,
+        call. = FALSE
+      )
+    }
+  }
+
+  # An explicit tag is meaningful even for a manual archive: it is never
+  # resolved online, but it names the destination and gates runtime libraries.
+  requested_version <- version
+  manual_version_known <- manual_install && !identical(version, "latest")
+
   sys_info <- Sys.info()
   platform <- get_platform_info(sys_info = sys_info)
   mac_release_info <- get_macos_release_info(sys_info)
@@ -170,99 +233,105 @@ osrm_install <- function(
     dest_dir
   }
 
-  # --- 2. Determine version and get release info ---
-  # Validated versions are maintained by the package's live integration tests.
-  # See the live tests workflow and per-OS test badges for current coverage:
-  # https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml
-  requested_version <- version
-  mac_release_display <- mac_release_info$display_name
-  if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
-    raw_release <- mac_release_info$release
-    if (!is.na(raw_release) && nzchar(raw_release)) {
-      mac_release_display <- paste0("Darwin ", raw_release)
-    } else {
-      mac_release_display <- "unknown macOS release"
+  if (!manual_install) {
+    # --- 2. Determine version and get release info ---
+    # Validated versions are maintained by the package's live integration tests.
+    # See the live tests workflow and per-OS test badges for current coverage:
+    # https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml
+    mac_release_display <- mac_release_info$display_name
+    if (is.null(mac_release_display) || !nzchar(mac_release_display)) {
+      raw_release <- mac_release_info$release
+      if (!is.na(raw_release) && nzchar(raw_release)) {
+        mac_release_display <- paste0("Darwin ", raw_release)
+      } else {
+        mac_release_display <- "unknown macOS release"
+      }
     }
-  }
-  mac_required_display <- "macOS 15.0 (Sequoia) [Darwin 24]"
-  is_macos <- identical(platform$os, "darwin")
-  mac_too_old_for_v6 <- is_macos &&
-    isFALSE(mac_release_info$meets_v6_requirement)
+    mac_required_display <- "macOS 15.0 (Sequoia) [Darwin 24]"
+    is_macos <- identical(platform$os, "darwin")
+    mac_too_old_for_v6 <- is_macos &&
+      isFALSE(mac_release_info$meets_v6_requirement)
 
-  if (identical(version, "latest")) {
-    emit_message("Finding latest stable version with available binaries...")
-    if (mac_too_old_for_v6) {
-      version <- find_latest_pre_v6_release(platform)
-      emit_message("Latest compatible version is '", version, "'")
-      emit_warning(
+    if (identical(version, "latest")) {
+      emit_message("Finding latest stable version with available binaries...")
+      if (mac_too_old_for_v6) {
+        version <- find_latest_pre_v6_release(platform)
+        emit_message("Latest compatible version is '", version, "'")
+        emit_warning(
+          sprintf(
+            "%s detected. OSRM v6.x requires %s or newer. Upgrade macOS to install v6.",
+            mac_release_display,
+            mac_required_display
+          ),
+          call. = FALSE
+        )
+      } else {
+        version <- osrm_check_latest_version()
+        emit_message("Latest stable version is '", version, "'")
+      }
+    }
+
+    if (mac_too_old_for_v6 && version_at_least(version, "v6.0.0")) {
+      stop(
         sprintf(
-          "%s detected. OSRM v6.x requires %s or newer. Upgrade macOS to install v6.",
+          "%s detected. OSRM v6.x requires %s or newer. Please install a v5.x release instead.",
           mac_release_display,
           mac_required_display
         ),
         call. = FALSE
       )
-    } else {
-      version <- osrm_check_latest_version()
-      emit_message("Latest stable version is '", version, "'")
     }
-  }
-
-  if (mac_too_old_for_v6 && version_at_least(version, "v6.0.0")) {
-    stop(
-      sprintf(
-        "%s detected. OSRM v6.x requires %s or newer. Please install a v5.x release instead.",
-        mac_release_display,
-        mac_required_display
-      ),
-      call. = FALSE
-    )
-  }
-  if (isTRUE(check_tested)) {
-    emit_message(
-      "Validated OSRM versions are maintained by the package's live integration tests on GitHub Actions. ",
-      "See the OSRM live tests workflow and per-OS badges for the current list of validated versions: ",
-      "https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml"
-    )
-  }
-
-  # Validate requested tag exists for this platform before hitting the API.
-  if (!identical(requested_version, "latest")) {
-    available_versions <- tryCatch(
-      osrm_check_available_versions(prereleases = TRUE),
-      error = identity
-    )
-
-    if (inherits(available_versions, "error")) {
-      emit_warning(
-        sprintf(
-          paste(
-            "Unable to verify requested version '%s' against",
-            "available releases: %s"
-          ),
-          version,
-          available_versions$message
-        ),
-        call. = FALSE
+    if (isTRUE(check_tested)) {
+      emit_message(
+        "Validated OSRM versions are maintained by the package's live integration tests on GitHub Actions. ",
+        "See the OSRM live tests workflow and per-OS badges for the current list of validated versions: ",
+        "https://github.com/e-kotov/osrm.backend/actions/workflows/osrm-live-tests.yml"
       )
-    } else if (!version %in% available_versions) {
-      stop(
-        sprintf(
-          paste(
-            "Version '%s' is not available for this platform.",
-            "Run osrm_check_available_versions(prereleases = TRUE) to list",
-            "supported tags."
-          ),
-          version
-        ),
-        call. = FALSE
+    }
+
+    # Validate requested tag exists for this platform before hitting the API.
+    if (!identical(requested_version, "latest")) {
+      available_versions <- tryCatch(
+        osrm_check_available_versions(prereleases = TRUE),
+        error = identity
       )
+
+      if (inherits(available_versions, "error")) {
+        emit_warning(
+          sprintf(
+            paste(
+              "Unable to verify requested version '%s' against",
+              "available releases: %s"
+            ),
+            version,
+            available_versions$message
+          ),
+          call. = FALSE
+        )
+      } else if (!version %in% available_versions) {
+        stop(
+          sprintf(
+            paste(
+              "Version '%s' is not available for this platform.",
+              "Run osrm_check_available_versions(prereleases = TRUE) to list",
+              "supported tags."
+            ),
+            version
+          ),
+          call. = FALSE
+        )
+      }
     }
   }
 
   # --- 3. Resolve final destination directory for this version ---
   if (using_default_dest) {
-    dest_dir <- file.path(install_root, version)
+    version_dir <- if (manual_install && !manual_version_known) {
+      "manual"
+    } else {
+      version
+    }
+    dest_dir <- file.path(install_root, version_dir)
   } else {
     dest_dir <- install_root
   }
@@ -296,28 +365,15 @@ osrm_install <- function(
     }
   }
 
-  manual_install <- !is.null(download_url) || !is.null(file_path)
-
   if (manual_install) {
     if (!is.null(file_path)) {
-      if (!file.exists(file_path)) {
-        stop("Provided file_path does not exist: ", file_path)
-      }
       tmp_file <- file_path
       emit_message("Using local file: ", tmp_file)
     } else {
       tmp_file <- tempfile(fileext = ".tar.gz")
       on.exit(unlink(tmp_file), add = TRUE)
       emit_message("Downloading from ", download_url)
-      tryCatch(
-        {
-          req <- httr2::req_retry(httr2::request(download_url), max_tries = 3)
-          httr2::req_perform(req, path = tmp_file)
-        },
-        error = function(e) {
-          stop("Failed to download file: ", e$message, call. = FALSE)
-        }
-      )
+      download_archive_file(download_url, tmp_file)
     }
   } else {
     # --- 4. Fetch release metadata or construct directly ---
@@ -363,12 +419,19 @@ osrm_install <- function(
     on.exit(unlink(tmp_file), add = TRUE)
 
     tryCatch(
-      {
-        req <- httr2::req_retry(httr2::request(asset_url), max_tries = 3)
-        httr2::req_perform(req, path = tmp_file)
-      },
+      download_archive_file(asset_url, tmp_file),
       error = function(e) {
-        stop("Failed to download file: ", e$message, call. = FALSE)
+        stop(
+          sprintf(
+            "Failed to download OSRM binary archive for version '%s' (%s-%s) from %s: %s",
+            version,
+            platform$os,
+            platform$arch,
+            asset_url,
+            e$message
+          ),
+          call. = FALSE
+        )
       }
     )
   }
@@ -486,25 +549,41 @@ osrm_install <- function(
     recursive = TRUE
   )
 
-  # Check if we need to install supplementary libraries/dlls
-  maybe_install_windows_v6_runtime(
-    version,
-    platform,
-    dest_dir,
-    quiet = quiet
-  )
-  maybe_install_linux_v6_runtime(
-    version,
-    platform,
-    dest_dir,
-    quiet = quiet
-  )
-  maybe_install_macos_v6_runtime(
-    version,
-    platform,
-    dest_dir,
-    quiet = quiet
-  )
+  # Check if we need to install supplementary libraries/dlls. A manual archive
+  # is never resolved against a release, so its version is only known when the
+  # caller supplied an explicit tag alongside file_path/download_url.
+  if (
+    manual_install &&
+      !manual_version_known &&
+      !identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries")
+  ) {
+    # Only relevant for providers whose archives do not bundle the runtime.
+    emit_message(
+      "Skipping automatic installation of v6 runtime libraries: the OSRM ",
+      "version of a manually supplied archive is unknown. Pass an explicit ",
+      "'version' tag alongside 'file_path' or 'download_url' if the archive ",
+      "is OSRM v6.0.0 or newer and needs them."
+    )
+  } else {
+    maybe_install_windows_v6_runtime(
+      version,
+      platform,
+      dest_dir,
+      quiet = quiet
+    )
+    maybe_install_linux_v6_runtime(
+      version,
+      platform,
+      dest_dir,
+      quiet = quiet
+    )
+    maybe_install_macos_v6_runtime(
+      version,
+      platform,
+      dest_dir,
+      quiet = quiet
+    )
+  }
 
   # --- 9. Download and install Lua profiles ---
   # If we are using our custom binaries, the profiles directory is already bundled inside the tarball
@@ -513,7 +592,15 @@ osrm_install <- function(
     !identical(getOption("osrm.backend.repository"), "e-kotov/osrm-binaries") &&
       !dir.exists(file.path(dest_dir, "profiles"))
   ) {
-    install_profiles_for_release(release_info, dest_dir, quiet = quiet)
+    if (manual_install) {
+      emit_message(
+        "The supplied archive does not bundle Lua profiles and they cannot be ",
+        "fetched for a manual installation. Provide an archive that contains a ",
+        "'profiles' directory if you need them."
+      )
+    } else {
+      install_profiles_for_release(release_info, dest_dir, quiet = quiet)
+    }
   }
 
   # --- 10. Set permissions and update PATH ---
@@ -995,18 +1082,156 @@ get_macos_release_info <- function(sys_info) {
 }
 
 #' @noRd
-github_api_request_with_retries <- function(url, error_message, verb = "GET") {
-  # Base request with error handling and retry policy
+download_archive_file <- function(
+  url,
+  dest_file,
+  max_tries = 3,
+  timeout_seconds = 60
+) {
+  tryCatch(
+    {
+      req <- httr2::request(url)
+      req <- httr2::req_timeout(req, timeout_seconds)
+      req <- httr2::req_retry(req, max_tries = max_tries)
+      httr2::req_perform(req, path = dest_file)
+    },
+    error = function(e) {
+      stop("Failed to download file: ", e$message, call. = FALSE)
+    }
+  )
+}
+
+#' @noRd
+github_response_is_transient <- function(resp) {
+  status <- httr2::resp_status(resp)
+  if (status %in% c(429L, 503L)) {
+    return(TRUE)
+  }
+  if (status == 403L) {
+    remaining <- httr2::resp_header(resp, "x-ratelimit-remaining")
+    if (identical(remaining, "0")) {
+      return(FALSE)
+    }
+    retry_after <- httr2::resp_header(resp, "retry-after")
+    if (!is.null(retry_after) && nzchar(retry_after)) {
+      retry_seconds <- suppressWarnings(as.numeric(retry_after))
+      if (!is.na(retry_seconds) && retry_seconds > 0 && retry_seconds <= 15) {
+        return(TRUE)
+      }
+    }
+    return(FALSE)
+  }
+  FALSE
+}
+
+#' @noRd
+github_response_retry_after <- function(resp) {
+  retry_after <- httr2::resp_header(resp, "retry-after")
+  if (!is.null(retry_after) && nzchar(retry_after)) {
+    retry_seconds <- suppressWarnings(as.numeric(retry_after))
+    if (!is.na(retry_seconds)) {
+      return(retry_seconds)
+    }
+  }
+  NA_real_
+}
+
+#' @noRd
+format_github_api_error <- function(
+  e,
+  default_prefix = "GitHub API request failed: "
+) {
+  prefix <- if (is.null(default_prefix) || !nzchar(default_prefix)) {
+    ""
+  } else {
+    default_prefix
+  }
+  resp <- e$resp
+  if (!is.null(resp)) {
+    status <- httr2::resp_status(resp)
+    remaining <- httr2::resp_header(resp, "x-ratelimit-remaining")
+    reset <- httr2::resp_header(resp, "x-ratelimit-reset")
+    if (status == 403L && identical(remaining, "0")) {
+      reset_info <- ""
+      if (!is.null(reset) && nzchar(reset)) {
+        reset_num <- suppressWarnings(as.numeric(reset))
+        if (!is.na(reset_num)) {
+          reset_time <- as.POSIXct(reset_num, origin = "1970-01-01", tz = "UTC")
+          reset_info <- sprintf(
+            " (rate limit resets at %s)",
+            format(reset_time, "%Y-%m-%d %H:%M:%S UTC")
+          )
+        }
+      }
+      return(sprintf(
+        "%sGitHub API rate limit exceeded%s. Set the GITHUB_PAT environment variable to increase rate limits.",
+        prefix,
+        reset_info
+      ))
+    }
+    if (status == 403L) {
+      body_msg <- tryCatch(
+        httr2::resp_body_json(resp)$message,
+        error = function(err) NULL
+      )
+      detail <- if (!is.null(body_msg) && nzchar(body_msg)) {
+        paste0(": ", body_msg)
+      } else {
+        ""
+      }
+      return(sprintf(
+        "%sGitHub API request forbidden (HTTP 403)%s. Set GITHUB_PAT to authenticate if needed.",
+        prefix,
+        detail
+      ))
+    }
+    if (status == 429L) {
+      return(paste0(
+        prefix,
+        "GitHub API rate limit exceeded (HTTP 429). Please try again later or set GITHUB_PAT."
+      ))
+    }
+    if (status == 503L) {
+      return(paste0(
+        prefix,
+        "GitHub API service temporarily unavailable (HTTP 503). Please try again later."
+      ))
+    }
+  }
+  msg <- if (!is.null(e$message) && nzchar(e$message)) {
+    e$message
+  } else {
+    "Failed to perform HTTP request."
+  }
+  paste0(prefix, msg)
+}
+
+#' @noRd
+execute_github_request <- function(req) {
+  httr2::req_perform(req)
+}
+
+#' @noRd
+github_api_request_with_retries <- function(
+  url,
+  error_message = "GitHub API request failed: ",
+  verb = "GET",
+  timeout_seconds = 15
+) {
   req <- httr2::request(url)
+  if (!identical(verb, "GET")) {
+    req <- httr2::req_method(req, verb)
+  }
+  req <- httr2::req_timeout(req, timeout_seconds)
   req <- httr2::req_error(req, body = function(resp) {
-    httr2::resp_body_json(resp)$message
+    tryCatch(httr2::resp_body_json(resp)$message, error = function(e) NULL)
   })
-  # Retry on GitHub's rate-limiting status (403), as well as the
-  # standard 429 (Too Many Requests) and 503 (Service Unavailable).
   req <- httr2::req_retry(
     req,
-    max_tries = 4,
-    is_transient = ~ httr2::resp_status(.x) %in% c(403, 429, 503)
+    max_tries = 3,
+    max_seconds = 15,
+    is_transient = github_response_is_transient,
+    after = github_response_retry_after
   )
 
   # Check for a GitHub Personal Access Token to increase rate limits.
@@ -1018,9 +1243,10 @@ github_api_request_with_retries <- function(url, error_message, verb = "GET") {
   }
 
   resp <- tryCatch(
-    httr2::req_perform(req),
+    execute_github_request(req),
     error = function(e) {
-      stop(error_message, e$message, call. = FALSE)
+      formatted <- format_github_api_error(e, default_prefix = error_message)
+      stop(formatted, call. = FALSE)
     }
   )
   return(resp)
@@ -1034,7 +1260,10 @@ get_all_releases <- function(
 
   resp <- github_api_request_with_retries(
     url,
-    error_message = "GitHub API request failed: "
+    error_message = sprintf(
+      "Failed to fetch the list of releases from '%s': ",
+      repo
+    )
   )
 
   httr2::resp_body_json(resp)
@@ -1054,7 +1283,11 @@ get_release_by_tag <- function(
 
   resp <- github_api_request_with_retries(
     url,
-    error_message = "GitHub API request failed: "
+    error_message = sprintf(
+      "Failed to fetch release '%s' from '%s': ",
+      version,
+      repo
+    )
   )
 
   httr2::resp_body_json(resp)

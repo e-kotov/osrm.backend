@@ -61,13 +61,21 @@ currently validated OSRM versions. If \code{FALSE}, this status message is
 suppressed.}
 
 \item{download_url}{\strong{Advanced usage only.} A direct URL to a \code{.tar.gz} archive containing OSRM binaries.
-If provided, \code{version} and \code{osrm_binaries_provider} are ignored. The archive must be structured similarly
+If provided, no GitHub release lookup is performed: the archive is fetched as given, \code{version} is not
+resolved online, and the macOS compatibility gate is not applied. The archive must be structured similarly
 to the default releases, containing the required OSRM executables (at least \code{osrm-routed} or \code{osrm-routed.exe})
 either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
-placed in the same folder will be installed alongside.}
+placed in the same folder will be installed alongside. Cannot be combined with \code{file_path}.
+Because the archive is not resolved against a release, its OSRM version is unknown: when \code{dest_dir} is
+\code{NULL} the binaries are installed into a subdirectory named \code{manual}, and supplementary v6 runtime
+libraries are not installed automatically. Passing an explicit \code{version} tag alongside the archive is
+still allowed and is used only to name that subdirectory and to decide whether those runtime libraries
+are needed; it never triggers a network lookup.}
 
 \item{file_path}{\strong{Advanced usage only.} A local file path to a \code{.tar.gz} archive containing OSRM binaries.
-If provided, skips downloading entirely. The archive structure expectations are identical to those of \code{download_url}.}
+If provided, skips downloading entirely. The path is validated before any directory is created or any
+network request is made. The archive structure expectations and the \code{version} handling are identical to
+those of \code{download_url}. Cannot be combined with \code{download_url}.}
 }
 \value{
 The path to the installation directory.
