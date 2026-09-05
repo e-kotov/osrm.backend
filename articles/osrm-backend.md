@@ -1,6 +1,7 @@
 # Quick Start: Install OSRM and calculate routes
 
 ``` r
+
 knitr::opts_chunk$set(eval = FALSE)
 library(osrm.backend)
 library(osrm)
@@ -11,6 +12,7 @@ library(osrm)
     ## Routing: OSRM - http://project-osrm.org/
 
 ``` r
+
 library(sf)
 ```
 
@@ -19,6 +21,7 @@ library(sf)
 ## Create a temporary directory and copy example OSM PBF file into it
 
 ``` r
+
 osrm_temp_dir <- file.path(tempdir(), paste0("osrm-data-", Sys.getpid()))
 dir.create(osrm_temp_dir, showWarnings = FALSE, recursive = TRUE)
 internal_pbf <- system.file("extdata/cur.osm.pbf", package = "osrm.backend")
@@ -38,6 +41,7 @@ running this function will not lead to re-downloading of OSRM binaries
 or re-processing of the OSM PBF file if already done.
 
 ``` r
+
 osrm_start(osrm_temp_dir, verbose = TRUE)
 ```
 
@@ -61,6 +65,7 @@ Load some spatial data from the OSM PBF file to sample points for
 routing and plot the street network:
 
 ``` r
+
 # read the pbf file with sf
 osm_points <- read_sf(internal_pbf, layer = "points")
 osm_streets <- read_sf(internal_pbf, layer = "multilinestrings")
@@ -80,6 +85,7 @@ can use any [osrm](https://github.com/riatelab/osrm) function as usual,
 here we calculate a route between the two sampled points:
 
 ``` r
+
 options("osrm.server" = "http://localhost:5001/")
 route <- osrm::osrmRoute(loc = sampled_points)
 route
@@ -96,6 +102,7 @@ route
 ## Plot the route on top of the street network
 
 ``` r
+
 plot(st_geometry(osm_streets), lwd = 0.5, col = "grey70")
 plot(st_geometry(route), col = "red", lwd = 5, add = TRUE)
 ```
@@ -107,6 +114,7 @@ plot(st_geometry(route), col = "red", lwd = 5, add = TRUE)
 You can now stop the server:
 
 ``` r
+
 osrm_stop()
 ```
 
@@ -115,5 +123,6 @@ osrm_stop()
 And remove the temporary directory:
 
 ``` r
+
 unlink(osrm_temp_dir, recursive = TRUE)
 ```

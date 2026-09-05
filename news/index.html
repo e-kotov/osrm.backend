@@ -16,7 +16,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -42,9 +42,31 @@
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/e-kotov/osrm.backend/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/e-kotov/osrm.backend/blob/fix-cran-network-tests/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.4.1" id="osrmbackend-041">osrm.backend 0.4.1<a class="anchor" aria-label="anchor" href="#osrmbackend-041"></a></h2>
+<div class="section level3">
+<h3 id="bug-fixes-0-4-1">Bug fixes<a class="anchor" aria-label="anchor" href="#bug-fixes-0-4-1"></a></h3>
+<ul><li>Replaced network-dependent unit tests with deterministic offline tests, so <code>R CMD check</code> now succeeds without internet access or GitHub API availability.</li>
+<li>
+<code><a href="../reference/osrm_install.html">osrm_install()</a></code> now validates the manual install arguments <code>file_path</code> and <code>download_url</code> first. A missing, unreadable or malformed value fails immediately, before any version resolution, destination directory creation or GitHub request.</li>
+<li>Manual installations from <code>file_path</code> or <code>download_url</code> no longer contact GitHub to resolve or verify a version, and no longer apply the macOS compatibility check, since neither applies to a user supplied archive.</li>
+<li>The GitHub API client gained an explicit request timeout, a bounded retry budget and accurate response classification. A primary rate limit response, meaning HTTP 403 with <code>X-RateLimit-Remaining: 0</code>, now fails at once and reports when the limit resets and how to set <code>GITHUB_PAT</code>, instead of retrying four times. API errors again say which request failed.</li>
+<li>Installing a manual archive that lacks Lua profiles no longer fails with an internal error when a non-default binary provider is selected. It now reports that profiles cannot be fetched for a manual archive.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="breaking-changes-0-4-1">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-4-1"></a></h3>
+<ul><li>
+<code><a href="../reference/osrm_install.html">osrm_install()</a></code> rejects <code>file_path</code> and <code>download_url</code> supplied together instead of silently preferring <code>file_path</code>.</li>
+<li>Because a manual archive is never resolved against a release, its OSRM version is unknown. When <code>dest_dir</code> is <code>NULL</code>, such an archive is now installed into a subdirectory named <code>manual</code> rather than one named after a version looked up online, and supplementary v6 runtime libraries are not installed automatically. Passing an explicit <code>version</code> tag alongside the archive restores both behaviours without any network lookup.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="internal-0-4-1">Internal<a class="anchor" aria-label="anchor" href="#internal-0-4-1"></a></h3>
+<ul><li>Declared the existing minimum requirement of R (&gt;= 3.5.0) in <code>DESCRIPTION</code>.</li>
+</ul></div>
+</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.4.0" id="osrmbackend-040">osrm.backend 0.4.0<a class="anchor" aria-label="anchor" href="#osrmbackend-040"></a></h2><p class="text-muted">CRAN release: 2026-07-11</p>
 <div class="section level3">

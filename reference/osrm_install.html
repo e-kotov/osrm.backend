@@ -38,7 +38,7 @@ guaranteed to function correctly."><meta property="og:image" content="https://ww
 
     <a class="navbar-brand me-2" href="../index.html">osrm.backend</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -64,7 +64,7 @@ guaranteed to function correctly."><meta property="og:image" content="https://ww
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
       <img src="../logo.png" class="logo" alt=""><h1>Install OSRM Backend Binaries</h1>
-      <small class="dont-index">Source: <a href="https://github.com/e-kotov/osrm.backend/blob/main/R/osrm_install.R" class="external-link"><code>R/osrm_install.R</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/e-kotov/osrm.backend/blob/fix-cran-network-tests/R/osrm_install.R" class="external-link"><code>R/osrm_install.R</code></a></small>
       <div class="d-none name"><code>osrm_install.Rd</code></div>
     </div>
 
@@ -159,15 +159,23 @@ suppressed.</p></dd>
 
 <dt id="arg-download-url">download_url<a class="anchor" aria-label="anchor" href="#arg-download-url"></a></dt>
 <dd><p><strong>Advanced usage only.</strong> A direct URL to a <code>.tar.gz</code> archive containing OSRM binaries.
-If provided, <code>version</code> and <code>osrm_binaries_provider</code> are ignored. The archive must be structured similarly
+If provided, no GitHub release lookup is performed: the archive is fetched as given, <code>version</code> is not
+resolved online, and the macOS compatibility gate is not applied. The archive must be structured similarly
 to the default releases, containing the required OSRM executables (at least <code>osrm-routed</code> or <code>osrm-routed.exe</code>)
 either directly at the root of the archive or nested under a single directory level. Supporting libraries and Lua profiles
-placed in the same folder will be installed alongside.</p></dd>
+placed in the same folder will be installed alongside. Cannot be combined with <code>file_path</code>.
+Because the archive is not resolved against a release, its OSRM version is unknown: when <code>dest_dir</code> is
+<code>NULL</code> the binaries are installed into a subdirectory named <code>manual</code>, and supplementary v6 runtime
+libraries are not installed automatically. Passing an explicit <code>version</code> tag alongside the archive is
+still allowed and is used only to name that subdirectory and to decide whether those runtime libraries
+are needed; it never triggers a network lookup.</p></dd>
 
 
 <dt id="arg-file-path">file_path<a class="anchor" aria-label="anchor" href="#arg-file-path"></a></dt>
 <dd><p><strong>Advanced usage only.</strong> A local file path to a <code>.tar.gz</code> archive containing OSRM binaries.
-If provided, skips downloading entirely. The archive structure expectations are identical to those of <code>download_url</code>.</p></dd>
+If provided, skips downloading entirely. The path is validated before any directory is created or any
+network request is made. The archive structure expectations and the <code>version</code> handling are identical to
+those of <code>download_url</code>. Cannot be combined with <code>download_url</code>.</p></dd>
 
 </dl></div>
     <div class="section level2">

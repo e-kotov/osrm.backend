@@ -99,20 +99,31 @@ osrm_install(
 - download_url:
 
   **Advanced usage only.** A direct URL to a `.tar.gz` archive
-  containing OSRM binaries. If provided, `version` and
-  `osrm_binaries_provider` are ignored. The archive must be structured
-  similarly to the default releases, containing the required OSRM
-  executables (at least `osrm-routed` or `osrm-routed.exe`) either
-  directly at the root of the archive or nested under a single directory
-  level. Supporting libraries and Lua profiles placed in the same folder
-  will be installed alongside.
+  containing OSRM binaries. If provided, no GitHub release lookup is
+  performed: the archive is fetched as given, `version` is not resolved
+  online, and the macOS compatibility gate is not applied. The archive
+  must be structured similarly to the default releases, containing the
+  required OSRM executables (at least `osrm-routed` or
+  `osrm-routed.exe`) either directly at the root of the archive or
+  nested under a single directory level. Supporting libraries and Lua
+  profiles placed in the same folder will be installed alongside. Cannot
+  be combined with `file_path`. Because the archive is not resolved
+  against a release, its OSRM version is unknown: when `dest_dir` is
+  `NULL` the binaries are installed into a subdirectory named `manual`,
+  and supplementary v6 runtime libraries are not installed
+  automatically. Passing an explicit `version` tag alongside the archive
+  is still allowed and is used only to name that subdirectory and to
+  decide whether those runtime libraries are needed; it never triggers a
+  network lookup.
 
 - file_path:
 
   **Advanced usage only.** A local file path to a `.tar.gz` archive
   containing OSRM binaries. If provided, skips downloading entirely. The
-  archive structure expectations are identical to those of
-  `download_url`.
+  path is validated before any directory is created or any network
+  request is made. The archive structure expectations and the `version`
+  handling are identical to those of `download_url`. Cannot be combined
+  with `download_url`.
 
 ## Value
 
