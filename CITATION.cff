@@ -8,7 +8,7 @@ message: 'To cite package "osrm.backend" in publications use:'
 type: software
 license: MIT
 title: 'osrm.backend: Bindings for ''Open Source Routing Machine'''
-version: 0.4.0
+version: 0.4.1
 doi: 10.32614/CRAN.package.osrm.backend
 identifiers:
 - type: doi
@@ -61,6 +61,18 @@ references:
   doi: 10.21105/joss.04574
   url: https://doi.org/10.21105/joss.04574
   start: '4574'
+- type: software
+  title: 'R: A Language and Environment for Statistical Computing'
+  notes: Depends
+  url: https://www.R-project.org/
+  authors:
+  - name: R Core Team
+  institution:
+    name: 'R Foundation for Statistical Computing (ROR: <https://ror.org/05qewa988>)'
+    address: Vienna, Austria
+  year: '2026'
+  doi: 10.32614/R.manuals
+  version: '>= 3.5.0'
 - type: software
   title: digest
   abstract: 'digest: Create Compact Hash Digests of R Objects'
