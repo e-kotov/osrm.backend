@@ -2,6 +2,8 @@
 
 ## osrm.backend 0.4.1
 
+CRAN release: 2026-09-05
+
 ### Bug fixes
 
 - Replaced network-dependent unit tests with deterministic offline
