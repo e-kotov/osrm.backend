@@ -6,9 +6,9 @@ library(osrm.backend)
 library(osrm)
 ```
 
-    ## Data: (c) OpenStreetMap contributors, ODbL 1.0 - http://www.openstreetmap.org/copyright
+    ## Data: (c) OpenStreetMap contributors, ODbL 1.0 - https://www.openstreetmap.org/copyright
 
-    ## Routing: OSRM - http://project-osrm.org/
+    ## Routing: OSRM - https://project-osrm.org/
 
 ``` r
 library(sf)
@@ -71,13 +71,13 @@ sampled_points <- osm_points[sample(nrow(osm_points), 2), ]
 
 ## Calculate route between sampled points
 
-To use [osrm](https://github.com/riatelab/osrm) package with the local
+To use [osrm](https://codeberg.org/riatelab/osrm) package with the local
 server, you have to set the `osrm.server` option to point to the local
 server URL. The default port that
 [`osrm_start()`](https://www.ekotov.pro/osrm.backend/reference/osrm_start.md)
 uses is `5001`, so the URL will be `http://localhost:5001/`. Then you
-can use any [osrm](https://github.com/riatelab/osrm) function as usual,
-here we calculate a route between the two sampled points:
+can use any [osrm](https://codeberg.org/riatelab/osrm) function as
+usual, here we calculate a route between the two sampled points:
 
 ``` r
 options("osrm.server" = "http://localhost:5001/")
