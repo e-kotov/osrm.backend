@@ -1,6 +1,7 @@
 # OSRM binary providers
 
 ``` r
+
 knitr::opts_chunk$set(eval = FALSE)
 library(osrm.backend)
 ```
@@ -23,6 +24,7 @@ The default provider downloads from
 [`e-kotov/osrm-binaries`](https://github.com/e-kotov/osrm-binaries):
 
 ``` r
+
 install_dir <- osrm_install(osrm_binaries_provider = "default")
 ```
 
@@ -52,6 +54,7 @@ The official provider downloads from
 [`Project-OSRM/osrm-backend`](https://github.com/Project-OSRM/osrm-backend):
 
 ``` r
+
 install_dir <- osrm_install(osrm_binaries_provider = "official")
 ```
 
@@ -113,6 +116,7 @@ In practice, this means:
 Most users should use the default provider:
 
 ``` r
+
 osrm_install()
 ```
 
@@ -120,6 +124,7 @@ Use the official provider only when you have a specific reason to test
 or depend on upstream OSRM’s official release artifacts:
 
 ``` r
+
 osrm_install(osrm_binaries_provider = "official")
 ```
 
