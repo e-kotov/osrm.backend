@@ -4,11 +4,11 @@ test_that("Cross-provider compatibility works for latest versions", {
     "Live OSRM tests skipped"
   )
 
-  test_map <- tempfile(fileext = ".osm.pbf")
-  download.file(
-    "https://download.geofabrik.de/europe/monaco-latest.osm.pbf",
-    test_map,
-    quiet = TRUE
+  # Use the package's bundled OSM fixture instead of downloading a map.
+  test_map <- system.file(
+    "extdata/cur.osm.pbf",
+    package = "osrm.backend",
+    mustWork = TRUE
   )
 
   old_repo <- options(osrm.backend.repository = "e-kotov/osrm-binaries")
@@ -25,6 +25,10 @@ test_that("Cross-provider compatibility works for latest versions", {
   )
 
   tested_any <- FALSE
+  route_url <- paste0(
+    "http://127.0.0.1:5001/route/v1/car/",
+    "-49.28,-25.44;-49.26,-25.42"
+  )
 
   for (ver in test_versions) {
     dir_official <- tempfile()
@@ -84,9 +88,7 @@ test_that("Cross-provider compatibility works for latest versions", {
         verbosity = "NONE"
       )
       Sys.sleep(2)
-      res_ours <- jsonlite::fromJSON(
-        "http://127.0.0.1:5001/route/v1/driving/7.419,43.731;7.418,43.733"
-      )
+      res_ours <- jsonlite::fromJSON(route_url)
       server_ours$kill()
       options(opts)
       Sys.sleep(1)
@@ -109,12 +111,14 @@ test_that("Cross-provider compatibility works for latest versions", {
         verbosity = "NONE"
       )
       Sys.sleep(2)
-      res_official <- jsonlite::fromJSON(
-        "http://127.0.0.1:5001/route/v1/driving/7.419,43.731;7.418,43.733"
-      )
+      res_official <- jsonlite::fromJSON(route_url)
       server_official$kill()
       options(opts)
 
+      expect_equal(res_ours$code, "Ok")
+      expect_equal(res_official$code, "Ok")
+      expect_gt(nrow(res_ours$routes), 0)
+      expect_gt(nrow(res_official$routes), 0)
       expect_equal(res_ours$routes$distance, res_official$routes$distance)
       expect_equal(res_ours$routes$duration, res_official$routes$duration)
       expect_equal(res_ours$routes$geometry, res_official$routes$geometry)
@@ -138,11 +142,11 @@ test_that("OSRM darwin-x64 releases run under Rosetta on Apple Silicon", {
     "Not on macOS arm64"
   )
 
-  test_map <- tempfile(fileext = ".osm.pbf")
-  download.file(
-    "https://download.geofabrik.de/europe/monaco-latest.osm.pbf",
-    test_map,
-    quiet = TRUE
+  # Use the package's bundled OSM fixture instead of downloading a map.
+  test_map <- system.file(
+    "extdata/cur.osm.pbf",
+    package = "osrm.backend",
+    mustWork = TRUE
   )
 
   # Override arch to force download of x64 binary
@@ -196,7 +200,7 @@ test_that("OSRM darwin-x64 releases run under Rosetta on Apple Silicon", {
         withr::defer(try(server_ours$kill(), silent = TRUE))
         Sys.sleep(2)
         res <- jsonlite::fromJSON(sprintf(
-          "http://127.0.0.1:%d/route/v1/driving/7.419,43.731;7.418,43.733",
+          "http://127.0.0.1:%d/route/v1/car/-49.28,-25.44;-49.26,-25.42",
           port
         ))
         server_ours$kill()
